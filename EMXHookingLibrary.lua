@@ -1,3 +1,11 @@
+--[[
+	-> EMXHookLibrary uses the "Big Numbers library for Lua", maintained by ...
+	fmp - Frederico Macedo Pessoa
+    msm - Marco Serpa Molinaro
+	-> I want to thank the authors for making this project possible. Thank you!
+	-> I also want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb for his help!
+]]--
+-- BigNum - Code --
 --%%%%%%%%  Constants used in the file %%%%%%%%--{{{1
    RADIX = 10^7 ;
    RADIX_LEN = math.floor( math.log10 ( RADIX ) ) ;
@@ -660,6 +668,7 @@ function BigNum.decr( bnum1 )
    return 0 ;
 end
 
+-- Here starts the main hook lib code --
 EMXHookLibrary = {
 	CurrentVersion = "1.0.4 - 09.06.2023 00:05 - Eisenmonoxid",
 	GlobalAddressEntity = 0,
@@ -710,20 +719,6 @@ EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize
 	end
 end
 
-EMXHookLibrary.GetTSlotCGameLogicStructure = function()
-	if not EMXHookLibrary.IsHistoryEdition then 
-		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new("11198552")));
-	end
-
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
-	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("40"))))
-	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
-
-	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. HexString01))));
-end
-
 EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityID, _newMaxHealth)
 	local EntityObject = EMXHookLibrary.CalculateEntityIDToObject(_entityID)
 	local ObjectValue = EMXHookLibrary.GetBuildingInformationStructure()
@@ -749,6 +744,20 @@ EMXHookLibrary.CalculateEntityIDToObject = function(_entityID)
 	Result = BigNum.mt.add(Result, BigNum.new("20"))
 	Result = BigNum.mt.add(Result, EMXHookLibrary.GetCEntityManagerStructure())
 	return BigNum.new(EMXHookLibrary.GetValueAtPointer(Result));
+end
+
+EMXHookLibrary.GetTSlotCGameLogicStructure = function()
+	if not EMXHookLibrary.IsHistoryEdition then 
+		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new("11198552")));
+	end
+
+	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
+	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+
+	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("40"))))
+	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
+
+	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. HexString01))));
 end
 
 EMXHookLibrary.GetCEntityManagerStructure = function()
@@ -969,6 +978,8 @@ EMXHookLibrary.SetBuildingFullCost = function(_entityType, _good, _amount, _seco
 		
 	end
 end
+
+-- Some Helpers --
 
 function EMXHookLibrary.HelperFunctions.qmod(a, b)
 	return a - math.floor(a / b) * b
