@@ -1,7 +1,7 @@
 --[[
 	-> EMXHookLibrary uses the "Big Numbers library for Lua", maintained by ...
 	fmp - Frederico Macedo Pessoa
-    msm - Marco Serpa Molinaro
+	msm - Marco Serpa Molinaro
 	-> I want to thank the authors for making this project possible. Thank you!
 	-> I also want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb for his help!
 ]]--
