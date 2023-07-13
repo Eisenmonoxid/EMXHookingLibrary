@@ -1,8 +1,8 @@
 --[[
 	-> EMXHookLibrary uses the "Big Numbers library for Lua", maintained by ...
-	fmp - Frederico Macedo Pessoa
-	msm - Marco Serpa Molinaro
-	-> I want to thank the authors for making this project possible. Thank you!
+		fmp - Frederico Macedo Pessoa
+		msm - Marco Serpa Molinaro
+	-> I want to thank the authors for making this project possible.
 	-> I also want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb for his help!
 ]]--
 -- BigNum - Code --
@@ -670,7 +670,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.0.4 - 09.06.2023 00:05 - Eisenmonoxid",
+	CurrentVersion = "1.0.5 - 13.07.2023 12:50 - Eisenmonoxid",
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
 	GlobalHeapStart = 0,
@@ -915,29 +915,19 @@ EMXHookLibrary.ModifyPlayerInformationStructure = function(_newValue, _vanillaVa
 	end
 end
 
-EMXHookLibrary.SetSettlerIllnessCount = function(_newCount)
-	EMXHookLibrary.ModifyPlayerInformationStructure(_newCount, "760", "700")
-end
-
-EMXHookLibrary.SetCarnivoreHealingSeconds = function(_newTime)
-	EMXHookLibrary.ModifyPlayerInformationStructure(_newTime, "680", "624")
-end
-
-EMXHookLibrary.SetKnightResurrectionTime = function(_newTime)
-	EMXHookLibrary.ModifyPlayerInformationStructure(_newTime, "184", "164")
-end
-
-EMXHookLibrary.SetMaxBuildingTaxAmount = function(_newTaxAmount)
-	EMXHookLibrary.ModifyPlayerInformationStructure(_newTaxAmount, "624", "580")
-end
-
-EMXHookLibrary.SetAmountOfTaxCollectors = function(_newAmount)
-	EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "532", "496")
-end
-
-EMXHookLibrary.SetFogOfWarVisibilityFactor = function(_newFactor)
-	EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "620", "576")
-end
+EMXHookLibrary.SetSettlerIllnessCount = function(_newCount) EMXHookLibrary.ModifyPlayerInformationStructure(_newCount, "760", "700") end
+EMXHookLibrary.SetCarnivoreHealingSeconds = function(_newTime) EMXHookLibrary.ModifyPlayerInformationStructure(_newTime, "680", "624") end
+EMXHookLibrary.SetKnightResurrectionTime = function(_newTime) EMXHookLibrary.ModifyPlayerInformationStructure(_newTime, "184", "164") end
+EMXHookLibrary.SetMaxBuildingTaxAmount = function(_newTaxAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newTaxAmount, "624", "580") end
+EMXHookLibrary.SetAmountOfTaxCollectors = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "808", "744") end
+EMXHookLibrary.SetFogOfWarVisibilityFactor = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "620", "576") end
+EMXHookLibrary.SetBuildingKnockDownCompensation = function(_percent) EMXHookLibrary.ModifyPlayerInformationStructure(_percent, "4", "4") end
+--EMXHookLibrary.SetTrailSpeedModifier = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "496", "464") end
+--EMXHookLibrary.SetRoadSpeedModifier = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "320", "300") end
+--EMXHookLibrary.SetWaterDepthBlockingThreshold = function(_threshold) EMXHookLibrary.ModifyPlayerInformationStructure(_threshold, "456", "424") end
+EMXHookLibrary.SetTerritoryCombatBonus = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "604", "560") end
+EMXHookLibrary.SetCathedralCollectAmount = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "436", "404") end
+EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "260", "240") end
 
 EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)	
 	if not EMXHookLibrary.IsHistoryEdition then
@@ -946,6 +936,42 @@ EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)
 	else
 		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.new("376"))))			
 		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_cathedralIndex), BigNum.new("4"))), _limit)
+	end
+end
+
+EMXHookLibrary.SetSermonSettlerLimit = function(_playerID, _cathedralLevel, _limit)	
+	if not EMXHookLibrary.IsHistoryEdition then
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetCathedral(_playerID)), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("756"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_cathedralLevel), BigNum.new("4"))), _limit)
+	else
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetCathedral(_playerID)), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("680"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_cathedralLevel), BigNum.new("4"))), _limit)
+	end
+end
+
+EMXHookLibrary.SetSoldierLimit = function(_playerID, _castleLevel, _limit)	
+	if not EMXHookLibrary.IsHistoryEdition then
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetHeadquarters(_playerID)), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("788"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_castleLevel), BigNum.new("4"))), _limit)
+	else
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetHeadquarters(_playerID)), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("704"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_castleLevel), BigNum.new("4"))), _limit)
+	end
+end
+
+EMXHookLibrary.SetOutStockCapacitiesLimit = function(_entityID, _upgradeLevel, _limit)	
+	if not EMXHookLibrary.IsHistoryEdition then
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("676"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _limit)
+	else
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("612"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _limit)
 	end
 end
 
@@ -1100,11 +1126,11 @@ function EMXHookLibrary.HelperFunctions.BitAnd(a, b)
     local result = 0
     local bitval = 1
     while a > 0 and b > 0 do
-      if a % 2 == 1 and b % 2 == 1 then -- test the rightmost bits
-          result = result + bitval      -- set the current bit
+      if a % 2 == 1 and b % 2 == 1 then
+          result = result + bitval
       end
-      bitval = bitval * 2 -- shift left
-      a = math.floor(a / 2) -- shift right
+      bitval = bitval * 2 
+      a = math.floor(a / 2)
       b = math.floor(b / 2)
     end
     return result
