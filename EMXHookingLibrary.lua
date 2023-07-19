@@ -1,17 +1,15 @@
 --[[
-	-> EMXHookLibrary uses the "Big Numbers library for Lua", maintained by ...
-		fmp - Frederico Macedo Pessoa
-		msm - Marco Serpa Molinaro
-	-> I want to thank the authors for making this project possible.
-	-> I also want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb for his help!
+	-> I want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb for his help!
+	-> Also thanks to the authors of the "Big numbers for Lua" - Library!
 ]]--
+
 -- BigNum - Code --
---%%%%%%%%  Constants used in the file %%%%%%%%--{{{1
-   RADIX = 10^7 ;
-   RADIX_LEN = math.floor( math.log10 ( RADIX ) ) ;
+--%%%%%%%%  Constants used in the file  %%%%%%%%--
+RADIX = 10^7;
+RADIX_LEN = math.floor(math.log10(RADIX));
 --%%%%%%%%        Start of Code        %%%%%%%%--
-BigNum = {} ;
-BigNum.mt = {} ;
+BigNum = {};
+BigNum.mt = {};
 
 function BigNum.new( num ) --{{{2
    local bignum = {} ;
@@ -670,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.0.6 - 16.07.2023 17:34 - Eisenmonoxid",
+	CurrentVersion = "1.0.7 - 19.07.2023 23:28 - Eisenmonoxid",
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
 	GlobalHeapStart = 0,
@@ -857,6 +855,31 @@ EMXHookLibrary.CalculateEntityIDToObject = function(_entityID)
 	return BigNum.new(EMXHookLibrary.GetValueAtPointer(Result));
 end
 
+EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11199488", 85, {1, 4, 5, 8}) end
+EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198716", 1601, {1, 2, 3, 8}) end
+EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198560", 2593, {1, 6, 7, 8}) end
+
+EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _lowestDigit, _hexSplitChars)
+	if not EMXHookLibrary.IsHistoryEdition then 
+		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(_ovPointer)));
+	end
+
+	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
+	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+
+	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit))))
+	local HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit + 1))))
+	
+	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
+	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
+	
+	HexString01 = string.sub(HexString01, _hexSplitChars[1], _hexSplitChars[2])
+	HexString02 = string.sub(HexString02, _hexSplitChars[3], _hexSplitChars[4])
+
+	local DereferenceString = HexString02 .. HexString01	
+	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. DereferenceString))));
+end
+
 EMXHookLibrary.GetTSlotCGameLogicStructure = function()
 	if not EMXHookLibrary.IsHistoryEdition then 
 		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new("11198552")));
@@ -869,69 +892,6 @@ EMXHookLibrary.GetTSlotCGameLogicStructure = function()
 	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
 
 	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. HexString01))));
-end
-
-EMXHookLibrary.GetCEntityManagerStructure = function()
-	if not EMXHookLibrary.IsHistoryEdition then 
-		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new("11199488")));
-	end
-
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
-	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("85"))))
-	local HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("86"))))
-
-	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
-	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
-	
-	HexString01 = string.sub(HexString01, 1, 4)
-	HexString02 = string.sub(HexString02, 5, 8)
-
-	local DereferenceString = HexString02 .. HexString01	
-	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. DereferenceString))));
-end
-
-EMXHookLibrary.GetPlayerInformationStructure = function()
-	if not EMXHookLibrary.IsHistoryEdition then 
-		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new("11198716")));
-	end
-
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
-	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("1601"))))
-	local HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("1602"))))
-
-	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
-	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
-	
-	HexString01 = string.sub(HexString01, 1, 2)
-	HexString02 = string.sub(HexString02, 3, 8)
-
-	local DereferenceString = HexString02 .. HexString01	
-	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. DereferenceString))));
-end
-
-EMXHookLibrary.GetBuildingInformationStructure = function()
-	if not EMXHookLibrary.IsHistoryEdition then 
-		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new("11198560")));
-	end
-
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
-	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("2593"))))
-	local HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("2594"))))
-	
-	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
-	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
-	
-	HexString01 = string.sub(HexString01, 1, 6)
-	HexString02 = string.sub(HexString02, 7, 8)
-
-	local DereferenceString = HexString02 .. HexString01	
-	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. DereferenceString))));
 end
 
 EMXHookLibrary.IsAdressEntityExisting = function()
@@ -1050,40 +1010,28 @@ EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)
 	end
 end
 
-EMXHookLibrary.SetSermonSettlerLimit = function(_playerID, _cathedralLevel, _limit)	
+EMXHookLibrary.SetLimitByEntityObject = function(_entityID, _upgradeLevel, _newLimit, _pointerValues)
 	if not EMXHookLibrary.IsHistoryEdition then
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetCathedral(_playerID)), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("756"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_cathedralLevel), BigNum.new("4"))), _limit)
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new(_pointerValues[1]))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _newLimit)
 	else
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetCathedral(_playerID)), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("680"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_cathedralLevel), BigNum.new("4"))), _limit)
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), BigNum.new("128"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new(_pointerValues[2]))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _newLimit)
 	end
 end
 
-EMXHookLibrary.SetSoldierLimit = function(_playerID, _castleLevel, _limit)	
-	if not EMXHookLibrary.IsHistoryEdition then
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetHeadquarters(_playerID)), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("788"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_castleLevel), BigNum.new("4"))), _limit)
-	else
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(Logic.GetHeadquarters(_playerID)), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("704"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_castleLevel), BigNum.new("4"))), _limit)
-	end
+EMXHookLibrary.SetSermonSettlerLimit = function(_playerID, _cathedralLevel, _newLimit) 
+	EMXHookLibrary.SetLimitByEntityObject(Logic.GetCathedral(_playerID), _cathedralLevel, _newLimit, {"756", "680"})
 end
 
-EMXHookLibrary.SetBuildingTypeOutStockCapacity = function(_buildingID, _upgradeLevel, _limit)	
-	if not EMXHookLibrary.IsHistoryEdition then
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("676"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _limit)
-	else
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("612"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _limit)
-	end
+EMXHookLibrary.SetSoldierLimit = function(_playerID, _castleLevel, _newLimit)	
+	EMXHookLibrary.SetLimitByEntityObject(Logic.GetHeadquarters(_playerID), _castleLevel, _newLimit, {"788", "704"})
+end
+
+EMXHookLibrary.SetBuildingTypeOutStockCapacity = function(_buildingID, _upgradeLevel, _newLimit)	
+	EMXHookLibrary.SetLimitByEntityObject(_buildingID, _upgradeLevel, _newLimit, {"676", "612"})
 end
 
 EMXHookLibrary.SetBuildingFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
