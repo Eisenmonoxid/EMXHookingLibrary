@@ -3,6 +3,9 @@ A work-in-progress Hook for the game "The Settlers 6" and "The Settlers 6: Histo
 
 Uses the "BigNum.lua" library. Special thanks to the authors!
 
+## Usage
+Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAddressEntity()" and after that, you can use the exported methods however you like.
+
 ## Features
 ```
 EMXHookLibrary.SetTerritoryGoldCostByIndex(_arrayIndex, _price)
@@ -68,5 +71,10 @@ EMXHookLibrary.SetBuildingInStockGood(_buildingID, _newGood)
 -> Setzt eine neue Ware als InStock eines Gebäudes.
 
 EMXHookLibrary.SetBuildingTypeOutStockProduct(_buildingID, _newGood)
--> Setzt eine neue Ware als OutStock eines Gebäudes.
+-> Setzt eine neue Ware als OutStock eines Gebäudetyps.
+
+EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource, _amount)
+-> Setzt das benötigte Produktionsgut einer Ware und/oder deren benötigte Menge. (zB Goods.G_Carcass -> Goods.G_Sausage)
+Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 Weizen für 1 Brot, 2 Stein für 1 Besen usw.)
 ```
+When errors occur, please notify me so i can fix them! ;)
