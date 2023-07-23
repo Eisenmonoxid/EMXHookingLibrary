@@ -57,11 +57,11 @@ EMXHookLibrary.SetSoldierLimit(_playerID, _castleLevel, _limit)
 -> Setzt das Limit an Soldaten per Burgausbaulevel. (Normal: 25, 43, 61, 91)
 
 EMXHookLibrary.SetBuildingTypeOutStockCapacity(_buildingID, _upgradeLevel, _limit)	
--> Setzt den maximalen Outstock eines Gebäudetyps basierend auf dessen Ausbaulevel. (Normal: 3, 6, 9 oder nur 9).
+-> Setzt den maximalen OutStock eines Gebäudetyps basierend auf dessen Ausbaulevel. (Normal: 3, 6, 9 oder nur 9).
 ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetMaxBuildingStockSize betrifft dies hier neu errichtete Gebäude eines Typs!
 
 EMXHookLibrary.SetMaxStorehouseStockSize(_storehouseID, _maxStockSize)
--> Setzt den maximalen Outstock des Lagerhauses.
+-> Setzt den maximalen OutStock des Lagerhauses.
 
 EMXHookLibrary.SetMaxBuildingStockSize(_buildingID, _maxStockSize)
 -> Setzt den maximalen Outstock eines Gebäudes.
@@ -76,5 +76,9 @@ EMXHookLibrary.SetBuildingTypeOutStockProduct(_buildingID, _newGood)
 EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource, _amount)
 -> Setzt das benötigte Produktionsgut einer Ware und/oder deren benötigte Menge. (zB Goods.G_Carcass -> Goods.G_Sausage)
 Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 Weizen für 1 Brot, 2 Stein für 1 Besen usw.)
+
+EMXHookLibrary.ToggleDEBUGMode(_magicWord)
+-> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren. (Eventuell für LuaDebugger Kompatibilität benötigt).
+_magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden.
 ```
 When errors occur, please notify me so i can fix them! ;)
