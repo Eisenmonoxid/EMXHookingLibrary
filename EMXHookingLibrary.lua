@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.0.8 - 22.07.2023 03:15 - Eisenmonoxid",
+	CurrentVersion = "1.0.9 - 23.07.2023 05:11 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -680,6 +680,27 @@ EMXHookLibrary = {
 
 	HelperFunctions = {}
 };
+
+EMXHookLibrary.ToggleDEBUGMode = function(_magicWord)
+	if not EMXHookLibrary.IsHistoryEdition then 
+		local Word = EMXHookLibrary.GetValueAtPointer(BigNum.new("11190056"))
+		Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
+		Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
+		EMXHookLibrary.SetValueAtPointer(BigNum.new("11190056"), _magicWord)
+		return;
+	end
+
+	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
+	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+
+	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+	
+	local Word = EMXHookLibrary.GetValueAtPointer(LowestDigit)
+	Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
+	Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
+
+	EMXHookLibrary.SetValueAtPointer(LowestDigit, _magicWord)
+end
 
 EMXHookLibrary.SetBuildingTypeOutStockProduct = function(_buildingID, _newGood)
 	local HEValues = {"352", "4", "8", "20", "20", "128", "564"}
@@ -720,6 +741,7 @@ end
 EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
 	local HEValues = {"352", "4", "8", "20", "18"}
 	local OVValues = {"364", "4", "8", "16", "24"}
+	local SharedIdentifier = BigNum.new("1501117341")
 		
 	local Value
 	if not EMXHookLibrary.IsHistoryEdition then 
@@ -728,12 +750,14 @@ EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(OVValues[2]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+		
+		local CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("12"))))
+		while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
+			Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
+			Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+			CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("12"))))
+		end
+		
 		Value = BigNum.mt.add(Value, BigNum.new(OVValues[4]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(OVValues[5]))
@@ -743,12 +767,14 @@ EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(HEValues[2]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(HEValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(HEValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(HEValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+		
+		local CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("16"))))
+		while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
+			Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
+			Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+			CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("16"))))
+		end
+		
 		Value = BigNum.mt.add(Value, BigNum.new(HEValues[4]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(HEValues[5]))
@@ -793,7 +819,8 @@ end
 EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize)
 	local HEValues = {"352", "4", "8", "20", "68"}
 	local OVValues = {"364", "4", "8", "16", "76"}
-		
+	local SharedIdentifier = BigNum.new("625443837")
+
 	local Value
 	if not EMXHookLibrary.IsHistoryEdition then 
 		Value = BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_storehouseID), BigNum.new(OVValues[1]))
@@ -801,10 +828,14 @@ EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(OVValues[2]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+		
+		local CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("12"))))
+		while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
+			Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
+			Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+			CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("12"))))
+		end
+
 		Value = BigNum.mt.add(Value, BigNum.new(OVValues[4]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(OVValues[5]))
@@ -813,10 +844,14 @@ EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(HEValues[2]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(HEValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		Value = BigNum.mt.add(Value, BigNum.new(HEValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+		
+		local CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("16"))))
+		while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
+			Value = BigNum.mt.add(Value, BigNum.new(OVValues[3]))
+			Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+			CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("16"))))
+		end
+		
 		Value = BigNum.mt.add(Value, BigNum.new(HEValues[4]))
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 		Value = BigNum.mt.add(Value, BigNum.new(HEValues[5]))
@@ -1102,7 +1137,7 @@ EMXHookLibrary.InitAddressEntity = function()
 	end
 	EMXHookLibrary.WasInitialized = true
 	
-	Framework.WriteToLog("EMXHookLibrary: Initialization successful! IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition))
+	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. ". IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition)..".")
 	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.GlobalHeapStart)..". AddressEntity ID: "..tostring(EMXHookLibrary.GlobalAddressEntity)..".")
 end
 
