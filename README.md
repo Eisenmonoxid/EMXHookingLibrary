@@ -50,21 +50,25 @@ EMXHookLibrary.SetCathedralCollectAmount(_newAmount)
 EMXHookLibrary.SetFireHealthDecreasePerSecond(_newAmount)
 -> Setzt den Schaden, welches Feuer in der Sekunde anrichtet. (Normal: 5)
 
-EMXHookLibrary.SetSermonSettlerLimit(_playerID, _cathedralLevel, _limit)
+EMXHookLibrary.SetSermonSettlerLimit(_playerID, _upgradeLevel, _limit)
 -> Setzt das Limit an Siedlern in der Predigt per Kathedralenausbaulevel. (Normal: 10, 15, 30, 60)    
 
-EMXHookLibrary.SetSoldierLimit(_playerID, _castleLevel, _limit)    
+EMXHookLibrary.SetSoldierLimit(_playerID, _upgradeLevel, _limit)    
 -> Setzt das Limit an Soldaten per Burgausbaulevel. (Normal: 25, 43, 61, 91)
 
 EMXHookLibrary.SetBuildingTypeOutStockCapacity(_buildingID, _upgradeLevel, _limit)	
 -> Setzt den maximalen OutStock eines Gebäudetyps basierend auf dessen Ausbaulevel. (Normal: 3, 6, 9 oder nur 9).
 ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetMaxBuildingStockSize betrifft dies hier neu errichtete Gebäude eines Typs!
 
+EMXHookLibrary.SetStoreHouseOutStockCapacity(_playerID, _upgradeLevel, _newLimit)
+-> Setzt den maximalen OutStock des Lagerhauses per Ausbaulevel.
+ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetMaxStorehouseStockSize betrifft dies hier neu erstellte Gebäude eines Typs!
+
 EMXHookLibrary.SetMaxStorehouseStockSize(_storehouseID, _maxStockSize)
 -> Setzt den maximalen OutStock des Lagerhauses.
 
 EMXHookLibrary.SetMaxBuildingStockSize(_buildingID, _maxStockSize)
--> Setzt den maximalen Outstock eines Gebäudes.
+-> Setzt den maximalen OutStock eines Gebäudes.
 ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetBuildingTypeOutStockCapacity betrifft dies hier einzelne Gebäude!
 
 EMXHookLibrary.SetBuildingInStockGood(_buildingID, _newGood)
