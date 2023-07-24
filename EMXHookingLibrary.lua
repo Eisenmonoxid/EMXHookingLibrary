@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.0.9 - 23.07.2023 23:04 - Eisenmonoxid",
+	CurrentVersion = "1.0.9 - 24.07.2023 05:55 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -968,16 +968,20 @@ EMXHookLibrary.SetLimitByEntityObject = function(_entityID, _upgradeLevel, _newL
 	end
 end
 
-EMXHookLibrary.SetSermonSettlerLimit = function(_playerID, _cathedralLevel, _newLimit) 
-	EMXHookLibrary.SetLimitByEntityObject(Logic.GetCathedral(_playerID), _cathedralLevel, _newLimit, {"756", "680"})
+EMXHookLibrary.SetSermonSettlerLimit = function(_playerID, _upgradeLevel, _newLimit) 
+	EMXHookLibrary.SetLimitByEntityObject(Logic.GetCathedral(_playerID), _upgradeLevel, _newLimit, {"756", "680"})
 end
 
-EMXHookLibrary.SetSoldierLimit = function(_playerID, _castleLevel, _newLimit)	
-	EMXHookLibrary.SetLimitByEntityObject(Logic.GetHeadquarters(_playerID), _castleLevel, _newLimit, {"788", "704"})
+EMXHookLibrary.SetSoldierLimit = function(_playerID, _upgradeLevel, _newLimit)	
+	EMXHookLibrary.SetLimitByEntityObject(Logic.GetHeadquarters(_playerID), _upgradeLevel, _newLimit, {"788", "704"})
 end
 
 EMXHookLibrary.SetBuildingTypeOutStockCapacity = function(_buildingID, _upgradeLevel, _newLimit)	
 	EMXHookLibrary.SetLimitByEntityObject(_buildingID, _upgradeLevel, _newLimit, {"676", "612"})
+end
+
+EMXHookLibrary.SetStoreHouseOutStockCapacity = function(_playerID, _upgradeLevel, _newLimit)	
+	EMXHookLibrary.SetLimitByEntityObject(Logic.GetStoreHouse(_playerID), _upgradeLevel, _newLimit, {"676", "612"})
 end
 
 EMXHookLibrary.SetBuildingFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
