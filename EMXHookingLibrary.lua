@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.0.9 - 24.07.2023 05:55 - Eisenmonoxid",
+	CurrentVersion = "1.1.0 - 30.07.2023 14:44 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -680,6 +680,34 @@ EMXHookLibrary = {
 
 	HelperFunctions = {}
 };
+
+EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
+	local Main = EMXHookLibrary.GetCGlobalsBaseEx()
+	Main = BigNum.mt.add(Main, BigNum.new("108"))
+	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+	
+	if not EMXHookLibrary.IsHistoryEdition then
+		Main = BigNum.mt.add(Main, BigNum.new("332"))
+		Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+	else
+		Main = BigNum.mt.add(Main, BigNum.new("328"))
+		Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+	end
+
+	local ColorStringHex = ""
+	for i = 1, #_rgb, 1 do
+		ColorStringHex = ColorStringHex .. string.format("%0x", _rgb[i])
+	end
+	
+	local Index = _playerID * 4
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, BigNum.new(Index)), tonumber("0x" .. ColorStringHex))
+	
+	Logic.ExecuteInLuaLocalState([[
+        Display.UpdatePlayerColors()
+        GUI.RebuildMinimapTerrain()
+        GUI.RebuildMinimapTerritory()
+    ]]);
+end
 
 EMXHookLibrary.ToggleDEBUGMode = function(_magicWord)
 	if not EMXHookLibrary.IsHistoryEdition then 
@@ -911,6 +939,7 @@ EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.
 EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198560", 2593, {1, 6, 7, 8}) end
 EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", 16529, {0, 0, 1, 8}) end
 EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198552", 39, {0, 0, 1, 8}) end
+EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetGlobalSingletonClass("11674352", 774921, {1, 4, 5, 8}) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local HEValues = {"632", "636", "640", "644", "648"}
