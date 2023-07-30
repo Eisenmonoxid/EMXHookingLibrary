@@ -84,5 +84,8 @@ Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 W
 EMXHookLibrary.ToggleDEBUGMode(_magicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren. (Eventuell für LuaDebugger Kompatibilität benötigt).
 _magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden.
+
+EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
+-> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein.
 ```
 When errors occur, please notify me so i can fix them! ;)
