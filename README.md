@@ -1,10 +1,10 @@
 # EMXHookingLibrary
-A work-in-progress Hook for the game "The Settlers 6" and "The Settlers 6: History Edition".
+A work-in-progress Hook for the game "The Settlers 6" and "The Settlers 6: History Edition". Will very likely never be truly finished ;)
 
 Uses the "BigNum.lua" library. Special thanks to the authors!
 
 ## Usage
-Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAddressEntity()" and after that, you can use the exported methods however you like.
+Include the lua script file "EMXHookingLibrary.lua" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAddressEntity()" and after that, you can use the exported methods however you like.
 
 ## Features
 ```
@@ -35,7 +35,7 @@ EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 EMXHookLibrary.SetBuildingFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
 -> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn das Gebäude bereits zwei Kosteneinträge im Originalspiel hat. Ansonsten sollte das Baukostensystem für die zweite Ware verwendet werden.
 
-EMXHookLibrary.SetEntityTypeMaxHealth(_entityID, _newMaxHealth)
+EMXHookLibrary.SetEntityTypeMaxHealth(_entityType, _newMaxHealth)
 -> Setzt die maximalen Lebenspunkte (HP) eines Entitätentyps.
 
 EMXHookLibrary.SetBuildingKnockDownCompensation(_percent)
