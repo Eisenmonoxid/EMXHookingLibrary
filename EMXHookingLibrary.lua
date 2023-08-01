@@ -931,21 +931,19 @@ EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount = function(_goodType, _requi
 	end
 end
 
-EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityID, _newMaxHealth)
-	local EntityObject = EMXHookLibrary.CalculateEntityIDToObject(_entityID)
+EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
 	local ObjectValue = EMXHookLibrary.GetBuildingInformationStructure()
+	local EntityObject = BigNum.new(_entityType)
 	
-	if not EMXHookLibrary.IsHistoryEdition then 
-		EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("24"))))
+	if not EMXHookLibrary.IsHistoryEdition then 	
 		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("28"))))
-
 		EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))
+		
 		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("36")), _newMaxHealth)
 	else
-		EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("24"))))
 		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("24"))))
-
 		EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))
+		
 		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("36")), _newMaxHealth)
 	end
 end
