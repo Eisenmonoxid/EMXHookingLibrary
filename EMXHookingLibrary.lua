@@ -682,26 +682,42 @@ EMXHookLibrary = {
 };
 
 EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
-	local Main = EMXHookLibrary.GetCGlobalsBaseEx()
-	Main = BigNum.mt.add(Main, BigNum.new("108"))
+	local Index = _playerID * 4
+	local ColorStringHex = ""
+	
+	for i = 1, #_rgb, 1 do
+		ColorStringHex = string.format("%0x", _rgb[i]) .. ColorStringHex
+	end
+
+	local GlobalsBase = EMXHookLibrary.GetCGlobalsBaseEx()
+	local Main = BigNum.mt.add(GlobalsBase, BigNum.new("108"))
 	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+	
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, BigNum.new(Index)), tonumber("0x" .. ColorStringHex))
 	
 	if not EMXHookLibrary.IsHistoryEdition then
 		Main = BigNum.mt.add(Main, BigNum.new("332"))
-		Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
 	else
 		Main = BigNum.mt.add(Main, BigNum.new("328"))
-		Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
-	end
-
-	local ColorStringHex = ""
-	for i = 1, #_rgb, 1 do
-		ColorStringHex = ColorStringHex .. string.format("%0x", _rgb[i])
 	end
 	
-	local Index = _playerID * 4
+	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+
 	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, BigNum.new(Index)), tonumber("0x" .. ColorStringHex))
 	
+	Main = BigNum.mt.add(GlobalsBase, BigNum.new("20"))
+	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+	
+	if not EMXHookLibrary.IsHistoryEdition then
+		Main = BigNum.mt.add(Main, BigNum.new("176"))
+	else
+		Main = BigNum.mt.add(Main, BigNum.new("172"))
+	end
+	
+	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+	
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, BigNum.new(Index)), tonumber("0x" .. ColorStringHex))
+
 	Logic.ExecuteInLuaLocalState([[
         Display.UpdatePlayerColors()
         GUI.RebuildMinimapTerrain()
