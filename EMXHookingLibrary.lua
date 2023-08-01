@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.1.0 - 30.07.2023 14:44 - Eisenmonoxid",
+	CurrentVersion = "1.1.0 - 01.08.2023 13:20 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
