@@ -81,7 +81,7 @@ EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource
 -> Setzt das benötigte Produktionsgut einer Ware und/oder deren benötigte Menge. (zB Goods.G_Carcass -> Goods.G_Sausage)
 Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 Weizen für 1 Brot, 2 Stein für 1 Besen usw.)
 
-EMXHookLibrary.ToggleDEBUGMode(_magicWord)
+EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren. (Eventuell für LuaDebugger Kompatibilität benötigt).
 _magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden.
 
