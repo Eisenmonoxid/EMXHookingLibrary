@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.0 - 27.08.2023 20:12 - Eisenmonoxid",
+	CurrentVersion = "1.2.2 - 30.08.2023 00:46 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -676,7 +676,7 @@ EMXHookLibrary = {
 	GlobalVTableValue = 0,
 	
 	IsHistoryEdition = false,
-	IsHistoryEditionNonSteam = false,
+	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
 	WasInitialized = false,
 
 	HelperFunctions = {}
@@ -954,24 +954,12 @@ EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
 	end
 end
 
-EMXHookLibrary.GetCEntityManagerStructure = function() 
-	return EMXHookLibrary.GetGlobalSingletonClass("11199488", 85, {1, 4, 5, 8}, "20436944") 
-end
-EMXHookLibrary.GetPlayerInformationStructure = function() 
-	return EMXHookLibrary.GetGlobalSingletonClass("11198716", 1601, {1, 2, 3, 8}, "20448584") 
-end
-EMXHookLibrary.GetBuildingInformationStructure = function() 
-	return EMXHookLibrary.GetGlobalSingletonClass("11198560", 2593, {1, 6, 7, 8}, "20448624") 
-end
-EMXHookLibrary.GetGoodTypeRequirementsStructure = function() 
-	return EMXHookLibrary.GetGlobalSingletonClass("11198636", 16529, {0, 0, 1, 8}, "20448504") 
-end
-EMXHookLibrary.GetTSlotCGameLogicStructure = function() 
-	return EMXHookLibrary.GetGlobalSingletonClass("11198552", 39, {0, 0, 1, 8}, "20448620") 
-end
-EMXHookLibrary.GetCGlobalsBaseEx = function() 
-	return EMXHookLibrary.GetGlobalSingletonClass("11674352", 774921, {1, 4, 5, 8}, "20374616") 
-end
+EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end -- Done
+EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end -- Done
+EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end -- Done
+EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", {16529, 0, 0, 1, 8}, {30410, 1, 6, 7, 8}) end -- Done
+EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end -- Done
+EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetGlobalSingletonClass("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end -- Done
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local HEValues = {"632", "636", "640", "644", "648"}
@@ -1077,15 +1065,22 @@ end
 
 -- Hooking Utility Methods --
 
-EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _lowestDigit, _hexSplitChars, _nonSteamHEPointer)
+EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ubiHEChars)
 	if not EMXHookLibrary.IsHistoryEdition then 
 		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(_ovPointer)));
 	end
 	
-	if EMXHookLibrary.IsHistoryEditionNonSteam == true and _nonSteamHEPointer ~= nil then
-		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(_nonSteamHEPointer)));
+	local _lowestDigit = 0
+	local _hexSplitChars = {}
+	
+	if EMXHookLibrary.HistoryEditionVariant == 1 then -- Steam HE
+		_lowestDigit = _steamHEChars[1]
+		_hexSplitChars = {_steamHEChars[2], _steamHEChars[3], _steamHEChars[4], _steamHEChars[5]}
+	else -- Ubi Connect HE
+		_lowestDigit = _ubiHEChars[1]
+		_hexSplitChars = {_ubiHEChars[2], _ubiHEChars[3], _ubiHEChars[4], _ubiHEChars[5]}
 	end
-
+	
 	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 
@@ -1199,19 +1194,34 @@ EMXHookLibrary.InitAddressEntity = function()
 	if (Network.IsNATReady == nil) then
 		EMXHookLibrary.FindOffsetValue(-81, 36)
 		EMXHookLibrary.IsHistoryEdition = false
-		EMXHookLibrary.IsHistoryEditionNonSteam = false
+		EMXHookLibrary.HistoryEditionVariant = 0
 	else
 		EMXHookLibrary.FindOffsetValue(-78, 34)
 		EMXHookLibrary.IsHistoryEdition = true
-		EMXHookLibrary.IsHistoryEditionNonSteam = (EMXHookLibrary.GlobalVTableValue == tonumber("17279880"))
+		EMXHookLibrary.HistoryEditionVariant = EMXHookLibrary.GetHistoryEditionVariant()
 	end
 	EMXHookLibrary.WasInitialized = true
 	
-	Framework.WriteToLog("...")
-	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. ". IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition)..".")
+	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. ". IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition)..". HistoryEditionVariant: "..tostring(EMXHookLibrary.HistoryEditionVariant)..".")
 	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.GlobalHeapStart)..". AddressEntity ID: "..tostring(EMXHookLibrary.GlobalAddressEntity)..".")
-	Framework.WriteToLog("EMXHookLibrary: Is Non-STEAM History Edition: "..tostring(EMXHookLibrary.IsHistoryEditionNonSteam)..". VTablePointerValue: "..tostring(EMXHookLibrary.GlobalVTableValue))
-	Framework.WriteToLog("...")
+end
+
+EMXHookLibrary.GetHistoryEditionVariant = function()
+	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
+	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+
+	local Digit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("105"))))
+	local HexString = string.format("%x", BigNum.mt.tostring(Digit))
+
+	HexString = string.sub(HexString, 3, 8)
+	
+	Framework.WriteToLog("EMXHookLibrary: Variant -> Found "..HexString.." - Expected: 92ff")
+	
+	if HexString == "92ff" then
+		return 1
+	else
+		return 2
+	end
 end
 
 -- Some Helpers --
