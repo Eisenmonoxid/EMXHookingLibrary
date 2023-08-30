@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.2 - 30.08.2023 00:46 - Eisenmonoxid",
+	CurrentVersion = "1.2.3 - 30.08.2023 23:27 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -740,8 +740,13 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 
 	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+	
+	local LowestDigit
+	if EMXHookLibrary.HistoryEditionVariant == 1 then
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+	else
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+	end
 	
 	local Word = EMXHookLibrary.GetValueAtPointer(LowestDigit)
 	Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
@@ -954,12 +959,12 @@ EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
 	end
 end
 
-EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end -- Done
-EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end -- Done
-EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end -- Done
-EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", {16529, 0, 0, 1, 8}, {30410, 1, 6, 7, 8}) end -- Done
-EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end -- Done
-EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetGlobalSingletonClass("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end -- Done
+EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
+EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
+EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
+EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 5, 6, 7}) end
+EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
+EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetGlobalSingletonClass("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local HEValues = {"632", "636", "640", "644", "648"}
