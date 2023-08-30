@@ -745,7 +745,8 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 	if EMXHookLibrary.HistoryEditionVariant == 1 then
 		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
 	else
-		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+		--LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+		return; -- TODO!
 	end
 	
 	local Word = EMXHookLibrary.GetValueAtPointer(LowestDigit)
