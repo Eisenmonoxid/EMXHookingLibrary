@@ -1,5 +1,5 @@
 --[[
-	-> I want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb for his help!
+	-> I want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb and Gitti1962 for their help!
 	-> Also thanks to the authors of the "Big numbers for Lua" - Library!
 ]]--
 
@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.3 - 30.08.2023 23:27 - Eisenmonoxid",
+	CurrentVersion = "1.2.4 - 02.09.2023 00:39 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -963,7 +963,7 @@ end
 EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
 EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
 EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
-EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 5, 6, 7}) end
+EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
 EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetGlobalSingletonClass("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
 
