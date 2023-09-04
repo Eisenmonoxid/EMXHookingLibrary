@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.5 - 04.09.2023 05:27 - Eisenmonoxid",
+	CurrentVersion = "1.2.5 - 04.09.2023 18:52 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -1097,6 +1097,7 @@ EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ub
 	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
 	
 	-- Both strings need to consist of 8 digits, otherwise trailing zeroes got lost, so we need to re-add them
+	-- TODO: Maybe cache the results from the .text segment once after loading so that it does not get computed every single time you call a function
 	while (string.len(HexString01) < 8) do
 		HexString01 = "0" .. HexString01
 	end
@@ -1231,7 +1232,7 @@ EMXHookLibrary.GetHistoryEditionVariant = function()
 
 	HexString = string.sub(HexString, 3, 8)
 	
-	Framework.WriteToLog("EMXHookLibrary: Variant -> Found "..HexString.." - Expected: 92ff")
+	Framework.WriteToLog("EMXHookLibrary: History Edition Variant -> Found "..HexString.." - Expected: 92ff")
 	
 	if HexString == "92ff" then
 		return 1
