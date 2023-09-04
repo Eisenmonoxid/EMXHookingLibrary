@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.4 - 02.09.2023 00:39 - Eisenmonoxid",
+	CurrentVersion = "1.2.5 - 04.09.2023 05:27 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -1096,10 +1096,20 @@ EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ub
 	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
 	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
 	
+	-- Both strings need to consist of 8 digits, otherwise trailing zeroes got lost, so we need to re-add them
+	while (string.len(HexString01) < 8) do
+		HexString01 = "0" .. HexString01
+	end
+	while (string.len(HexString02) < 8) do
+		HexString02 = "0" .. HexString02
+	end
+	
 	HexString01 = string.sub(HexString01, _hexSplitChars[1], _hexSplitChars[2])
 	HexString02 = string.sub(HexString02, _hexSplitChars[3], _hexSplitChars[4])
 
 	local DereferenceString = HexString02 .. HexString01	
+	Framework.WriteToLog("EMXHookLibrary: Going to deref Hexstring: "..DereferenceString..". OVPointer: ".._ovPointer)
+	
 	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. DereferenceString))));
 end
 
