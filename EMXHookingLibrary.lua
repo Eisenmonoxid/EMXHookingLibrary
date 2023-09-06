@@ -668,7 +668,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.5 - 04.09.2023 18:52 - Eisenmonoxid",
+	CurrentVersion = "1.2.6 - 06.09.2023 18:57 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -681,6 +681,22 @@ EMXHookLibrary = {
 
 	HelperFunctions = {}
 };
+
+EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers = function(_buildingID, _maxWorkers)
+	if not EMXHookLibrary.IsHistoryEdition then
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new("128"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("288")), _maxWorkers)
+	else
+		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new("128"))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("256")), _maxWorkers)
+	end
+end
+
+EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
+	local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_settlerID), BigNum.new("84"))))
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(LimitPointer))		
+	EMXHookLibrary.SetValueAtPointer(LimitPointer, _buildingID)
+end
 
 EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
 	local Index = _playerID * 4
