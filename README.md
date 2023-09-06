@@ -66,6 +66,7 @@ ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetMaxStorehouseStockSize betrifft dies 
 
 EMXHookLibrary.SetMaxStorehouseStockSize(_storehouseID, _maxStockSize)
 -> Setzt den maximalen OutStock des Lagerhauses.
+ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetStoreHouseOutStockCapacity betrifft dies hier einzelne Lagerhäuser!
 
 EMXHookLibrary.SetMaxBuildingStockSize(_buildingID, _maxStockSize)
 -> Setzt den maximalen OutStock eines Gebäudes.
@@ -83,9 +84,16 @@ Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 W
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren. (Eventuell für LuaDebugger Kompatibilität benötigt).
-_magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden.
+_magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden. FUNKTIONIERT DERZEIT NUR IN DER STEAM-HE!
 
 EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
 -> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein.
+
+EMXHookLibrary.SetSettlersWorkBuilding(_settlerID, _buildingID)
+-> Setzt das Arbeitsgebäude eines Siedlers. Dadurch ist es möglich, mehr als 3 Siedler an einem Gebäude beschäftigt zu haben.
+(Bei mehr als 3 Siedlern sollte zuvor EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers entsprechend gesetzt werden)
+
+EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers(_buildingID, _maxWorkers)
+-> Setzt die neue Maximalanzahl an Arbeitern eines Gebäudes.
 ```
 When errors occur, please notify me so i can fix them! ;)
