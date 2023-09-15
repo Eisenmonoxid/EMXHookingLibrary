@@ -9,7 +9,7 @@ Include the lua script file "EMXHookingLibrary.lua" in your map folder and load 
 ## Features
 ```
 EMXHookLibrary.SetTerritoryGoldCostByIndex(_arrayIndex, _price)
--> Setzt neue Goldkosten für Territorien, von Index 0 - 5 (0 = Low, 5 = Very Expensive).
+-> Setzt neue Goldkosten für Territorien, von Index 1 - 5 (1 = Low, 5 = Very Expensive).
 
 EMXHookLibrary.SetSettlerIllnessCount(_newCount)
 -> Setzt die Siedlermenge, ab derer Krankheiten ausbrechen können. (Normal: 151)
