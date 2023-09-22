@@ -4,7 +4,7 @@ A work-in-progress Hook for the game "The Settlers 6" and "The Settlers 6: Histo
 Uses the "BigNum.lua" library. Special thanks to the authors!
 
 ## Usage
-Include the lua script file "EMXHookingLibrary.lua" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAddressEntity()" and after that, you can use the exported methods however you like.
+Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAdressEntity()" and after that, you can use the exported methods however you like.
 
 ## Features
 ```
