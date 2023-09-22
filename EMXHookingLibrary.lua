@@ -1,8 +1,3 @@
---[[
-	-> I want to thank Kantelo and Zedeg for creating the original SCV for The Settlers: Heritage of Kings, and mcb and Gitti1962 for their help!
-	-> Also thanks to the authors of the "Big numbers for Lua" - Library!
-]]--
-
 -- BigNum - Code --
 --%%%%%%%%  Constants used in the file  %%%%%%%%--
 RADIX = 10^7;
@@ -668,7 +663,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.6 - 06.09.2023 18:57 - Eisenmonoxid",
+	CurrentVersion = "1.2.7 - 22.09.2023 00:59 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -679,7 +674,8 @@ EMXHookLibrary = {
 	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
 	WasInitialized = false,
 
-	HelperFunctions = {}
+	HelperFunctions = {},
+	CachedClassPointers = {}
 };
 
 EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers = function(_buildingID, _maxWorkers)
@@ -1092,6 +1088,10 @@ EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ub
 		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(_ovPointer)));
 	end
 	
+	if EMXHookLibrary.CachedClassPointers[_ovPointer] ~= nil then
+		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. EMXHookLibrary.CachedClassPointers[_ovPointer]))));
+	end
+	
 	local _lowestDigit = 0
 	local _hexSplitChars = {}
 	
@@ -1113,7 +1113,6 @@ EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ub
 	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
 	
 	-- Both strings need to consist of 8 digits, otherwise trailing zeroes got lost, so we need to re-add them
-	-- TODO: Maybe cache the results from the .text segment once after loading so that it does not get computed every single time you call a function
 	while (string.len(HexString01) < 8) do
 		HexString01 = "0" .. HexString01
 	end
@@ -1126,6 +1125,8 @@ EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ub
 
 	local DereferenceString = HexString02 .. HexString01	
 	Framework.WriteToLog("EMXHookLibrary: Going to deref Hexstring: "..DereferenceString..". OVPointer: ".._ovPointer)
+	
+	EMXHookLibrary.CachedClassPointers[_ovPointer] = DereferenceString
 	
 	return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(tonumber("0x" .. DereferenceString))));
 end
@@ -1222,7 +1223,17 @@ EMXHookLibrary.FindOffsetValue = function(_VTableOffset, _PointerOffset)
 	EMXHookLibrary.GlobalVTableValue = VTablePointerValue
 end
 
-EMXHookLibrary.InitAddressEntity = function()
+EMXHookLibrary.InitAdressEntity = function() -- Entry Point
+	if (nil == string.find(Framework.GetProgramVersion(), "1.71")) then
+		EMXHookLibrary.WasInitialized = false
+		Framework.WriteToLog("EMXHookLibrary: Patch 1.71 was NOT found! Aborting ...")
+		assert(false, "EMXHookLibrary: Patch 1.71 was NOT found! Aborting ...")
+		return;
+	end
+	
+	for Key, Value in pairs(EMXHookLibrary.CachedClassPointers) do
+		EMXHookLibrary.CachedClassPointers[Key] = nil
+	end
 	
 	if (Network.IsNATReady == nil) then
 		EMXHookLibrary.FindOffsetValue(-81, 36)
@@ -1236,7 +1247,7 @@ EMXHookLibrary.InitAddressEntity = function()
 	EMXHookLibrary.WasInitialized = true
 	
 	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. ". IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition)..". HistoryEditionVariant: "..tostring(EMXHookLibrary.HistoryEditionVariant)..".")
-	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.GlobalHeapStart)..". AddressEntity ID: "..tostring(EMXHookLibrary.GlobalAddressEntity)..".")
+	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.GlobalHeapStart)..". AdressEntity ID: "..tostring(EMXHookLibrary.GlobalAddressEntity)..".")
 end
 
 EMXHookLibrary.GetHistoryEditionVariant = function()
