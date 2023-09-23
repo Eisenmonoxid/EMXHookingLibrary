@@ -95,5 +95,9 @@ EMXHookLibrary.SetSettlersWorkBuilding(_settlerID, _buildingID)
 
 EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers(_buildingID, _maxWorkers)
 -> Setzt die neue Maximalanzahl an Arbeitern eines Gebäudes.
+
+EMXHookLibrary.EditFestivalProperties(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
+->  Verändert einen oder mehrere Parameter der Feste (Aufstiegs- sowie normales Fest). (Nicht benötigte Parameter sind nil).
+Geändert werden können Dauer sowie das Limit der möglichen Partizipierenden.
 ```
 When errors occur, please notify me so i can fix them! ;)
