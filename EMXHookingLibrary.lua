@@ -663,7 +663,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.7 - 22.09.2023 00:59 - Eisenmonoxid",
+	CurrentVersion = "1.2.8 - 23.09.2023 03:07 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -767,6 +767,58 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 
 	if _setNewMagicWord ~= nil then
 		EMXHookLibrary.SetValueAtPointer(LowestDigit, _magicWord)
+	end
+end
+
+EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
+	local CMain = EMXHookLibrary.GetFrameworkCMainStructure()
+	
+	if not EMXHookLibrary.IsHistoryEdition then
+		local CGLUEPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CMain, BigNum.new("504"))))
+		local CGLUEFestivalPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEPropsManager, BigNum.new("44"))))
+		local EGLCFestivalProps = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEFestivalPropsManager, BigNum.new("12"))))
+
+		if _promotionParticipantLimit ~= nil then
+			local ParticipantLimitsPromotion = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("188"))))
+			for i = 0, 12, 4 do
+				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimitsPromotion, BigNum.new(i)), _promotionParticipantLimit)
+			end
+		end
+		if _festivalParticipantLimit ~= nil then
+			local ParticipantLimits = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("72"))))
+			for i = 0, 12, 4 do
+				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimits, BigNum.new(i)), _festivalParticipantLimit)
+			end
+		end
+		if _promotionDuration ~= nil then
+			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("224")), _promotionDuration)
+		end
+		if _festivalDuration ~= nil then
+			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("108")), _festivalDuration)
+		end
+	else
+		local CGLUEPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CMain, BigNum.new("496"))))
+		local CGLUEFestivalPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEPropsManager, BigNum.new("44"))))
+		local EGLCFestivalProps = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEFestivalPropsManager, BigNum.new("8"))))
+
+		if _promotionParticipantLimit ~= nil then
+			local ParticipantLimitsPromotion = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("144"))))
+			for i = 0, 12, 4 do
+				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimitsPromotion, BigNum.new(i)), _promotionParticipantLimit)
+			end
+		end
+		if _festivalParticipantLimit ~= nil then
+			local ParticipantLimits = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("52"))))
+			for i = 0, 12, 4 do
+				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimits, BigNum.new(i)), _festivalParticipantLimit)
+			end
+		end
+		if _promotionDuration ~= nil then
+			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("176")), _promotionDuration)
+		end
+		if _festivalDuration ~= nil then
+			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("84")), _festivalDuration)
+		end
 	end
 end
 
@@ -978,6 +1030,8 @@ EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrar
 EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
 EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetGlobalSingletonClass("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
+EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11158232", {2250717, 0, 0, 1, 8}, {1338624, 0, 0, 1, 8}, true) end
+-- TODO: Test CMain with Ubi Connect HE!
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local HEValues = {"632", "636", "640", "644", "648"}
@@ -1083,7 +1137,7 @@ end
 
 -- Hooking Utility Methods --
 
-EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ubiHEChars)
+EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then 
 		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(_ovPointer)));
 	end
@@ -1094,6 +1148,7 @@ EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ub
 	
 	local _lowestDigit = 0
 	local _hexSplitChars = {}
+	local LowestDigit, HighestDigit
 	
 	if EMXHookLibrary.HistoryEditionVariant == 1 then -- Steam HE
 		_lowestDigit = _steamHEChars[1]
@@ -1105,9 +1160,14 @@ EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ub
 	
 	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	local LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit))))
-	local HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit + 1))))
+	
+	if _subtract ~= nil then
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new(_lowestDigit))))
+		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new(_lowestDigit + 1))))
+	else
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit))))
+		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit + 1))))
+	end
 	
 	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
 	local HexString02 = string.format("%x", BigNum.mt.tostring(HighestDigit))
