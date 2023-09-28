@@ -88,6 +88,7 @@ _magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifi
 
 EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
 -> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein.
+ACHTUNG: Alpha-Kanal muss je nach Farbintensität gesetzt werden, zB bei Weiß: EMXHookLibrary.SetPlayerColorRGB(1, {255,255,255,127})
 
 EMXHookLibrary.SetSettlersWorkBuilding(_settlerID, _buildingID)
 -> Setzt das Arbeitsgebäude eines Siedlers. Dadurch ist es möglich, mehr als 3 Siedler an einem Gebäude beschäftigt zu haben.
