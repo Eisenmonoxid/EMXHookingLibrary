@@ -1024,13 +1024,13 @@ EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
 	end
 end
 
-EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
-EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
-EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
-EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
-EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
-EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetGlobalSingletonClass("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
-EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetGlobalSingletonClass("11158232", {2250717, 0, 0, 1, 8}, {1338624, 0, 0, 1, 8}, true) end
+EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
+EMXHookLibrary.GetPlayerInformationStructure = function() return EMXHookLibrary.GetObjectInstance("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
+EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrary.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
+EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
+EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
+EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
+EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 0, 0, 1, 8}, true) end
 -- TODO: Test CMain with Ubi Connect HE!
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
@@ -1137,7 +1137,7 @@ end
 
 -- Hooking Utility Methods --
 
-EMXHookLibrary.GetGlobalSingletonClass = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
+EMXHookLibrary.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then 
 		return BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.new(_ovPointer)));
 	end
