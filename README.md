@@ -87,8 +87,11 @@ EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 _magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden. FUNKTIONIERT DERZEIT NUR IN DER STEAM-HE!
 
 EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
--> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein.
-ACHTUNG: Alpha-Kanal muss je nach Farbintensität gesetzt werden, zB bei Weiß: EMXHookLibrary.SetPlayerColorRGB(1, {255,255,255,127})
+-> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein. Beispiele:
+(Der Alphakanal muss immer 127 betragen und der erste Eintrag im table sein. 0 muss durch zwei Nullen repräsentiert werden)
+-- EMXHookLibrary.SetPlayerColorRGB(1, {127, 0, 0, 255, 255}) -- Yellow
+-- EMXHookLibrary.SetPlayerColorRGB(1, {127, 253, 112, 0, 0}) -- Dark Blue
+-- EMXHookLibrary.SetPlayerColorRGB(1, {127, 255, 255, 255}) -- White
 
 EMXHookLibrary.SetSettlersWorkBuilding(_settlerID, _buildingID)
 -> Setzt das Arbeitsgebäude eines Siedlers. Dadurch ist es möglich, mehr als 3 Siedler an einem Gebäude beschäftigt zu haben.
