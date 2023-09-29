@@ -663,7 +663,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.8 - 23.09.2023 03:07 - Eisenmonoxid",
+	CurrentVersion = "1.2.9 - 29.09.2023 10:17 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -694,12 +694,15 @@ EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
 	EMXHookLibrary.SetValueAtPointer(LimitPointer, _buildingID)
 end
 
+-- EMXHookLibrary.SetPlayerColorRGB(1, {127, 0, 0, 255, 255}) -- Yellow
+-- EMXHookLibrary.SetPlayerColorRGB(1, {127, 253, 112, 0, 0}) -- Dark Blue
+-- EMXHookLibrary.SetPlayerColorRGB(1, {127, 255, 255, 255}) -- White
 EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
 	local Index = _playerID * 4
 	local ColorStringHex = ""
 	
 	for i = 1, #_rgb, 1 do
-		ColorStringHex = string.format("%0x", _rgb[i]) .. ColorStringHex
+		ColorStringHex = ColorStringHex .. string.format("%0x", _rgb[i])
 	end
 
 	local GlobalsBase = EMXHookLibrary.GetCGlobalsBaseEx()
@@ -1013,15 +1016,12 @@ EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
 	
 	if not EMXHookLibrary.IsHistoryEdition then 	
 		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("28"))))
-		EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))
-		
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("36")), _newMaxHealth)
 	else
 		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("24"))))
-		EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))
-		
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("36")), _newMaxHealth)
 	end
+	
+	EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))	
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("36")), _newMaxHealth)
 end
 
 EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
@@ -1106,32 +1106,23 @@ EMXHookLibrary.SetStoreHouseOutStockCapacity = function(_playerID, _upgradeLevel
 end
 
 EMXHookLibrary.SetBuildingFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
+	local LimitPointer
 	if not EMXHookLibrary.IsHistoryEdition then
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), BigNum.new("28"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), BigNum.new("28"))))
 		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_entityType), BigNum.new("4")))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("144"))))
-		
-		EMXHookLibrary.SetValueAtPointer(LimitPointer, _good)
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("4")), _amount)
-		
-		if _secondGood ~= nil and _secondAmount ~= nil then
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("8")), _secondGood)
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("12")), _secondAmount)
-		end
-		
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("144"))))	
 	else
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), BigNum.new("24"))))
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), BigNum.new("24"))))
 		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_entityType), BigNum.new("4")))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("136"))))
-		
-		EMXHookLibrary.SetValueAtPointer(LimitPointer, _good)
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("4")), _amount)
-		
-		if _secondGood ~= nil and _secondAmount ~= nil then
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("8")), _secondGood)
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("12")), _secondAmount)
-		end
-		
+		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("136"))))		
+	end
+	
+	EMXHookLibrary.SetValueAtPointer(LimitPointer, _good)
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("4")), _amount)
+	
+	if _secondGood ~= nil and _secondAmount ~= nil then
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("8")), _secondGood)
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("12")), _secondAmount)
 	end
 end
 
@@ -1219,7 +1210,7 @@ end
 
 EMXHookLibrary.GetValueAtPointer = function(_Pointer)
 	if not EMXHookLibrary.IsAdressEntityExisting() then
-		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to get value at adress "..BigNum.mt.tostring(_Pointer).." without existing AddressEntity!")
+		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to get value at adress "..BigNum.mt.tostring(_Pointer).." without existing AdressEntity!")
 		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
 		return;
 	end
@@ -1237,7 +1228,7 @@ end
 
 EMXHookLibrary.SetValueAtPointer = function(_Pointer, _Value)
 	if not EMXHookLibrary.IsAdressEntityExisting() then
-		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to set a value at adress "..BigNum.mt.tostring(_Pointer).." without existing AddressEntity!")
+		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to set a value at adress "..BigNum.mt.tostring(_Pointer).." without existing AdressEntity!")
 		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
 		return;
 	end
