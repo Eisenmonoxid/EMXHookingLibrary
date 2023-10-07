@@ -663,7 +663,7 @@ end
 
 -- Here starts the main hook lib code --
 EMXHookLibrary = {
-	CurrentVersion = "1.2.9 - 29.09.2023 10:17 - Eisenmonoxid",
+	CurrentVersion = "1.3.1 - 07.10.2023 19:50 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -677,6 +677,31 @@ EMXHookLibrary = {
 	HelperFunctions = {},
 	CachedClassPointers = {}
 };
+
+EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
+	local WideCharAsMultiByte = EMXHookLibrary.HelperFunctions.ConvertCharToMultiByte(_newString)
+	local CTextSet = EMXHookLibrary.GetCTextSetStructure()
+	CTextSet = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, BigNum.new("4")))
+	
+	local TextSegment
+	local Counter
+	if not EMXHookLibrary.IsHistoryEdition then
+		TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, BigNum.new("24"))))		
+		TextSegment = BigNum.mt.add(TextSegment, BigNum.new(_IDManagerEntryIndex * 28))
+		
+		Counter = 4
+	else
+		TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, BigNum.new("20"))))	
+		TextSegment = BigNum.mt.add(TextSegment, BigNum.new(_IDManagerEntryIndex * 24))
+		
+		Counter = 0
+	end
+	
+	for i = 1, #WideCharAsMultiByte do
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(TextSegment, BigNum.new(Counter)), WideCharAsMultiByte[i])
+		Counter = Counter + 4
+	end
+end
 
 EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers = function(_buildingID, _maxWorkers)
 	if not EMXHookLibrary.IsHistoryEdition then
@@ -1031,7 +1056,8 @@ EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibra
 EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
 EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 0, 0, 1, 8}, true) end
--- TODO: Test CMain with Ubi Connect HE!
+EMXHookLibrary.GetCTextSetStructure = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1803892, 1, 2, 3, 8}) end
+-- TODO: Test CMain and find CTextSet with Ubi Connect HE!
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local HEValues = {"632", "636", "640", "644", "648"}
@@ -1448,5 +1474,25 @@ function EMXHookLibrary.HelperFunctions.BitAnd(a, b)
       b = math.floor(b / 2)
     end
     return result
+end
+
+function EMXHookLibrary.HelperFunctions.ConvertCharToMultiByte(_string)
+	local OutputHexString = "" 
+	local OutputNumbers = {}
+	
+	local CurrentCharacter = 0
+	for i = 1, #_string, 1 do
+		CurrentCharacter = _string:sub(i, i)
+		OutputHexString = "00" .. string.format("%0x", string.byte(CurrentCharacter)) .. OutputHexString
+		
+		if math.fmod(i, 2) == 0 then
+			OutputNumbers[#OutputNumbers + 1] = tonumber("0x" .. OutputHexString)
+			OutputHexString = ""
+		end
+	end
+	
+	OutputNumbers[#OutputNumbers + 1] = 0
+	
+	return OutputNumbers
 end
 --#EOF
