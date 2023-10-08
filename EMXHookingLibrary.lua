@@ -662,8 +662,9 @@ function BigNum.decr( bnum1 )
 end
 
 -- Here starts the main hook lib code --
+
 EMXHookLibrary = {
-	CurrentVersion = "1.3.1 - 07.10.2023 22:12 - Eisenmonoxid",
+	CurrentVersion = "1.3.2 - 08.10.2023 02:33 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -1302,7 +1303,7 @@ EMXHookLibrary.FindOffsetValue = function(_VTableOffset, _PointerOffset)
 	EMXHookLibrary.GlobalVTableValue = VTablePointerValue
 end
 
-EMXHookLibrary.InitAdressEntity = function() -- Entry Point
+EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 	if (nil == string.find(Framework.GetProgramVersion(), "1.71")) then
 		EMXHookLibrary.WasInitialized = false
 		Framework.WriteToLog("EMXHookLibrary: Patch 1.71 was NOT found! Aborting ...")
@@ -1327,6 +1328,11 @@ EMXHookLibrary.InitAdressEntity = function() -- Entry Point
 	
 	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. ". IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition)..". HistoryEditionVariant: "..tostring(EMXHookLibrary.HistoryEditionVariant)..".")
 	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.GlobalHeapStart)..". AdressEntity ID: "..tostring(EMXHookLibrary.GlobalAddressEntity)..".")
+
+	if _useLoadGameOverride then
+		EMXHookLibrary.OverrideSavegameHandling()
+		Framework.WriteToLog("EMXHookLibrary: LoadGame Overwritten!")
+	end
 end
 
 EMXHookLibrary.GetHistoryEditionVariant = function()
@@ -1345,6 +1351,90 @@ EMXHookLibrary.GetHistoryEditionVariant = function()
 	else
 		return 2
 	end
+end
+
+EMXHookLibrary.OverrideSavegameHandling = function()
+	-- This is necessary if you do not want to reset the hooked values at the end of the map
+	Logic.ExecuteInLuaLocalState([[
+		local CurrentLanguage = Network.GetDesiredLanguage()
+		
+		GUI_Window.MainMenuExit = function()
+			Framework.ExitGame()
+		end
+	
+		if InitBottomButtons_ORIG == nil then
+			InitBottomButtons_ORIG = GUI_MissionStatistic.InitBottomButtons;
+		end
+		GUI_MissionStatistic.InitBottomButtons = function()
+			InitBottomButtons_ORIG()
+		
+			local ContainerBottomWidget = "/InGame/MissionStatistic/ContainerBottom"
+			if CurrentLanguage == "de" then
+				XGUIEng.SetText(ContainerBottomWidget .. "/BackMenu", "{center}{@color:255,80,80,255}Spiel Beenden")
+			else
+				XGUIEng.SetText(ContainerBottomWidget .. "/BackMenu", "{center}{@color:255,80,80,255}Exit Game")
+			end
+		end
+
+		GUI_Window.QuickLoad = function() return true end
+		KeyBindings_LoadGame = function() return true end
+
+		if ToggleInGameMenu == nil then
+			ToggleInGameMenu = GUI_Window.ToggleInGameMenu;
+		end
+		GUI_Window.ToggleInGameMenu = function()
+			ToggleInGameMenu()
+		
+			XGUIEng.ShowWidget("/InGame/InGame/MainMenu/Container/QuickLoad", 0)
+		end
+		
+		OpenLoadDialog = function()
+			LoadDialog.Starting = false
+			LockInputForDialog()
+			XGUIEng.ShowWidget(LoadDialog.Widget.Dialog,1)
+			XGUIEng.PushPage(LoadDialog.Widget.Dialog,false)
+
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.FileList)
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.MapList)
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.DateList)
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.TimeList)
+	
+			local Names = Framework.GetSaveGameNamesExEx()
+			local Extension = GetSaveGameExtension()
+			local ID = Names[1]
+			local Count = 2
+			local Entries = #Names
+			
+			Entries = (Entries - 1) / 4
+			LoadDialog.FileId = ID + 1
+
+			for i = 1, Entries do
+				local Name = Names[Count]
+				local Date = Names[Count + 1]
+				local Time = Names[Count + 2]
+				local Map = Tool_GetLocalizedMapName(Names[Count + 3])
+
+				if string.lower(Names[Count + 3]) == string.lower(Framework.GetCurrentMapName()) then
+					local FinalName = string.gsub(Name, Extension, "")
+ 	
+					-- make sure the listboxes are filled from right to left (against the linking order)
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.TimeList, Time)
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.DateList, Date)
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.MapList, Map) 	
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.FileList, FinalName)
+				end
+ 		
+				Count = Count + 4
+			end
+
+			if Game ~= nil then
+				LoadDialog.Backup.Speed = Game.GameTimeGetFactor()
+				Game.GameTimeSetFactor( GUI.GetPlayerID(), 0 )
+			end
+
+			UpdateLoadDialog()
+		end
+	]]);
 end
 
 -- Some Helpers --
