@@ -664,7 +664,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.2 - 08.10.2023 02:33 - Eisenmonoxid",
+	CurrentVersion = "1.3.3 - 08.10.2023 19:57 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -1056,9 +1056,8 @@ EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrar
 EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
 EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
-EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 8, 1, 8}, true) end
-EMXHookLibrary.GetCTextSetStructure = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 8, 1, 8}) end
--- TODO: Test CMain and CTextSet with Ubi Connect HE!
+EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338626, 1, 4, 4, 8}, true) end
+EMXHookLibrary.GetCTextSetStructure = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local HEValues = {"632", "636", "640", "644", "648"}
@@ -1202,9 +1201,7 @@ EMXHookLibrary.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHECha
 	HexString02 = string.sub(HexString02, _hexSplitChars[3], _hexSplitChars[4])
 
 	local DereferenceString = HexString02 .. HexString01	
-	Framework.WriteToLog("EMXHookLibrary: Going to deref Hexstring: "..DereferenceString..". OVPointer: ".._ovPointer)
-	Framework.WriteToLog("EMXHookLibrary: Hexstring01: "..string.format("%x", BigNum.mt.tostring(LowestDigit)))
-	Framework.WriteToLog("EMXHookLibrary: Hexstring02: "..string.format("%x", BigNum.mt.tostring(HighestDigit)))
+	Framework.WriteToLog("EMXHookLibrary: Going to dereference HexString: "..DereferenceString..". OVPointer: ".._ovPointer)
 	
 	EMXHookLibrary.CachedClassPointers[_ovPointer] = DereferenceString
 	
