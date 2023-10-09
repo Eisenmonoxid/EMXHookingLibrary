@@ -664,7 +664,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.3 - 08.10.2023 19:57 - Eisenmonoxid",
+	CurrentVersion = "1.3.4 - 09.10.2023 02:14 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalPointerEntity = 0,
@@ -1056,7 +1056,7 @@ EMXHookLibrary.GetBuildingInformationStructure = function() return EMXHookLibrar
 EMXHookLibrary.GetGoodTypeRequirementsStructure = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
 EMXHookLibrary.GetTSlotCGameLogicStructure = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
-EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338627, 1, 4, 5, 8}, true) end
+EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
 EMXHookLibrary.GetCTextSetStructure = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
@@ -1180,7 +1180,7 @@ EMXHookLibrary.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHECha
 	
 	if _subtract ~= nil then
 		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new(_lowestDigit))))
-		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new(_lowestDigit + 1))))
+		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new(_lowestDigit - 1))))
 	else
 		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit))))
 		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit + 1))))
