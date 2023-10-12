@@ -5,6 +5,7 @@ Uses the "BigNum.lua" library. Special thanks to the authors!
 
 ## Usage
 Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAdressEntity()" and after that, you can use the exported methods however you like.
+
 (If you use the argument EMXHookLibrary.InitAdressEntity(true), you can use the savegame-override and do not have to worry about resetting all values when the player closes the map)
 
 ## Features
@@ -34,7 +35,8 @@ EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 -> Setzt den Faktor, um den der Fog of War in bereits aufgedeckten Gebieten angewandt wird. (Normal: 0.75)
 
 EMXHookLibrary.SetBuildingFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
--> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn das Gebäude bereits zwei Kosteneinträge im Originalspiel hat. Ansonsten sollte das Baukostensystem für die zweite Ware verwendet werden.
+-> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn das Gebäude bereits zwei Kosteneinträge im Originalspiel hat.
+Ansonsten sollte das Baukostensystem für die zweite Ware verwendet werden.
 
 EMXHookLibrary.SetEntityTypeMaxHealth(_entityType, _newMaxHealth)
 -> Setzt die maximalen Lebenspunkte (HP) eines Entitätentyps.
@@ -85,11 +87,12 @@ Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 W
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren. (Eventuell für LuaDebugger Kompatibilität benötigt).
-_magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden. FUNKTIONIERT DERZEIT NUR IN DER STEAM-HE!
+_magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden.
+Funktioniert sowohl in Steam - HE als auch in der Ubisoft - HE.
 
 EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
 -> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein. Beispiele:
-(Der Alphakanal muss immer 127 betragen und der erste Eintrag im table sein. 0 muss durch zwei Nullen repräsentiert werden)
+(Der Alphakanal muss immer 127 betragen und der erste Eintrag im table sein. 0 und einstellige Werte müssen durch zwei Ziffern [bspw. 9 -> 09] repräsentiert werden)
 -- EMXHookLibrary.SetPlayerColorRGB(1, {127, 0, 0, 255, 255}) -- Yellow
 -- EMXHookLibrary.SetPlayerColorRGB(1, {127, 253, 112, 0, 0}) -- Dark Blue
 -- EMXHookLibrary.SetPlayerColorRGB(1, {127, 255, 255, 255}) -- White
