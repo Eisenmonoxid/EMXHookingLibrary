@@ -664,10 +664,9 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.4 - 09.10.2023 02:14 - Eisenmonoxid",
+	CurrentVersion = "1.3.5 - 12.10.2023 22:24 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
-	GlobalPointerEntity = 0,
 	GlobalHeapStart = 0,
 	GlobalVTableValue = 0,
 	
@@ -782,20 +781,35 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 	
-	local LowestDigit
+	local LowestDigit, HighestDigit, DereferenceString
 	if EMXHookLibrary.HistoryEditionVariant == 1 then
-		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+		DereferenceString = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
 	else
-		--LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
-		return; -- TODO!
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("1069996"))))
+		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("1069995"))))
+		LowestDigit = string.format("%x", BigNum.mt.tostring(LowestDigit))
+		HighestDigit = string.format("%x", BigNum.mt.tostring(HighestDigit))
+
+		while (string.len(LowestDigit) < 8) do
+			LowestDigit = "0" .. LowestDigit
+		end
+		while (string.len(HighestDigit) < 8) do
+			HighestDigit = "0" .. HighestDigit
+		end
+	
+		LowestDigit = string.sub(LowestDigit, 1, 6)
+		HighestDigit = string.sub(HighestDigit, 7, 8)
+
+		DereferenceString = HighestDigit .. LowestDigit	
+		DereferenceString = BigNum.new(tonumber("0x" .. DereferenceString))
 	end
 	
-	local Word = EMXHookLibrary.GetValueAtPointer(LowestDigit)
+	local Word = EMXHookLibrary.GetValueAtPointer(DereferenceString)
 	Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 	Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 
 	if _setNewMagicWord ~= nil then
-		EMXHookLibrary.SetValueAtPointer(LowestDigit, _magicWord)
+		EMXHookLibrary.SetValueAtPointer(DereferenceString, _magicWord)
 	end
 end
 
@@ -1280,9 +1294,6 @@ EMXHookLibrary.FindOffsetValue = function(_VTableOffset, _PointerOffset)
 	if EMXHookLibrary.GlobalAddressEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.GlobalAddressEntity) then
 		Logic.DestroyEntity(EMXHookLibrary.GlobalAddressEntity)
 	end
-	if EMXHookLibrary.GlobalPointerEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.GlobalPointerEntity) then
-		Logic.DestroyEntity(EMXHookLibrary.GlobalPointerEntity)
-	end
 
 	local posX, posY = 3000, 3000
 	local AddressEntity = Logic.CreateEntity(Entities.D_X_TradeShip, posX, posY, 0, 0)
@@ -1292,10 +1303,9 @@ EMXHookLibrary.FindOffsetValue = function(_VTableOffset, _PointerOffset)
 	local PointerToVTableValue = BigNum.new(Logic.GetEntityScriptingValue(PointerEntity, _PointerOffset))
 	
 	Logic.SetVisible(AddressEntity, false)
-	Logic.SetVisible(PointerEntity, false)
+	Logic.DestroyEntity(PointerEntity)
 	
 	EMXHookLibrary.GlobalAddressEntity = AddressEntity
-	EMXHookLibrary.GlobalPointerEntity = PointerEntity
 	EMXHookLibrary.GlobalHeapStart = PointerToVTableValue
 	EMXHookLibrary.GlobalVTableValue = VTablePointerValue
 end
