@@ -5,8 +5,9 @@ Uses the "BigNum.lua" library. Special thanks to the authors!
 
 ## Usage
 Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAdressEntity()" and after that, you can use the exported methods however you like.
-
+```
 (If you use the argument EMXHookLibrary.InitAdressEntity(true), you can use the savegame-override and do not have to worry about resetting all values when the player closes the map)
+```
 
 ## Features
 ```
