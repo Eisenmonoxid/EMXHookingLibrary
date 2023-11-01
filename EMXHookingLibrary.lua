@@ -664,7 +664,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.6 - 01.11.2023 21:41 - Eisenmonoxid",
+	CurrentVersion = "1.3.7 - 01.11.2023 22:18 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalHeapStart = 0,
@@ -681,19 +681,21 @@ EMXHookLibrary = {
 -- EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7}) --Red, Green, Blue, Alpha
 EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
 	local SeasonIndizes = {0, 16, 32, 48}
+	local OriginalValues = {}
+	
 	local GlobalsBaseEx = EMXHookLibrary.GetCGlobalsBaseEx()
 	local CurrentPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(GlobalsBaseEx, BigNum.new("128"))))
 
 	local CurrentOffset, CurrentIdentifier, Value
 	if not EMXHookLibrary.IsHistoryEdition then 
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("4"))))
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, BigNum.new("4"))))
 		CurrentOffset = BigNum.new("12")
 	else
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(CurrentPointer))
 		CurrentOffset = BigNum.new("16")
 	end
 	
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, BigNum.new("4"))))
+	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("4"))))
 
 	repeat
 		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, CurrentOffset))
@@ -713,8 +715,31 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
 	
 	local CurrentIndex = SeasonIndizes[_season]
 	for i = 1, 4, 1 do
+		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.HelperFunctions.Int2Float(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new(CurrentIndex))))
 		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Value, BigNum.new(CurrentIndex)), EMXHookLibrary.HelperFunctions.Float2Int(_rgb[i]))
 		CurrentIndex = CurrentIndex + 4
+	end
+	
+	return OriginalValues
+end
+
+-- This requires the map to be restarted after setting the values! 0 -> No Icon!
+EMXHookLibrary.SetEntityTypeMinimapIcon = function(_entityType, _iconIndex)
+	local ObjectValue = EMXHookLibrary.GetBuildingInformationStructure()
+	local EntityObject = BigNum.new(_entityType)
+	
+	if not EMXHookLibrary.IsHistoryEdition then 	
+		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("28"))))
+	else
+		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("24"))))
+	end
+	
+	EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))	
+	
+	if not EMXHookLibrary.IsHistoryEdition then 	
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("92")), _iconIndex)
+	else
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("88")), _iconIndex)
 	end
 end
 
