@@ -117,7 +117,6 @@ EMXHookLibrary.SetEntityTypeMinimapIcon(_entityType, _iconIndex)
 -> Setzt ein Minimap-Icon für einen Entitätentyp. Es sind Icons aus der Icontabelle möglich. 0 entfernt das Icon wieder.
 ACHTUNG: Nachdem die Icons gesetzt wurden, muss die Map neugestartet werden, damit der Effekt sichtbar ist.
 
-
 EMXHookLibrary.SetColorSetColorRGB(_ColorSetIndex, _season, _rgb)
 -> Setzt die Farben eines ColorSets per Season. Es wird ein Table zurückgegeben, der die originalen Values enthält, damit man
 das Colorset wieder zurücksetzen kann. 
