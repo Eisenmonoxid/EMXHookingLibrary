@@ -664,7 +664,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.5 - 12.10.2023 22:24 - Eisenmonoxid",
+	CurrentVersion = "1.3.6 - 01.11.2023 21:41 - Eisenmonoxid",
 	
 	GlobalAddressEntity = 0,
 	GlobalHeapStart = 0,
@@ -677,6 +677,46 @@ EMXHookLibrary = {
 	HelperFunctions = {},
 	CachedClassPointers = {}
 };
+
+-- EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7}) --Red, Green, Blue, Alpha
+EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
+	local SeasonIndizes = {0, 16, 32, 48}
+	local GlobalsBaseEx = EMXHookLibrary.GetCGlobalsBaseEx()
+	local CurrentPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(GlobalsBaseEx, BigNum.new("128"))))
+
+	local CurrentOffset, CurrentIdentifier, Value
+	if not EMXHookLibrary.IsHistoryEdition then 
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("4"))))
+		CurrentOffset = BigNum.new("12")
+	else
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+		CurrentOffset = BigNum.new("16")
+	end
+	
+	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, BigNum.new("4"))))
+
+	repeat
+		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, CurrentOffset))
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("8"))))
+		if CurrentIdentifier == _ColorSetIndex then
+			break;
+		end
+	until false
+	
+	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+
+	if not EMXHookLibrary.IsHistoryEdition then 
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("16"))))
+	else
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("20"))))
+	end
+	
+	local CurrentIndex = SeasonIndizes[_season]
+	for i = 1, 4, 1 do
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Value, BigNum.new(CurrentIndex)), EMXHookLibrary.HelperFunctions.Float2Int(_rgb[i]))
+		CurrentIndex = CurrentIndex + 4
+	end
+end
 
 EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
 	local WideCharAsMultiByte = EMXHookLibrary.HelperFunctions.ConvertCharToMultiByte(_newString)
