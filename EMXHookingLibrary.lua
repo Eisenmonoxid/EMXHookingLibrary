@@ -631,44 +631,41 @@ function BigNum.change( bnum1 , num )
 end 
 
 function BigNum.put( bnum , int , pos )
-   if bnum == nil then
-      error("Function BigNum.put: parameter nil") ;
-   end
-   local i = 0 ;
-   for i = 0 , pos - 1 do
-      bnum[i] = 0 ;
-   end
-   bnum[pos] = int ;
-   for i = pos + 1 , bnum.len do
-      bnum[i] = nil ;
-   end
-   bnum.len = pos ;
-   return 0 ;
+	local i = 0;
+	for i = 0, pos - 1 do
+		bnum[i] = 0;
+	end
+	
+	bnum[pos] = int;
+	
+	for i = pos + 1, bnum.len do
+		bnum[i] = nil;
+	end
+	
+	bnum.len = pos;
+	return 0
 end
 
-function BigNum.max( int1 , int2 )
-   if int1 > int2 then
-      return int1 ;
-   else
-      return int2 ;
-   end
+function BigNum.max(int1, int2)
+	if int1 > int2 then
+		return int1;
+	else
+		return int2;
+	end
 end
 
-function BigNum.decr( bnum1 )
-   local temp = {} ;
-   temp = BigNum.new( "1" ) ;
-   BigNum.sub( bnum1 , temp , bnum1 ) ;
-   return 0 ;
+function BigNum.decr(bnum1)
+   BigNum.sub(bnum1, BigNum.new("1"), bnum1);
+   return 0
 end
 
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.7 - 01.11.2023 22:18 - Eisenmonoxid",
+	CurrentVersion = "1.3.8 - 08.11.2023 01:25 - Eisenmonoxid",
 	
-	GlobalAddressEntity = 0,
+	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
-	GlobalVTableValue = 0,
 	
 	IsHistoryEdition = false,
 	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
@@ -680,43 +677,36 @@ EMXHookLibrary = {
 
 -- EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7}) --Red, Green, Blue, Alpha
 EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
 	local SeasonIndizes = {0, 16, 32, 48}
 	local OriginalValues = {}
 	
 	local GlobalsBaseEx = EMXHookLibrary.GetCGlobalsBaseEx()
-	local CurrentPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(GlobalsBaseEx, BigNum.new("128"))))
+	local CurrentPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(GlobalsBaseEx, "128")))
 
-	local CurrentOffset, CurrentIdentifier, Value
-	if not EMXHookLibrary.IsHistoryEdition then 
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, BigNum.new("4"))))
-		CurrentOffset = BigNum.new("12")
-	else
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(CurrentPointer))
-		CurrentOffset = BigNum.new("16")
-	end
-	
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("4"))))
+	local Counter = 0, CurrentIdentifier, Value
+	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, Offsets[1])))
+	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, "4")))
 
 	repeat
-		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, CurrentOffset))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("8"))))
-		if CurrentIdentifier == _ColorSetIndex then
+		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offsets[2]))
+		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, "8")))
+		if (CurrentIdentifier == _ColorSetIndex) then
 			break;
+		end
+		Counter = Counter + 1
+		if Counter >= 1000 then -- ERROR: Endless Loop, ColorSet not Found!
+			return false;
 		end
 	until false
 	
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offsets[3])))
 
-	if not EMXHookLibrary.IsHistoryEdition then 
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("16"))))
-	else
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("20"))))
-	end
-	
 	local CurrentIndex = SeasonIndizes[_season]
 	for i = 1, 4, 1 do
-		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.HelperFunctions.Int2Float(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new(CurrentIndex))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Value, BigNum.new(CurrentIndex)), EMXHookLibrary.HelperFunctions.Float2Int(_rgb[i]))
+		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.HelperFunctions.Int2Float(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, CurrentIndex)))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Value, CurrentIndex), EMXHookLibrary.HelperFunctions.Float2Int(_rgb[i]))
 		CurrentIndex = CurrentIndex + 4
 	end
 	
@@ -725,61 +715,40 @@ end
 
 -- This requires the map to be restarted after setting the values! 0 -> No Icon!
 EMXHookLibrary.SetEntityTypeMinimapIcon = function(_entityType, _iconIndex)
-	local ObjectValue = EMXHookLibrary.GetBuildingInformationStructure()
-	local EntityObject = BigNum.new(_entityType)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "88"}) or {"28", "92"}
 	
-	if not EMXHookLibrary.IsHistoryEdition then 	
-		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("28"))))
-	else
-		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("24"))))
-	end
-	
-	EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))	
-	
-	if not EMXHookLibrary.IsHistoryEdition then 	
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("92")), _iconIndex)
-	else
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("88")), _iconIndex)
-	end
+	local ObjectInstance = EMXHookLibrary.GetBuildingInformationStructure()
+	ObjectInstance = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectInstance, Offsets[1])))
+	ObjectInstance = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(_entityType, "4"), ObjectInstance)))	
+
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ObjectInstance, Offsets[2]), _iconIndex)
 end
 
 EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"20", "24", 0}) or {"24", "28", 4}
+	
 	local WideCharAsMultiByte = EMXHookLibrary.HelperFunctions.ConvertCharToMultiByte(_newString)
 	local CTextSet = EMXHookLibrary.GetCTextSetStructure()
-	CTextSet = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, BigNum.new("4")))
+	CTextSet = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, "4"))
 	
-	local TextSegment
-	local Counter
-	if not EMXHookLibrary.IsHistoryEdition then
-		TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, BigNum.new("24"))))		
-		TextSegment = BigNum.mt.add(TextSegment, BigNum.new(_IDManagerEntryIndex * 28))
-		
-		Counter = 4
-	else
-		TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, BigNum.new("20"))))	
-		TextSegment = BigNum.mt.add(TextSegment, BigNum.new(_IDManagerEntryIndex * 24))
-		
-		Counter = 0
-	end
-	
+	local TextSegment, Counter
+	TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, Offsets[1])))
+	TextSegment = BigNum.mt.add(TextSegment, BigNum.mt.mul(_IDManagerEntryIndex, Offsets[2]))
+
 	for i = 1, #WideCharAsMultiByte do
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(TextSegment, BigNum.new(Counter)), WideCharAsMultiByte[i])
-		Counter = Counter + 4
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(TextSegment, Offsets[3]), WideCharAsMultiByte[i])
+		Offsets[3] = Offsets[3] + 4
 	end
 end
 
 EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers = function(_buildingID, _maxWorkers)
-	if not EMXHookLibrary.IsHistoryEdition then
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new("128"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("288")), _maxWorkers)
-	else
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new("128"))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("256")), _maxWorkers)
-	end
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "256") or "288"
+	local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), "128")))
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, Offset), _maxWorkers)
 end
 
 EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
-	local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_settlerID), BigNum.new("84"))))
+	local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_settlerID), "84")))
 	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(LimitPointer))		
 	EMXHookLibrary.SetValueAtPointer(LimitPointer, _buildingID)
 end
@@ -788,6 +757,7 @@ end
 -- EMXHookLibrary.SetPlayerColorRGB(1, {127, 253, 112, 0, 0}) -- Dark Blue
 -- EMXHookLibrary.SetPlayerColorRGB(1, {127, 255, 255, 255}) -- White
 EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"328", "172"}) or {"332", "176"}
 	local Index = _playerID * 4
 	local ColorStringHex = ""
 	
@@ -796,38 +766,27 @@ EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
 	end
 
 	local GlobalsBase = EMXHookLibrary.GetCGlobalsBaseEx()
-	local Main = BigNum.mt.add(GlobalsBase, BigNum.new("108"))
+	local Main = BigNum.mt.add(GlobalsBase, "108")
 	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
 	
-	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, BigNum.new(Index)), tonumber("0x" .. ColorStringHex))
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, Index), tonumber("0x" .. ColorStringHex))
 	
-	if not EMXHookLibrary.IsHistoryEdition then
-		Main = BigNum.mt.add(Main, BigNum.new("332"))
-	else
-		Main = BigNum.mt.add(Main, BigNum.new("328"))
-	end
-	
+	Main = BigNum.mt.add(Main, Offsets[1])
 	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
 
-	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, BigNum.new(Index)), tonumber("0x" .. ColorStringHex))
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, Index), tonumber("0x" .. ColorStringHex))
 	
-	Main = BigNum.mt.add(GlobalsBase, BigNum.new("20"))
+	Main = BigNum.mt.add(GlobalsBase, "20")
+	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
+	Main = BigNum.mt.add(Main, Offsets[2])	
 	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
 	
-	if not EMXHookLibrary.IsHistoryEdition then
-		Main = BigNum.mt.add(Main, BigNum.new("176"))
-	else
-		Main = BigNum.mt.add(Main, BigNum.new("172"))
-	end
-	
-	Main = BigNum.new(EMXHookLibrary.GetValueAtPointer(Main))
-	
-	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, BigNum.new(Index)), tonumber("0x" .. ColorStringHex))
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Main, Index), tonumber("0x" .. ColorStringHex))
 
 	Logic.ExecuteInLuaLocalState([[
-        Display.UpdatePlayerColors()
-        GUI.RebuildMinimapTerrain()
-        GUI.RebuildMinimapTerritory()
+		Display.UpdatePlayerColors()
+		GUI.RebuildMinimapTerrain()
+		GUI.RebuildMinimapTerritory()
     ]]);
 end
 
@@ -843,15 +802,15 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 		return;
 	end
 
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
+	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 	
 	local LowestDigit, HighestDigit, DereferenceString
 	if EMXHookLibrary.HistoryEditionVariant == 1 then
-		DereferenceString = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("2100263"))))
+		DereferenceString = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, "2100263")))
 	else
-		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("1069996"))))
-		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new("1069995"))))
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, "1069996")))
+		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, "1069995")))
 		LowestDigit = string.format("%x", BigNum.mt.tostring(LowestDigit))
 		HighestDigit = string.format("%x", BigNum.mt.tostring(HighestDigit))
 
@@ -879,54 +838,32 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 end
 
 EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
-	local CMain = EMXHookLibrary.GetFrameworkCMainStructure()
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"496", "8", "144", "52", "176", "84"}) or {"504", "12", "188", "72", "224", "108"}
 	
-	if not EMXHookLibrary.IsHistoryEdition then
-		local CGLUEPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CMain, BigNum.new("504"))))
-		local CGLUEFestivalPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEPropsManager, BigNum.new("44"))))
-		local EGLCFestivalProps = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEFestivalPropsManager, BigNum.new("12"))))
+	local CMain = EMXHookLibrary.GetFrameworkCMainStructure()
+	local CGLUEPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CMain, Offsets[1])))
+	local CGLUEFestivalPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEPropsManager, "44")))
+	local EGLCFestivalProps = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEFestivalPropsManager, Offsets[2])))
 
-		if _promotionParticipantLimit ~= nil then
-			local ParticipantLimitsPromotion = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("188"))))
-			for i = 0, 12, 4 do
-				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimitsPromotion, BigNum.new(i)), _promotionParticipantLimit)
-			end
+	if _promotionParticipantLimit ~= nil then
+		local ParticipantLimitsPromotion = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, Offsets[3])))
+		for i = 0, 12, 4 do
+			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimitsPromotion, i), _promotionParticipantLimit)
 		end
-		if _festivalParticipantLimit ~= nil then
-			local ParticipantLimits = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("72"))))
-			for i = 0, 12, 4 do
-				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimits, BigNum.new(i)), _festivalParticipantLimit)
-			end
+	end
+	
+	if _festivalParticipantLimit ~= nil then
+		local ParticipantLimits = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, Offsets[4])))
+		for i = 0, 12, 4 do
+			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimits, i), _festivalParticipantLimit)
 		end
-		if _promotionDuration ~= nil then
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("224")), _promotionDuration)
-		end
-		if _festivalDuration ~= nil then
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("108")), _festivalDuration)
-		end
-	else
-		local CGLUEPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CMain, BigNum.new("496"))))
-		local CGLUEFestivalPropsManager = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEPropsManager, BigNum.new("44"))))
-		local EGLCFestivalProps = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CGLUEFestivalPropsManager, BigNum.new("8"))))
-
-		if _promotionParticipantLimit ~= nil then
-			local ParticipantLimitsPromotion = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("144"))))
-			for i = 0, 12, 4 do
-				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimitsPromotion, BigNum.new(i)), _promotionParticipantLimit)
-			end
-		end
-		if _festivalParticipantLimit ~= nil then
-			local ParticipantLimits = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("52"))))
-			for i = 0, 12, 4 do
-				EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ParticipantLimits, BigNum.new(i)), _festivalParticipantLimit)
-			end
-		end
-		if _promotionDuration ~= nil then
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("176")), _promotionDuration)
-		end
-		if _festivalDuration ~= nil then
-			EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, BigNum.new("84")), _festivalDuration)
-		end
+	end
+	
+	if _promotionDuration ~= nil then
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, Offsets[5]), _promotionDuration)
+	end
+	if _festivalDuration ~= nil then
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EGLCFestivalProps, Offsets[6]), _festivalDuration)
 	end
 end
 
@@ -1092,41 +1029,31 @@ EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize
 end
 
 EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount = function(_goodType, _requiredResource, _amount)
-	local Value = EMXHookLibrary.GetGoodTypeRequirementsStructure()
-
-	if not EMXHookLibrary.IsHistoryEdition then
-		Value = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("8")))
-		Value = BigNum.mt.add(Value, BigNum.mt.mul(BigNum.new(_goodType), BigNum.new("4")))
-		Value = EMXHookLibrary.GetValueAtPointer(Value)
-		Value = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("40")))
-	else
-		Value = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("4")))
-		Value = BigNum.mt.add(Value, BigNum.mt.mul(BigNum.new(_goodType), BigNum.new("4")))
-		Value = EMXHookLibrary.GetValueAtPointer(Value)
-		Value = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new("36")))
-	end
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36"}) or {"8", "40"}
 	
+	local Value = EMXHookLibrary.GetGoodTypeRequirementsStructure()
+	Value = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offsets[1]))
+	Value = BigNum.mt.add(Value, BigNum.mt.mul(_goodType, "4"))
+	Value = EMXHookLibrary.GetValueAtPointer(Value)
+	Value = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offsets[2]))
+
 	if _requiredResource ~= nil then
-		EMXHookLibrary.SetValueAtPointer(Value, _requiredResource)
+		EMXHookLibrary.SetValueAtPointer(BigNum.new(Value), _requiredResource)
 	end
 	
 	if _amount ~= nil then
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Value, BigNum.new("4")), _amount)
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Value, "4"), _amount)
 	end
 end
 
 EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
-	local ObjectValue = EMXHookLibrary.GetBuildingInformationStructure()
-	local EntityObject = BigNum.new(_entityType)
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "24") or "28"
 	
-	if not EMXHookLibrary.IsHistoryEdition then 	
-		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("28"))))
-	else
-		ObjectValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectValue, BigNum.new("24"))))
-	end
+	local ObjectInstance = EMXHookLibrary.GetBuildingInformationStructure()
+	ObjectInstance = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(ObjectInstance, Offset)))
+	ObjectInstance = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(_entityType, "4"), ObjectInstance)))	
 	
-	EntityObject = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(BigNum.mt.mul(EntityObject, BigNum.new("4")), ObjectValue)))	
-	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EntityObject, BigNum.new("36")), _newMaxHealth)
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(ObjectInstance, "36"), _newMaxHealth)
 end
 
 EMXHookLibrary.GetCEntityManagerStructure = function() return EMXHookLibrary.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
@@ -1139,21 +1066,17 @@ EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.Get
 EMXHookLibrary.GetCTextSetStructure = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
-	local HEValues = {"632", "636", "640", "644", "648"}
-	local OVValues = {"688", "692", "696", "700", "704"}
-	
-	if not EMXHookLibrary.IsHistoryEdition then 
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.new(OVValues[_arrayIndex])), _price)
-	else
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.new(HEValues[_arrayIndex])), _price)
-	end
+	local Index = _arrayIndex * 4
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "628") or "684"
+
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.mt.add(Offset, Index)), _price)
 end
 
 EMXHookLibrary.ModifyPlayerInformationStructure = function(_newValue, _vanillaValue, _heValue)
 	if not EMXHookLibrary.IsHistoryEdition then 
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.new(_vanillaValue)), _newValue)
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), _vanillaValue), _newValue)
 	else
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.new(_heValue)), _newValue)
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), _heValue), _newValue)
 	end
 end
 
@@ -1173,25 +1096,21 @@ EMXHookLibrary.SetCathedralCollectAmount = function(_newAmount) EMXHookLibrary.M
 EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "260", "240") end
 
 EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)	
-	if not EMXHookLibrary.IsHistoryEdition then
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.new("408"))))			
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_cathedralIndex), BigNum.new("4"))), _limit)
-	else
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.new("376"))))			
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_cathedralIndex), BigNum.new("4"))), _limit)
-	end
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "376") or "408"
+
+	local LimitPointer = 0
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), Offset)))			
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(_cathedralIndex, "4")), _limit)
 end
 
 EMXHookLibrary.SetLimitByEntityObject = function(_entityID, _upgradeLevel, _newLimit, _pointerValues)
-	if not EMXHookLibrary.IsHistoryEdition then
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new(_pointerValues[1]))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _newLimit)
-	else
-		local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), BigNum.new("128"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new(_pointerValues[2]))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_upgradeLevel), BigNum.new("4"))), _newLimit)
-	end
+	local Offset = (EMXHookLibrary.IsHistoryEdition and _pointerValues[2]) or _pointerValues[1]
+	
+	local LimitPointer = 0
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), "128")))
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, Offset)))
+	
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(_upgradeLevel, "4")), _newLimit)
 end
 
 EMXHookLibrary.SetSermonSettlerLimit = function(_playerID, _upgradeLevel, _newLimit) 
@@ -1210,24 +1129,20 @@ EMXHookLibrary.SetStoreHouseOutStockCapacity = function(_playerID, _upgradeLevel
 	EMXHookLibrary.SetLimitByEntityObject(Logic.GetStoreHouse(_playerID), _upgradeLevel, _newLimit, {"676", "612"})
 end
 
-EMXHookLibrary.SetBuildingFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
-	local LimitPointer
-	if not EMXHookLibrary.IsHistoryEdition then
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), BigNum.new("28"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_entityType), BigNum.new("4")))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("144"))))	
-	else
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), BigNum.new("24"))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(BigNum.new(_entityType), BigNum.new("4")))))
-		LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("136"))))		
-	end
+EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"28", "144"}) or {"24", "136"}
+	local LimitPointer = 0
 	
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), Offsets[1])))
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(_entityType, "4"))))
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, Offsets[2])))	
+
 	EMXHookLibrary.SetValueAtPointer(LimitPointer, _good)
-	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("4")), _amount)
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, "4"), _amount)
 	
 	if _secondGood ~= nil and _secondAmount ~= nil then
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("8")), _secondGood)
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.new("12")), _secondAmount)
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, "8"), _secondGood)
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, "12"), _secondAmount)
 	end
 end
 
@@ -1254,15 +1169,15 @@ EMXHookLibrary.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHECha
 		_hexSplitChars = {_ubiHEChars[2], _ubiHEChars[3], _ubiHEChars[4], _ubiHEChars[5]}
 	end
 	
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
+	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 	
 	if _subtract ~= nil then
-		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new(_lowestDigit))))
-		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, BigNum.new(_lowestDigit - 1))))
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, (_lowestDigit))))
+		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, (_lowestDigit - 1))))
 	else
-		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit))))
-		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new(_lowestDigit + 1))))
+		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, (_lowestDigit))))
+		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, (_lowestDigit + 1))))
 	end
 	
 	local HexString01 = string.format("%x", BigNum.mt.tostring(LowestDigit))
@@ -1288,18 +1203,13 @@ EMXHookLibrary.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHECha
 end
 
 EMXHookLibrary.CompareIdentifierToStaticValue = function(Value, Identifier)
-	local Offset = "16"
-	if not EMXHookLibrary.IsHistoryEdition then 
-		Offset = "12"
-	end
-
-	local CurrentOffset = BigNum.new(Offset)
-	local CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, CurrentOffset))
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "16") or "12"
+	local CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offset)))
 	local StaticValue = BigNum.new(Identifier)
 	
-	while (BigNum.compareAbs(BigNum.new(CurrentIdentifier), StaticValue) ~= 0) do
+	while (BigNum.compareAbs(CurrentIdentifier, StaticValue) ~= 0) do
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, CurrentOffset))
+		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offset))
 	end
 	
 	return Value
@@ -1307,72 +1217,68 @@ end
 
 EMXHookLibrary.CalculateEntityIDToObject = function(_entityID)
 	local Result = BigNum.new(EMXHookLibrary.HelperFunctions.BitAnd(_entityID, 65535))
-	Result = BigNum.mt.mul(Result, BigNum.new("8"))
-	Result = BigNum.mt.add(Result, BigNum.new("20"))
+	Result = BigNum.mt.mul(Result, "8")
+	Result = BigNum.mt.add(Result, "20")
 	Result = BigNum.mt.add(Result, EMXHookLibrary.GetCEntityManagerStructure())
 	return BigNum.new(EMXHookLibrary.GetValueAtPointer(Result));
 end
 
 EMXHookLibrary.GetValueAtPointer = function(_Pointer)
-	if not EMXHookLibrary.IsAdressEntityExisting() then
-		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to get value at adress "..BigNum.mt.tostring(_Pointer).." without existing AdressEntity!")
-		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
-		return;
-	end
-	local PointerDifference = BigNum.mt.sub(_Pointer, EMXHookLibrary.GlobalHeapStart)
-	local FinalIndex = BigNum.mt.div(PointerDifference, BigNum.new("4"))
-
-	if (Network.IsNATReady == nil) then
-		FinalIndex = BigNum.mt.add(BigNum.new("-81"), FinalIndex)
-	else
-		FinalIndex = BigNum.mt.add(BigNum.new("-78"), FinalIndex)
-	end
-	
-	return Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, tonumber(BigNum.mt.tostring(FinalIndex)))
-end
-
-EMXHookLibrary.SetValueAtPointer = function(_Pointer, _Value)
-	if not EMXHookLibrary.IsAdressEntityExisting() then
+	if not Logic.IsEntityAlive(EMXHookLibrary.GlobalAdressEntity) then
 		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to set a value at adress "..BigNum.mt.tostring(_Pointer).." without existing AdressEntity!")
 		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
 		return;
 	end
+	
 	local PointerDifference = BigNum.mt.sub(_Pointer, EMXHookLibrary.GlobalHeapStart)
-	local FinalIndex = BigNum.mt.div(PointerDifference, BigNum.new("4"))
+	local FinalIndex = BigNum.mt.div(PointerDifference, "4")
 
-	if (Network.IsNATReady == nil) then
-		FinalIndex = BigNum.mt.add(BigNum.new("-81"), FinalIndex)
+	if not EMXHookLibrary.IsHistoryEdition then
+		FinalIndex = BigNum.mt.add("-81", FinalIndex)
 	else
-		FinalIndex = BigNum.mt.add(BigNum.new("-78"), FinalIndex)
+		FinalIndex = BigNum.mt.add("-78", FinalIndex)
 	end
 	
-	Logic.SetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, tonumber(BigNum.mt.tostring(FinalIndex)), _Value)
+	return Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, tonumber(BigNum.mt.tostring(FinalIndex)))
+end
+
+EMXHookLibrary.SetValueAtPointer = function(_Pointer, _Value)
+	if not Logic.IsEntityAlive(EMXHookLibrary.GlobalAdressEntity) then
+		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to set a value at adress "..BigNum.mt.tostring(_Pointer).." without existing AdressEntity!")
+		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
+		return;
+	end
+	
+	local PointerDifference = BigNum.mt.sub(_Pointer, EMXHookLibrary.GlobalHeapStart)
+	local FinalIndex = BigNum.mt.div(PointerDifference, "4")
+
+	if not EMXHookLibrary.IsHistoryEdition then
+		FinalIndex = BigNum.mt.add("-81", FinalIndex)
+	else
+		FinalIndex = BigNum.mt.add("-78", FinalIndex)
+	end
+	
+	Logic.SetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, tonumber(BigNum.mt.tostring(FinalIndex)), _Value)
 end
 
 -- Initialization of the Library --
 
-EMXHookLibrary.IsAdressEntityExisting = function()
-	return Logic.IsEntityAlive(EMXHookLibrary.GlobalAddressEntity);
-end
-
 EMXHookLibrary.FindOffsetValue = function(_VTableOffset, _PointerOffset)
-	if EMXHookLibrary.GlobalAddressEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.GlobalAddressEntity) then
-		Logic.DestroyEntity(EMXHookLibrary.GlobalAddressEntity)
+	if EMXHookLibrary.GlobalAdressEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.GlobalAdressEntity) then
+		Logic.DestroyEntity(EMXHookLibrary.GlobalAdressEntity)
 	end
 
 	local posX, posY = 3000, 3000
-	local AddressEntity = Logic.CreateEntity(Entities.D_X_TradeShip, posX, posY, 0, 0)
+	local AdressEntity = Logic.CreateEntity(Entities.D_X_TradeShip, posX, posY, 0, 0)
 	local PointerEntity = Logic.CreateEntity(Entities.D_X_TradeShip, posX, posY, 0, 0)
 	
-	local VTablePointerValue = Logic.GetEntityScriptingValue(AddressEntity, _VTableOffset)	
 	local PointerToVTableValue = BigNum.new(Logic.GetEntityScriptingValue(PointerEntity, _PointerOffset))
 	
-	Logic.SetVisible(AddressEntity, false)
+	Logic.SetVisible(AdressEntity, false)
 	Logic.DestroyEntity(PointerEntity)
 	
-	EMXHookLibrary.GlobalAddressEntity = AddressEntity
+	EMXHookLibrary.GlobalAdressEntity = AdressEntity
 	EMXHookLibrary.GlobalHeapStart = PointerToVTableValue
-	EMXHookLibrary.GlobalVTableValue = VTablePointerValue
 end
 
 EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
@@ -1399,7 +1305,7 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 	EMXHookLibrary.WasInitialized = true
 	
 	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. ". IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition)..". HistoryEditionVariant: "..tostring(EMXHookLibrary.HistoryEditionVariant)..".")
-	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.GlobalHeapStart)..". AdressEntity ID: "..tostring(EMXHookLibrary.GlobalAddressEntity)..".")
+	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.GlobalHeapStart)..". AdressEntity ID: "..tostring(EMXHookLibrary.GlobalAdressEntity)..".")
 
 	if _useLoadGameOverride then
 		EMXHookLibrary.OverrideSavegameHandling()
@@ -1408,7 +1314,7 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 end
 
 EMXHookLibrary.GetHistoryEditionVariant = function()
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAddressEntity, -78))
+	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 
 	local Digit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("105"))))
