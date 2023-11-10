@@ -1,7 +1,7 @@
 -- BigNum - Code --
 BigNum = {
 	RADIX = 10^7,
-	RADIX_LEN = math.floor(math.log10(BigNum.RADIX)),
+	RADIX_LEN = math.floor(math.log10(10^7)),
 	
 	mt = {}
 };
@@ -1069,7 +1069,7 @@ EMXHookLibrary.SetStoreHouseOutStockCapacity = function(_playerID, _upgradeLevel
 end
 
 EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"28", "144"}) or {"24", "136"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "144"}) or {"28", "136"}
 	local LimitPointer = 0
 	
 	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), Offsets[1])))
