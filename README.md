@@ -6,7 +6,8 @@ Uses the "BigNum.lua" library. Special thanks to the authors!
 ## Usage
 Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAdressEntity()" and after that, you can use the exported methods however you like.
 ```
-(If you use the argument EMXHookLibrary.InitAdressEntity(true), you can use the savegame-override and do not have to worry about resetting all values when the player closes the map)
+(If you use the function argument EMXHookLibrary.InitAdressEntity(true), you can use the savegame-override
+and do not have to worry about resetting all values when the player closes the map!)
 ```
 
 ## Features
@@ -35,7 +36,7 @@ EMXHookLibrary.SetAmountOfTaxCollectors(_newAmount)
 EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 -> Setzt den Faktor, um den der Fog of War in bereits aufgedeckten Gebieten angewandt wird. (Normal: 0.75)
 
-EMXHookLibrary.SetBuildingFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
+EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
 -> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn das Gebäude bereits zwei Kosteneinträge im Originalspiel hat.
 Ansonsten sollte das Baukostensystem für die zweite Ware verwendet werden.
 
@@ -115,7 +116,7 @@ Bspw. "Saraya" -> "Testritter": EMXHookLibrary.EditStringTableText(5037, "Testri
 
 EMXHookLibrary.SetEntityTypeMinimapIcon(_entityType, _iconIndex)
 -> Setzt ein Minimap-Icon für einen Entitätentyp. Es sind Icons aus der Icontabelle möglich. 0 entfernt das Icon wieder.
-ACHTUNG: Nachdem die Icons gesetzt wurden, muss die Map neugestartet werden, damit der Effekt sichtbar ist.
+ACHTUNG: Nachdem die Icons gesetzt wurden, muss die Map neugestartet werden (oder ein Savegame geladen werden), damit der Effekt sichtbar ist.
 
 EMXHookLibrary.SetColorSetColorRGB(_ColorSetIndex, _season, _rgb)
 -> Setzt die Farben eines ColorSets per Season. Es wird ein Table zurückgegeben, der die originalen Values enthält, damit man
