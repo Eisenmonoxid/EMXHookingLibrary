@@ -1,10 +1,10 @@
 -- BigNum - Code --
---%%%%%%%%  Constants used in the file  %%%%%%%%--
-RADIX = 10^7;
-RADIX_LEN = math.floor(math.log10(RADIX));
---%%%%%%%%        Start of Code        %%%%%%%%--
-BigNum = {};
-BigNum.mt = {};
+BigNum = {
+	RADIX = 10^7,
+	RADIX_LEN = math.floor(math.log10(BigNum.RADIX)),
+	
+	mt = {}
+};
 
 function BigNum.new( num ) --{{{2
    local bignum = {} ;
@@ -57,7 +57,7 @@ function BigNum.mt.tostring( bnum )
       return "nil" ;
    elseif bnum.len > 0 then
       for i = bnum.len - 2 , 0 , -1  do
-         for j = 0 , RADIX_LEN - string.len( bnum[i] ) - 1 do
+         for j = 0 , BigNum.RADIX_LEN - string.len( bnum[i] ) - 1 do
             temp = temp .. '0' ;
          end
          temp = temp .. bnum[i] ;
@@ -70,12 +70,6 @@ function BigNum.mt.tostring( bnum )
    else
       return "" ;
    end
-end
-
-function BigNum.mt.pow( num1 , num2 )
-   local bnum1 = BigNum.new( num1 ) ;
-   local bnum2 = BigNum.new( num2 ) ;
-   return BigNum.pow( bnum1 , bnum2 ) ;
 end
 
 function BigNum.mt.eq( num1 , num2 )
@@ -106,21 +100,20 @@ function BigNum.mt.unm( num )
    return ret
 end
 
-BigNum.mt.__metatable = "hidden"           ; -- answer to getmetatable(aBignum)
-BigNum.mt.__tostring  = BigNum.mt.tostring ;
+BigNum.mt.__metatable = "hidden";
+BigNum.mt.__tostring  = BigNum.mt.tostring;
 -- arithmetics
-BigNum.mt.__add = BigNum.mt.add ;
-BigNum.mt.__sub = BigNum.mt.sub ;
-BigNum.mt.__mul = BigNum.mt.mul ;
-BigNum.mt.__div = BigNum.mt.div ;
-BigNum.mt.__pow = BigNum.mt.pow ;
-BigNum.mt.__unm = BigNum.mt.unm ;
+BigNum.mt.__add = BigNum.mt.add;
+BigNum.mt.__sub = BigNum.mt.sub;
+BigNum.mt.__mul = BigNum.mt.mul;
+BigNum.mt.__div = BigNum.mt.div;
+BigNum.mt.__unm = BigNum.mt.unm;
 -- Comparisons
-BigNum.mt.__eq = BigNum.mt.eq   ; 
-BigNum.mt.__le = BigNum.mt.le   ;
-BigNum.mt.__lt = BigNum.mt.lt   ;
+BigNum.mt.__eq = BigNum.mt.eq; 
+BigNum.mt.__le = BigNum.mt.le;
+BigNum.mt.__lt = BigNum.mt.lt;
 --concatenation
-setmetatable( BigNum.mt, { __index = "inexistent field", __newindex = "not available", __metatable="hidden" } ) ;
+setmetatable(BigNum.mt, {__index = "inexistent field", __newindex = "not available", __metatable = "hidden"});
 
 function BigNum.add( bnum1 , bnum2 , bnum3 )
    local maxlen = 0 ;
@@ -130,7 +123,7 @@ function BigNum.add( bnum1 , bnum2 , bnum3 )
    local old_len = 0 ;
    --Handle the signals
    if bnum1 == nil or bnum2 == nil or bnum3 == nil then
-      error("Function BigNum.add: parameter nil") ;
+      assert(false, "Function BigNum.add: parameter nil") ;
    elseif bnum1.signal == '-' and bnum2.signal == '+' then
       bnum1.signal = '+' ;
       BigNum.sub( bnum2 , bnum1 , bnum3 ) ;
@@ -164,8 +157,8 @@ function BigNum.add( bnum1 , bnum2 , bnum3 )
       else
          bnum3[i] = bnum1[i] + carry ;
       end
-      if bnum3[i] >= RADIX then
-         bnum3[i] = bnum3[i] - RADIX ;
+      if bnum3[i] >= BigNum.RADIX then
+         bnum3[i] = bnum3[i] - BigNum.RADIX ;
          carry = 1 ;
       else
          carry = 0 ;
@@ -191,7 +184,7 @@ function BigNum.sub( bnum1 , bnum2 , bnum3 )
    --Handle the signals
    
    if bnum1 == nil or bnum2 == nil or bnum3 == nil then
-      error("Function BigNum.sub: parameter nil") ;
+      assert(false, "Function BigNum.sub: parameter nil") ;
    elseif bnum1.signal == '-' and bnum2.signal == '+' then
       bnum1.signal = '+' ;
       BigNum.add( bnum1 , bnum2 , bnum3 ) ;
@@ -237,7 +230,7 @@ function BigNum.sub( bnum1 , bnum2 , bnum3 )
          bnum3[i] = bnum1[i] - carry ;
       end
       if bnum3[i] < 0 then
-         bnum3[i] = RADIX + bnum3[i] ;
+         bnum3[i] = BigNum.RADIX + bnum3[i] ;
          carry = 1 ;
       else
          carry = 0 ;
@@ -254,7 +247,7 @@ function BigNum.sub( bnum1 , bnum2 , bnum3 )
       bnum3[0]  = 0 ;
    end
    if carry == 1 then
-      error( "Error in function sub" ) ;
+      assert(false, "Error in function sub" ) ;
    end
    for i = bnum3.len , BigNum.max( old_len , maxlen - 1 ) do
       bnum3[i] = nil ;
@@ -269,7 +262,7 @@ function BigNum.mul( bnum1 , bnum2 , bnum3 )
    local carry = 0 ;
    local oldLen = bnum3.len ;
    if bnum1 == nil or bnum2 == nil or bnum3 == nil then
-      error("Function BigNum.mul: parameter nil") ;
+      assert(false, "Function BigNum.mul: parameter nil") ;
    --Handle the signals
    elseif bnum1.signal ~= bnum2.signal then
       BigNum.mul( bnum1 , -bnum2 , bnum3 ) ;
@@ -290,9 +283,9 @@ function BigNum.mul( bnum1 , bnum2 , bnum3 )
       for j = 0 , bnum2.len - 1 do
          carry =  ( bnum1[i] * bnum2[j] + carry ) ;
          carry = carry + bnum3[i + j] ;
-         bnum3[i + j] = math.mod ( carry , RADIX ) ;
+         bnum3[i + j] = math.mod ( carry , BigNum.RADIX ) ;
          temp2 = bnum3[i + j] ;
-         carry =  math.floor ( carry / RADIX ) ;
+         carry =  math.floor ( carry / BigNum.RADIX ) ;
       end
       if carry ~= 0 then
          bnum3[i + bnum2.len] = carry ;
@@ -319,11 +312,11 @@ function BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 )
    local zero = BigNum.new( "0" ) ;
    --Check division by zero
    if BigNum.compareAbs( bnum2 , zero ) == 0 then
-      error( "Function BigNum.div: Division by zero" ) ;
+      assert(false, "Function BigNum.div: Division by zero" ) ;
    end     
    --Handle the signals
    if bnum1 == nil or bnum2 == nil or bnum3 == nil or bnum4 == nil then
-      error( "Function BigNum.div: parameter nil" ) ;
+      assert(false, "Function BigNum.div: parameter nil" ) ;
    elseif bnum1.signal == "+" and bnum2.signal == "-" then
       bnum2.signal = "+" ;
       BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 ) ;
@@ -366,7 +359,7 @@ function BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 )
          BigNum.put( temp , math.floor( bnum4[bnum4.len - 1] / bnum2[bnum2.len - 1] ) , bnum4.len - bnum2.len ) ;
          temp.len = bnum4.len - bnum2.len + 1 ;
       else
-         BigNum.put( temp , math.floor( ( bnum4[bnum4.len - 1] * RADIX + bnum4[bnum4.len - 2] ) / bnum2[bnum2.len -1] ) , bnum4.len - bnum2.len - 1 ) ;
+         BigNum.put( temp , math.floor( ( bnum4[bnum4.len - 1] * BigNum.RADIX + bnum4[bnum4.len - 2] ) / bnum2[bnum2.len -1] ) , bnum4.len - bnum2.len - 1 ) ;
          temp.len = bnum4.len - bnum2.len ;
       end
     
@@ -387,55 +380,6 @@ function BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 )
    end
    return 0 ;
 end
-
-function BigNum.pow( bnum1 , bnum2 )
-   local n = BigNum.new( bnum2 ) ;
-   local y = BigNum.new( 1 ) ;
-   local z = BigNum.new( bnum1 ) ;
-   local zero = BigNum.new( "0" ) ;
-   if bnum2 < zero then
-      error( "Function BigNum.exp: domain error" ) ;
-   elseif bnum2 == zero then
-      return y ;
-   end
-   while 1 do
-      if math.mod( n[0] , 2 ) == 0 then
-         n = n / 2 ;
-      else
-         n = n / 2 ;
-         y = z * y  ;
-         if n == zero then
-            return y ;
-         end
-      end
-      z = z * z ;
-   end
-end
-BigNum.exp = BigNum.pow
-
-function BigNum.gcd( bnum1 , bnum2 )
-   local a = {} ;
-   local b = {} ;
-   local c = {} ;
-   local d = {} ;
-   local zero = {} ;
-   zero = BigNum.new( "0" ) ;
-   if bnum1 == zero or bnum2 == zero then
-      return BigNum.new( "1" ) ;
-   end
-   a = BigNum.new( bnum1 ) ;
-   b = BigNum.new( bnum2 ) ;
-   a.signal = '+' ;
-   b.signal = '+' ;
-   c = BigNum.new() ;
-   d = BigNum.new() ;
-   while b > zero do
-      BigNum.div( a , b , c , d ) ;
-      a , b , d = b , d , a ;
-   end
-   return a ;
-end
-BigNum.mmc = BigNum.gcd
 
 function BigNum.eq( bnum1 , bnum2 )
    if BigNum.compare( bnum1 , bnum2 ) == 0 then
@@ -465,7 +409,7 @@ end
 
 function BigNum.compareAbs( bnum1 , bnum2 )
    if bnum1 == nil or bnum2 == nil then
-      error("Function compare: parameter nil") ;
+      assert(false, "Function compare: parameter nil") ;
    elseif bnum1.len > bnum2.len then
       return 1 ;
    elseif bnum1.len < bnum2.len then
@@ -487,7 +431,7 @@ function BigNum.compare( bnum1 , bnum2 )
    local signal = 0 ;
    
    if bnum1 == nil or bnum2 == nil then
-      error("Funtion BigNum.compare: parameter nil") ;
+      assert(false, "Funtion BigNum.compare: parameter nil") ;
    elseif bnum1.signal == '+' and bnum2.signal == '-' then
       return 1 ;
    elseif bnum1.signal == '-' and bnum2.signal == '+' then
@@ -520,118 +464,119 @@ function BigNum.copy( bnum1 , bnum2 )
       end
       bnum2.len = bnum1.len ;
    else
-      error("Function BigNum.copy: parameter nil") ;
+      assert(false, "Function BigNum.copy: parameter nil") ;
    end
 end
 
-function BigNum.change( bnum1 , num )
-   local j = 0 ;
-   local len = 0  ;
-   local num = num ;
-   local l ;
-   local oldLen = 0 ;
-   if bnum1 == nil then
-      error( "BigNum.change: parameter nil" ) ;
-   elseif type( bnum1 ) ~= "table" then
-      error( "BigNum.change: parameter error, type unexpected" ) ;
-   elseif num == nil then
-      bnum1.len = 1 ;
-      bnum1[0] = 0 ;
-      bnum1.signal = "+";
-   elseif type( num ) == "table" and num.len ~= nil then  --check if num is a big number
-      --copy given table to the new one
-      for i = 0 , num.len do
-         bnum1[i] = num[i] ;
-      end
-      if num.signal ~= '-' and num.signal ~= '+' then
-         bnum1.signal = '+' ;
-      else
-         bnum1.signal = num.signal ;
-      end
-      oldLen = bnum1.len ;
-      bnum1.len = num.len ;
-   elseif type( num ) == "string" or type( num ) == "number" then
-      if string.sub( num , 1 , 1 ) == '+' or string.sub( num , 1 , 1 ) == '-' then
-         bnum1.signal = string.sub( num , 1 , 1 ) ;
-         num = string.sub(num, 2) ;
-      else
-         bnum1.signal = '+' ;
-      end
-      num = string.gsub( num , " " , "" ) ;
-      local sf = string.find( num , "e" ) ;
-      --Handles if the number is in exp notation
-      if sf ~= nil then
-         num = string.gsub( num , "%." , "" ) ;
-         local e = string.sub( num , sf + 1 ) ;
-         e = tonumber(e) ;
-         if e ~= nil and e > 0 then 
-            e = tonumber(e) ;
-         else
-            error( "Function BigNum.change: string is not a valid number" ) ;
-         end
-         num = string.sub( num , 1 , sf - 2 ) ;
-         for i = string.len( num ) , e do
-            num = num .. "0" ;
-         end
-      else
-         sf = string.find( num , "%." ) ;
-         if sf ~= nil then
-            num = string.sub( num , 1 , sf - 1 ) ;
-         end
-      end
+function BigNum.change(bnum1, num)
+	local j = 0;
+	local len = 0 ;
+	local num = num;
+	local l;
+	local oldLen = 0;
+	
+	if bnum1 == nil then
+		assert(false, "BigNum.change: parameter nil");
+	elseif type(bnum1) ~= "table" then
+		assert(false, "BigNum.change: parameter error, type unexpected");
+	elseif num == nil then
+		bnum1.len = 1;
+		bnum1[0] = 0;
+		bnum1.signal = "+";
+	elseif type(num) == "table" and num.len ~= nil then  --check if num is a big number
+		--copy given table to the new one
+		for i = 0, num.len do
+			bnum1[i] = num[i];
+		end
+		if num.signal ~= '-' and num.signal ~= '+' then
+			bnum1.signal = '+';
+		else
+			bnum1.signal = num.signal;
+		end
+		
+		oldLen = bnum1.len;
+		bnum1.len = num.len;
+	elseif type(num) == "string" or type(num) == "number" then
+		if string.sub(num, 1, 1) == '+' or string.sub(num, 1, 1) == '-' then
+			bnum1.signal = string.sub(num, 1, 1);
+			num = string.sub(num, 2);
+		else
+			bnum1.signal = '+';
+		end
+		num = string.gsub( num , " " , "" ) ;
+		local sf = string.find( num , "e" ) ;
+		--Handles if the number is in exp notation
+		if sf ~= nil then
+			num = string.gsub( num , "%." , "" ) ;
+			local e = string.sub( num , sf + 1 ) ;
+			e = tonumber(e) ;
+			if e ~= nil and e > 0 then 
+				e = tonumber(e) ;
+			else
+				assert(false, "Function BigNum.change: string is not a valid number" ) ;
+			end
+			num = string.sub( num , 1 , sf - 2 ) ;
+			for i = string.len( num ) , e do
+				num = num .. "0" ;
+			end
+		else
+			sf = string.find( num , "%." ) ;
+			if sf ~= nil then
+				num = string.sub( num , 1 , sf - 1 ) ;
+			end
+		end
 
-      l = string.len( num ) ;
-      oldLen = bnum1.len ;
-      if (l > RADIX_LEN) then
-         local mod = l-( math.floor( l / RADIX_LEN ) * RADIX_LEN ) ;
-         for i = 1 , l-mod, RADIX_LEN do
-            bnum1[j] = tonumber( string.sub( num, -( i + RADIX_LEN - 1 ) , -i ) );
-            --Check if string dosn't represents a number
-            if bnum1[j] == nil then
-               error( "Function BigNum.change: string is not a valid number" ) ;
-               bnum1.len = 0 ;
-               return 1 ;
-            end
-            j = j + 1 ; 
-            len = len + 1 ;
-         end
-         if (mod ~= 0) then
-            bnum1[j] = tonumber( string.sub( num , 1 , mod ) ) ;
-            bnum1.len = len + 1 ;
-         else
-            bnum1.len = len ;            
-         end
-         --Eliminate trailing zeros
-         for i = bnum1.len - 1 , 1 , -1 do
-            if bnum1[i] == 0 then
-               bnum1[i] = nil ;
-               bnum1.len = bnum1.len - 1 ;
-            else
-               break ;
-            end
-         end
-         
-      else     
-         -- string.len(num) <= RADIX_LEN
-         bnum1[j] = tonumber( num ) ;
-         bnum1.len = 1 ;
-      end
-   else
-      error( "Function BigNum.change: parameter error, type unexpected" ) ;
-   end
+		l = string.len( num ) ;
+		oldLen = bnum1.len ;
+		if (l > BigNum.RADIX_LEN) then
+			local mod = l-( math.floor( l / BigNum.RADIX_LEN ) * BigNum.RADIX_LEN ) ;
+			for i = 1 , l-mod, BigNum.RADIX_LEN do
+				bnum1[j] = tonumber( string.sub( num, -( i + BigNum.RADIX_LEN - 1 ) , -i ) );
+				--Check if string dosn't represents a number
+				if bnum1[j] == nil then
+				assert(false, "Function BigNum.change: string is not a valid number" ) ;
+				bnum1.len = 0 ;
+				return 1 ;
+				end
+				j = j + 1 ; 
+				len = len + 1 ;
+			end
+			if (mod ~= 0) then
+				bnum1[j] = tonumber( string.sub( num , 1 , mod ) ) ;
+				bnum1.len = len + 1 ;
+			else
+				bnum1.len = len ;            
+			end
+			--Eliminate trailing zeros
+			for i = bnum1.len - 1 , 1 , -1 do
+				if bnum1[i] == 0 then
+				bnum1[i] = nil ;
+				bnum1.len = bnum1.len - 1 ;
+				else
+				break ;
+				end
+			end
+		 
+		else     
+			-- string.len(num) <= BigNum.RADIX_LEN
+			bnum1[j] = tonumber( num ) ;
+			bnum1.len = 1 ;
+		end
+	else
+		assert(false, "Function BigNum.change: parameter error, type unexpected");
+	end
 
-   --eliminates the deprecated higher order 'algarisms'
-   if oldLen ~= nil then
-      for i = bnum1.len , oldLen do
-         bnum1[i] = nil ;
-      end
-   end
+	-- eliminates the deprecated higher order 'algarisms'
+	if oldLen ~= nil then
+		for i = bnum1.len, oldLen do
+			bnum1[i] = nil;
+		end
+	end
 
-   return 0 ;
+	return 0;
 end 
 
-function BigNum.put( bnum , int , pos )
-	local i = 0;
+function BigNum.put(bnum, int, pos)
 	for i = 0, pos - 1 do
 		bnum[i] = 0;
 	end
@@ -662,7 +607,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.8 - 08.11.2023 01:25 - Eisenmonoxid",
+	CurrentVersion = "1.3.9 - 10.11.2023 23:21 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -731,7 +676,7 @@ EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
 	local CTextSet = EMXHookLibrary.GetCTextSetStructure()
 	CTextSet = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, "4"))
 	
-	local TextSegment, Counter
+	local TextSegment
 	TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, Offsets[1])))
 	TextSegment = BigNum.mt.add(TextSegment, BigNum.mt.mul(_IDManagerEntryIndex, Offsets[2]))
 
@@ -1073,11 +1018,7 @@ EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 end
 
 EMXHookLibrary.ModifyPlayerInformationStructure = function(_newValue, _vanillaValue, _heValue)
-	if not EMXHookLibrary.IsHistoryEdition then 
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), _vanillaValue), _newValue)
-	else
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), _heValue), _newValue)
-	end
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), (EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue), _newValue)
 end
 
 EMXHookLibrary.SetSettlerIllnessCount = function(_newCount) EMXHookLibrary.ModifyPlayerInformationStructure(_newCount, "760", "700") end
@@ -1098,16 +1039,14 @@ EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibr
 EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "376") or "408"
 
-	local LimitPointer = 0
-	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), Offset)))			
+	local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), Offset)))			
 	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(_cathedralIndex, "4")), _limit)
 end
 
 EMXHookLibrary.SetLimitByEntityObject = function(_entityID, _upgradeLevel, _newLimit, _pointerValues)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and _pointerValues[2]) or _pointerValues[1]
 	
-	local LimitPointer = 0
-	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), "128")))
+	local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_entityID), "128")))
 	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, Offset)))
 	
 	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(_upgradeLevel, "4")), _newLimit)
@@ -1225,21 +1164,17 @@ end
 
 EMXHookLibrary.GetValueAtPointer = function(_Pointer)
 	if not Logic.IsEntityAlive(EMXHookLibrary.GlobalAdressEntity) then
-		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to set a value at adress "..BigNum.mt.tostring(_Pointer).." without existing AdressEntity!")
+		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to get value at adress "..BigNum.mt.tostring(_Pointer).." without existing AdressEntity!")
 		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
 		return;
 	end
 	
-	local PointerDifference = BigNum.mt.sub(_Pointer, EMXHookLibrary.GlobalHeapStart)
-	local FinalIndex = BigNum.mt.div(PointerDifference, "4")
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "-78") or "-81"
+	local Index = BigNum.mt.sub(_Pointer, EMXHookLibrary.GlobalHeapStart)
+	Index = BigNum.mt.div(Index, "4")
+	Index = BigNum.mt.add(Offset, Index)
 
-	if not EMXHookLibrary.IsHistoryEdition then
-		FinalIndex = BigNum.mt.add("-81", FinalIndex)
-	else
-		FinalIndex = BigNum.mt.add("-78", FinalIndex)
-	end
-	
-	return Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, tonumber(BigNum.mt.tostring(FinalIndex)))
+	return Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, tonumber(BigNum.mt.tostring(Index)))
 end
 
 EMXHookLibrary.SetValueAtPointer = function(_Pointer, _Value)
@@ -1249,16 +1184,12 @@ EMXHookLibrary.SetValueAtPointer = function(_Pointer, _Value)
 		return;
 	end
 	
-	local PointerDifference = BigNum.mt.sub(_Pointer, EMXHookLibrary.GlobalHeapStart)
-	local FinalIndex = BigNum.mt.div(PointerDifference, "4")
-
-	if not EMXHookLibrary.IsHistoryEdition then
-		FinalIndex = BigNum.mt.add("-81", FinalIndex)
-	else
-		FinalIndex = BigNum.mt.add("-78", FinalIndex)
-	end
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "-78") or "-81"
+	local Index = BigNum.mt.sub(_Pointer, EMXHookLibrary.GlobalHeapStart)
+	Index = BigNum.mt.div(Index, "4")
+	Index = BigNum.mt.add(Offset, Index)
 	
-	Logic.SetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, tonumber(BigNum.mt.tostring(FinalIndex)), _Value)
+	Logic.SetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, tonumber(BigNum.mt.tostring(Index)), _Value)
 end
 
 -- Initialization of the Library --
