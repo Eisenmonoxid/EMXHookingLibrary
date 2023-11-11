@@ -6,114 +6,78 @@ BigNum = {
 	mt = {}
 };
 
-function BigNum.new( num ) --{{{2
-   local bignum = {} ;
-   setmetatable( bignum , BigNum.mt ) ;
-   BigNum.change( bignum , num ) ;
-   return bignum ;
+function BigNum.new(Number)
+   local BNum = {};
+   BigNum.change(BNum, Number);
+   return BNum;
 end
 
-function BigNum.mt.sub( num1 , num2 )
-   local temp = BigNum.new() ;
-   local bnum1 = BigNum.new( num1 ) ;
-   local bnum2 = BigNum.new( num2 ) ;
-   BigNum.sub( bnum1 , bnum2 , temp ) ;
-   return temp ;
+function BigNum.mt.sub(Number1, Number2)
+   local Temp = BigNum.new();
+   BigNum.sub(BigNum.new(Number1), BigNum.new(Number2), Temp);
+   return Temp;
 end
 
-function BigNum.mt.add( num1 , num2 )
-   local temp = BigNum.new() ;
-   local bnum1 = BigNum.new( num1 ) ;
-   local bnum2 = BigNum.new( num2 ) ;
-   BigNum.add( bnum1 , bnum2 , temp ) ;
-   return temp ;
+function BigNum.mt.add(Number1, Number2)
+   local Temp = BigNum.new();
+   BigNum.add(BigNum.new(Number1), BigNum.new(Number2), Temp);
+   return Temp;
 end
 
-function BigNum.mt.mul( num1 , num2 )
-   local temp = BigNum.new() ;
-   local bnum1 = BigNum.new( num1 ) ;
-   local bnum2 = BigNum.new( num2 ) ;
-   BigNum.mul( bnum1 , bnum2 , temp ) ;
-   return temp ;
+function BigNum.mt.mul(Number1, Number2)
+   local Temp = BigNum.new();
+   BigNum.mul(BigNum.new(Number1), BigNum.new(Number2), Temp);
+   return Temp;
 end
 
-function BigNum.mt.div( num1 , num2 )
-   local bnum1 = {} ;
-   local bnum2 = {} ;
-   local bnum3 = BigNum.new() ;
-   local bnum4 = BigNum.new() ;
-   bnum1 = BigNum.new( num1 ) ;
-   bnum2 = BigNum.new( num2 ) ;
-   BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 ) ;
-   return bnum3 , bnum4 ;
+function BigNum.mt.div(Number1, Number2)
+   local Quotient = BigNum.new();
+   local Remainder = BigNum.new();
+   BigNum.div(BigNum.new(Number1), BigNum.new(Number2), Quotient, Remainder);
+   return Quotient, Remainder;
 end
 
-function BigNum.mt.tostring( bnum )
-   local i = 0 ;
-   local j = 0 ;
-   local str = "" ;
-   local temp = "" ;
-   if bnum == nil then
-      return "nil" ;
-   elseif bnum.len > 0 then
-      for i = bnum.len - 2 , 0 , -1  do
-         for j = 0 , BigNum.RADIX_LEN - string.len( bnum[i] ) - 1 do
-            temp = temp .. '0' ;
-         end
-         temp = temp .. bnum[i] ;
-      end
-      temp = bnum[bnum.len - 1] .. temp ;
-      if bnum.signal == '-' then
-         temp = bnum.signal .. temp ;
-      end
-      return temp ;
-   else
-      return "" ;
-   end
+function BigNum.mt.tostring(BNum)
+	local str = "";
+	local temp = "";
+	if BNum == nil then
+		return "nil";
+	elseif BNum.len > 0 then
+		for i = BNum.len - 2, 0, -1 do
+			for j = 0, BigNum.RADIX_LEN - string.len(BNum[i]) - 1 do
+				temp = temp .. '0';
+			end
+			temp = temp .. BNum[i];
+		end
+		temp = BNum[BNum.len - 1] .. temp;
+		if BNum.signal == '-' then
+			temp = BNum.signal .. temp;
+		end
+		return temp;
+	else
+		return "";
+	end
 end
 
-function BigNum.mt.eq( num1 , num2 )
-   local bnum1 = BigNum.new( num1 ) ;
-   local bnum2 = BigNum.new( num2 ) ;
-   return BigNum.eq( bnum1 , bnum2 ) ;
+function BigNum.mt.eq(Number1, Number2)
+	return BigNum.eq(BigNum.new(Number1), BigNum.new(Number2));
+end
+function BigNum.mt.lt(Number1, Number2)
+	return BigNum.lt(BigNum.new(Number1), BigNum.new(Number2));
+end
+function BigNum.mt.le(Number1, Number2)
+	return BigNum.le(BigNum.new(Number1), BigNum.new(Number2));
 end
 
-function BigNum.mt.lt( num1 , num2 )
-   local bnum1 = BigNum.new( num1 ) ;
-   local bnum2 = BigNum.new( num2 ) ;
-   return BigNum.lt( bnum1 , bnum2 ) ;
+function BigNum.mt.unm(num)
+	local ret = BigNum.new(num)
+	if ret.signal == '+' then
+		ret.signal = '-'
+	else
+		ret.signal = '+'
+	end
+	return ret
 end
-
-function BigNum.mt.le( num1 , num2 )
-   local bnum1 = BigNum.new( num1 ) ;
-   local bnum2 = BigNum.new( num2 ) ;
-   return BigNum.le( bnum1 , bnum2 ) ;
-end
-
-function BigNum.mt.unm( num )
-   local ret = BigNum.new( num )
-   if ret.signal == '+' then
-      ret.signal = '-'
-   else
-      ret.signal = '+'
-   end
-   return ret
-end
-
-BigNum.mt.__metatable = "hidden";
-BigNum.mt.__tostring  = BigNum.mt.tostring;
--- arithmetics
-BigNum.mt.__add = BigNum.mt.add;
-BigNum.mt.__sub = BigNum.mt.sub;
-BigNum.mt.__mul = BigNum.mt.mul;
-BigNum.mt.__div = BigNum.mt.div;
-BigNum.mt.__unm = BigNum.mt.unm;
--- Comparisons
-BigNum.mt.__eq = BigNum.mt.eq; 
-BigNum.mt.__le = BigNum.mt.le;
-BigNum.mt.__lt = BigNum.mt.lt;
---concatenation
-setmetatable(BigNum.mt, {__index = "inexistent field", __newindex = "not available", __metatable = "hidden"});
 
 function BigNum.add( bnum1 , bnum2 , bnum3 )
    local maxlen = 0 ;
@@ -607,7 +571,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.9 - 10.11.2023 23:21 - Eisenmonoxid",
+	CurrentVersion = "1.3.9 - 11.11.2023 18:35 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -640,7 +604,9 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
 			break;
 		end
 		Counter = Counter + 1
-		if Counter >= 1000 then -- ERROR: Endless Loop, ColorSet not Found!
+		if Counter >= 100 then -- ERROR: Endless Loop, ColorSet not Found!
+			assert(false, "EMXHookLibrary: ERROR! ColorSet ".._ColorSetIndex.." NOT found! Aborting ...")
+			Framework.WriteToLog("EMXHookLibrary: ERROR! ColorSet ".._ColorSetIndex.." NOT found! Aborting ...")
 			return false;
 		end
 	until false
@@ -658,7 +624,7 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
 	return OriginalValues
 end
 
--- This requires the map to be restarted after setting the values! 0 -> No Icon!
+-- This requires the map to be restarted (or a save to be loaded) after setting the values! 0 -> No Icon!
 EMXHookLibrary.SetEntityTypeMinimapIcon = function(_entityType, _iconIndex)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "88"}) or {"28", "92"}
 	
@@ -812,7 +778,7 @@ EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDu
 	end
 end
 
-EMXHookLibrary.SetBuildingTypeOutStockProduct = function(_buildingID, _newGood)
+EMXHookLibrary.SetBuildingTypeOutStockProduct = function(_buildingID, _newGood, _forEntityType)
 	local HEValues = {"352", "4", "8", "20", "20", "128", "564"}
 	local OVValues = {"364", "4", "8", "16", "24", "128", "612"}
 	local SharedIdentifier = "-1035359747"
@@ -833,8 +799,10 @@ EMXHookLibrary.SetBuildingTypeOutStockProduct = function(_buildingID, _newGood)
 		Value = BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[1]))	
 	end
 
-	Props = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[6]))))
-	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Props, BigNum.new(CorrespondingValues[7])), _newGood)
+	if _forEntityType ~= nil then
+		Props = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[6]))))
+		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Props, BigNum.new(CorrespondingValues[7])), _newGood)
+	end
 
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 	Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[2]))	
@@ -1069,7 +1037,7 @@ EMXHookLibrary.SetStoreHouseOutStockCapacity = function(_playerID, _upgradeLevel
 end
 
 EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "144"}) or {"28", "136"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"28", "136"}) or {"24", "144"}
 	local LimitPointer = 0
 	
 	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), Offsets[1])))
