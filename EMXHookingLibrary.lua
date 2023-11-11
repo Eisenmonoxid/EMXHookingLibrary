@@ -7,34 +7,35 @@ BigNum = {
 };
 
 function BigNum.new(Number)
-   local BNum = {};
-   BigNum.change(BNum, Number);
-   return BNum;
+	local BNum = {};
+	setmetatable(BNum, BigNum.mt);
+	BigNum.change(BNum, Number);
+	return BNum;
 end
 
 function BigNum.mt.sub(Number1, Number2)
-   local Temp = BigNum.new();
-   BigNum.sub(BigNum.new(Number1), BigNum.new(Number2), Temp);
-   return Temp;
+	local Temp = BigNum.new();
+	BigNum.sub(BigNum.new(Number1), BigNum.new(Number2), Temp);
+	return Temp;
 end
 
 function BigNum.mt.add(Number1, Number2)
-   local Temp = BigNum.new();
-   BigNum.add(BigNum.new(Number1), BigNum.new(Number2), Temp);
-   return Temp;
+	local Temp = BigNum.new();
+	BigNum.add(BigNum.new(Number1), BigNum.new(Number2), Temp);
+	return Temp;
 end
 
 function BigNum.mt.mul(Number1, Number2)
-   local Temp = BigNum.new();
-   BigNum.mul(BigNum.new(Number1), BigNum.new(Number2), Temp);
-   return Temp;
+	local Temp = BigNum.new();
+	BigNum.mul(BigNum.new(Number1), BigNum.new(Number2), Temp);
+	return Temp;
 end
 
 function BigNum.mt.div(Number1, Number2)
-   local Quotient = BigNum.new();
-   local Remainder = BigNum.new();
-   BigNum.div(BigNum.new(Number1), BigNum.new(Number2), Quotient, Remainder);
-   return Quotient, Remainder;
+	local Quotient = BigNum.new();
+	local Remainder = BigNum.new();
+	BigNum.div(BigNum.new(Number1), BigNum.new(Number2), Quotient, Remainder);
+	return Quotient, Remainder;
 end
 
 function BigNum.mt.tostring(BNum)
@@ -78,6 +79,21 @@ function BigNum.mt.unm(num)
 	end
 	return ret
 end
+
+BigNum.mt.__metatable = "hidden";
+BigNum.mt.__tostring  = BigNum.mt.tostring;
+-- arithmetics
+BigNum.mt.__add = BigNum.mt.add;
+BigNum.mt.__sub = BigNum.mt.sub;
+BigNum.mt.__mul = BigNum.mt.mul;
+BigNum.mt.__div = BigNum.mt.div;
+BigNum.mt.__unm = BigNum.mt.unm;
+-- Comparisons
+BigNum.mt.__eq = BigNum.mt.eq; 
+BigNum.mt.__le = BigNum.mt.le;
+BigNum.mt.__lt = BigNum.mt.lt;
+--concatenation
+setmetatable(BigNum.mt, {__index = "inexistent field", __newindex = "not available", __metatable = "hidden"});
 
 function BigNum.add( bnum1 , bnum2 , bnum3 )
    local maxlen = 0 ;
@@ -571,7 +587,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.9 - 11.11.2023 18:35 - Eisenmonoxid",
+	CurrentVersion = "1.3.9 - 11.11.2023 19:04 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -1037,12 +1053,11 @@ EMXHookLibrary.SetStoreHouseOutStockCapacity = function(_playerID, _upgradeLevel
 end
 
 EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"28", "136"}) or {"24", "144"}
-	local LimitPointer = 0
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136"}) or {"28", "144"}
 	
-	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), Offsets[1])))
+	local LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetBuildingInformationStructure(), Offsets[1])))
 	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, BigNum.mt.mul(_entityType, "4"))))
-	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, Offsets[2])))	
+	LimitPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(LimitPointer, Offsets[2])))
 
 	EMXHookLibrary.SetValueAtPointer(LimitPointer, _good)
 	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, "4"), _amount)
