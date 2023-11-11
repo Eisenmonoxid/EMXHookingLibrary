@@ -587,7 +587,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.9 - 11.11.2023 19:04 - Eisenmonoxid",
+	CurrentVersion = "1.3.9 - 11.11.2023 22:20 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -1131,7 +1131,7 @@ EMXHookLibrary.CompareIdentifierToStaticValue = function(Value, Identifier)
 	
 	while (BigNum.compareAbs(CurrentIdentifier, StaticValue) ~= 0) do
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offset))
+		CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offset)))
 	end
 	
 	return Value
