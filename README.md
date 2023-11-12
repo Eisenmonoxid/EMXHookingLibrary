@@ -22,7 +22,7 @@ EMXHookLibrary.SetCarnivoreHealingSeconds(_newTime)
 -> Setzt die Zeit, die Raubtiere benötigen, um ihre Gesundheit zu regenerieren.
 
 EMXHookLibrary.SetKnightResurrectionTime(_newTime)
--> Setzt die Zeit, die sich der Ritter in der Burg erholen muss.
+-> Setzt die Zeit, die sich der Ritter in der Burg erholen muss. (Normal: 60000)
 
 EMXHookLibrary.SetMaxBuildingTaxAmount(_newTaxAmount)
 -> Setzt die maximale Anzahl an Steuereinnahmen, die Stadtgebäude besitzen können.
@@ -39,6 +39,7 @@ EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
 -> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn das Gebäude bereits zwei Kosteneinträge im Originalspiel hat.
 Ansonsten sollte das Baukostensystem für die zweite Ware verwendet werden.
+Hinweis: Funktioniert auch bei Einheiten, zB Munitionskarren/Soldaten. 
 
 EMXHookLibrary.SetEntityTypeMaxHealth(_entityType, _newMaxHealth)
 -> Setzt die maximalen Lebenspunkte (HP) eines Entitätentyps.
@@ -80,11 +81,13 @@ ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetBuildingTypeOutStockCapacity betrifft
 EMXHookLibrary.SetBuildingInStockGood(_buildingID, _newGood)
 -> Setzt eine neue Ware als InStock eines Gebäudes.
 
-EMXHookLibrary.SetBuildingTypeOutStockProduct(_buildingID, _newGood)
--> Setzt eine neue Ware als OutStock eines Gebäudetyps.
+EMXHookLibrary.SetBuildingTypeOutStockProduct(_buildingID, _newGood, _forEntityType)
+-> Setzt eine neue Ware als OutStock eines Gebäudes. Wenn _forEntityType ~= nil, wird der Wert für den Entitätentyp gesetzt,
+ansonsten für ein Gebäude.
 
 EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource, _amount)
 -> Setzt das benötigte Produktionsgut einer Ware und/oder deren benötigte Menge. (zB Goods.G_Carcass -> Goods.G_Sausage)
+(Nicht benötigte Parameter sind nil).
 Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 Weizen für 1 Brot, 2 Stein für 1 Besen usw.)
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
@@ -101,6 +104,7 @@ EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
 
 EMXHookLibrary.SetSettlersWorkBuilding(_settlerID, _buildingID)
 -> Setzt das Arbeitsgebäude eines Siedlers. Dadurch ist es möglich, mehr als 3 Siedler an einem Gebäude beschäftigt zu haben.
+ACHTUNG: Der Siedler muss bereits einem Gebäude zugeordnet sein, bevor gewechselt werden kann!
 (Bei mehr als 3 Siedlern sollte zuvor EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers entsprechend gesetzt werden)
 
 EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers(_buildingID, _maxWorkers)
@@ -111,7 +115,8 @@ EMXHookLibrary.EditFestivalProperties(_festivalDuration, _promotionDuration, _pr
 Geändert werden können Dauer sowie das Limit der möglichen Partizipierenden.
 
 EMXHookLibrary.EditStringTableText(_IDManagerEntryIndex, _newString)
-->  Verändert den StringTable-Eintrag. Der EntryIndex muss zuerst ausgelesen werden. Genaueres auf Anfrage.
+->  Verändert einen StringTable-Eintrag. Der EntryIndex muss zuerst ausgelesen werden und das Zeichenlimit muss beachtet werden.
+Genaueres dazu auf Anfrage.
 Bspw. "Saraya" -> "Testritter": EMXHookLibrary.EditStringTableText(5037, "Testritter")
 
 EMXHookLibrary.SetEntityTypeMinimapIcon(_entityType, _iconIndex)
@@ -120,7 +125,9 @@ ACHTUNG: Nachdem die Icons gesetzt wurden, muss die Map neugestartet werden (ode
 
 EMXHookLibrary.SetColorSetColorRGB(_ColorSetIndex, _season, _rgb)
 -> Setzt die Farben eines ColorSets per Season. Es wird ein Table zurückgegeben, der die originalen Values enthält, damit man
-das Colorset wieder zurücksetzen kann. 
-Bspw. EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7}) --Red, Green, Blue, Alpha
+das Colorset wieder zurücksetzen kann.
+Wenn das ColorSet nicht mit der Klimazone der Map geladen wurde, muss es zuerst manuell über Display.AddColorSet(_nameWithoutExtension) hinzugefügt werden.
+Bspw. EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7})
+--> 82 = (ME_Set_T_Grass01), 1 = Season (Spring), {Red, Green, Blue, Alpha}.
 ```
 When errors occur, please notify me so i can fix them! ;)
