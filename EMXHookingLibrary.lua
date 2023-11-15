@@ -560,13 +560,10 @@ function BigNum.put(bnum, int, pos)
 	for i = 0, pos - 1 do
 		bnum[i] = 0;
 	end
-	
 	bnum[pos] = int;
-	
 	for i = pos + 1, bnum.len do
 		bnum[i] = nil;
 	end
-	
 	bnum.len = pos;
 	return 0
 end
@@ -587,7 +584,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.9 - 11.11.2023 22:20 - Eisenmonoxid",
+	CurrentVersion = "1.3.9 - 15.11.2023 01:26 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -620,7 +617,7 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
 			break;
 		end
 		Counter = Counter + 1
-		if Counter >= 100 then -- ERROR: Endless Loop, ColorSet not Found!
+		if Counter >= 200 then -- ERROR: Endless Loop, ColorSet not Found!
 			assert(false, "EMXHookLibrary: ERROR! ColorSet ".._ColorSetIndex.." NOT found! Aborting ...")
 			Framework.WriteToLog("EMXHookLibrary: ERROR! ColorSet ".._ColorSetIndex.." NOT found! Aborting ...")
 			return false;
@@ -640,7 +637,6 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
 	return OriginalValues
 end
 
--- This requires the map to be restarted (or a save to be loaded) after setting the values! 0 -> No Icon!
 EMXHookLibrary.SetEntityTypeMinimapIcon = function(_entityType, _iconIndex)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "88"}) or {"28", "92"}
 	
@@ -994,13 +990,6 @@ EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectIns
 EMXHookLibrary.GetFrameworkCMainStructure = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
 EMXHookLibrary.GetCTextSetStructure = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
 
-EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
-	local Index = _arrayIndex * 4
-	local Offset = (EMXHookLibrary.IsHistoryEdition and "628") or "684"
-
-	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.mt.add(Offset, Index)), _price)
-end
-
 EMXHookLibrary.ModifyPlayerInformationStructure = function(_newValue, _vanillaValue, _heValue)
 	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), (EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue), _newValue)
 end
@@ -1019,6 +1008,14 @@ EMXHookLibrary.SetBuildingKnockDownCompensation = function(_percent) EMXHookLibr
 EMXHookLibrary.SetTerritoryCombatBonus = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "604", "560") end
 EMXHookLibrary.SetCathedralCollectAmount = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "436", "404") end
 EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "260", "240") end
+EMXHookLibrary.SetWealthGoodDecayPerSecond = function(_decay) EMXHookLibrary.ModifyPlayerInformationStructure(_decay, "492", "460") end
+
+EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
+	local Index = _arrayIndex * 4
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "628") or "684"
+
+	EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.mt.add(Offset, Index)), _price)
+end
 
 EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "376") or "408"
@@ -1066,6 +1063,26 @@ EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _se
 		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, "8"), _secondGood)
 		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(LimitPointer, "12"), _secondAmount)
 	end
+end
+
+-- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}
+EMXHookLibrary.SetMilitaryMetaFormationParameters = function(_distances) 
+	assert(type(_distances) == "table")
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "652") or "708"
+	local OriginalValues = {}
+	
+	local Counter = 0
+	local CurrentPointer
+	for Key, Value in pairs(_distances) do
+		if Value ~= nil then
+			CurrentPointer = BigNum.mt.add(EMXHookLibrary.GetPlayerInformationStructure(), BigNum.mt.add(Offset, Counter))
+			OriginalValues[#OriginalValues + 1] = EMXHookLibrary.HelperFunctions.Int2Float(EMXHookLibrary.GetValueAtPointer(CurrentPointer))
+			EMXHookLibrary.SetValueAtPointer(CurrentPointer, EMXHookLibrary.HelperFunctions.Float2Int(Value))
+		end
+		Counter = Counter + 4
+	end
+	
+	return OriginalValues
 end
 
 -- Hooking Utility Methods --
@@ -1231,7 +1248,7 @@ EMXHookLibrary.GetHistoryEditionVariant = function()
 	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, -78))
 	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 
-	local Digit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, BigNum.new("105"))))
+	local Digit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(PointerValue, "105")))
 	local HexString = string.format("%x", BigNum.mt.tostring(Digit))
 
 	HexString = string.sub(HexString, 3, 8)
@@ -1239,9 +1256,9 @@ EMXHookLibrary.GetHistoryEditionVariant = function()
 	Framework.WriteToLog("EMXHookLibrary: History Edition Variant -> Found "..HexString.." - Expected: 92ff")
 	
 	if HexString == "92ff" then
-		return 1
+		return 1 -- Steam HE
 	else
-		return 2
+		return 2 -- Ubi Connect HE
 	end
 end
 
