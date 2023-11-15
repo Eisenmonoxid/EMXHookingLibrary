@@ -18,6 +18,9 @@ EMXHookLibrary.SetTerritoryGoldCostByIndex(_arrayIndex, _price)
 EMXHookLibrary.SetSettlerIllnessCount(_newCount)
 -> Setzt die Siedlermenge, ab derer Krankheiten ausbrechen können. (Normal: 151)
 
+EMXHookLibrary.SetWealthGoodDecayPerSecond(_decay)
+-> Setzt den Wert, um den Wealth-Güter in Gebäuden wiederaufgefüllt werden müssen. (Normal: 0)
+
 EMXHookLibrary.SetCarnivoreHealingSeconds(_newTime)
 -> Setzt die Zeit, die Raubtiere benötigen, um ihre Gesundheit zu regenerieren.
 
@@ -37,8 +40,8 @@ EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 -> Setzt den Faktor, um den der Fog of War in bereits aufgedeckten Gebieten angewandt wird. (Normal: 0.75)
 
 EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
--> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn das Gebäude bereits zwei Kosteneinträge im Originalspiel hat.
-Ansonsten sollte das Baukostensystem für die zweite Ware verwendet werden.
+-> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn der Entitätentyp bereits zwei Kosteneinträge im Originalspiel hat.
+Ansonsten sollte das Baukostensystem für die zweite Ware (bei Gebäuden!) verwendet werden.
 Hinweis: Funktioniert auch bei Einheiten, zB Munitionskarren/Soldaten. 
 
 EMXHookLibrary.SetEntityTypeMaxHealth(_entityType, _newMaxHealth)
@@ -61,6 +64,11 @@ EMXHookLibrary.SetSermonSettlerLimit(_playerID, _upgradeLevel, _limit)
 
 EMXHookLibrary.SetSoldierLimit(_playerID, _upgradeLevel, _limit)    
 -> Setzt das Limit an Soldaten per Burgausbaulevel. (Normal: 25, 43, 61, 91)
+
+EMXHookLibrary.SetMilitaryMetaFormationParameters(_distances)
+-> Setzt einige Parameter zur Truppenanordnung. Der Parameter _distances muss ein table sein nach folgendem Vorbild:
+-- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}.
+Nicht benötigte Werte sind nil.
 
 EMXHookLibrary.SetBuildingTypeOutStockCapacity(_buildingID, _upgradeLevel, _limit)	
 -> Setzt den maximalen OutStock eines Gebäudetyps basierend auf dessen Ausbaulevel. (Normal: 3, 6, 9 oder nur 9).
@@ -116,17 +124,18 @@ Geändert werden können Dauer sowie das Limit der möglichen Partizipierenden.
 
 EMXHookLibrary.EditStringTableText(_IDManagerEntryIndex, _newString)
 ->  Verändert einen StringTable-Eintrag. Der EntryIndex muss zuerst ausgelesen werden und das Zeichenlimit muss beachtet werden.
-Genaueres dazu auf Anfrage.
+Genaueres zur Verwendung auf Anfrage.
 Bspw. "Saraya" -> "Testritter": EMXHookLibrary.EditStringTableText(5037, "Testritter")
 
 EMXHookLibrary.SetEntityTypeMinimapIcon(_entityType, _iconIndex)
 -> Setzt ein Minimap-Icon für einen Entitätentyp. Es sind Icons aus der Icontabelle möglich. 0 entfernt das Icon wieder.
-ACHTUNG: Nachdem die Icons gesetzt wurden, muss die Map neugestartet werden (oder ein Savegame geladen werden), damit der Effekt sichtbar ist.
+Für bereits auf der Map existierende Entitäten sollte die Funktion in der FMA aufgerufen werden, ansonsten sind nur neu erstellte Entitäten betroffen.
 
 EMXHookLibrary.SetColorSetColorRGB(_ColorSetIndex, _season, _rgb)
 -> Setzt die Farben eines ColorSets per Season. Es wird ein Table zurückgegeben, der die originalen Values enthält, damit man
 das Colorset wieder zurücksetzen kann.
 Wenn das ColorSet nicht mit der Klimazone der Map geladen wurde, muss es zuerst manuell über Display.AddColorSet(_nameWithoutExtension) hinzugefügt werden.
+Genaueres zur Verwendung auf Anfrage.
 Bspw. EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7})
 --> 82 = (ME_Set_T_Grass01), 1 = Season (Spring), {Red, Green, Blue, Alpha}.
 ```
