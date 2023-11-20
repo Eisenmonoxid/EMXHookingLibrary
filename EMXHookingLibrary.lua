@@ -584,7 +584,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.9 - 15.11.2023 01:26 - Eisenmonoxid",
+	CurrentVersion = "1.3.9 - 20.11.2023 02:02 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -597,8 +597,8 @@ EMXHookLibrary = {
 	CachedClassPointers = {}
 };
 
--- EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7}) --Red, Green, Blue, Alpha
-EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
+-- EMXHookLibrary.SetColorSetColorRGB(1, 1, {0.3, 0.7, 0.4, 0.7}) --Red, Green, Blue, Alpha
+EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
 	local SeasonIndizes = {0, 16, 32, 48}
 	local OriginalValues = {}
@@ -610,19 +610,9 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetIndex, _season, _rgb)
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, Offsets[1])))
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, "4")))
 
-	repeat
-		CurrentIdentifier = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offsets[2]))
+	for i = 0, _ColorSetEntryIndex, 1 do
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, "8")))
-		if (CurrentIdentifier == _ColorSetIndex) then
-			break;
-		end
-		Counter = Counter + 1
-		if Counter >= 200 then -- ERROR: Endless Loop, ColorSet not Found!
-			assert(false, "EMXHookLibrary: ERROR! ColorSet ".._ColorSetIndex.." NOT found! Aborting ...")
-			Framework.WriteToLog("EMXHookLibrary: ERROR! ColorSet ".._ColorSetIndex.." NOT found! Aborting ...")
-			return false;
-		end
-	until false
+	end
 	
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offsets[3])))
