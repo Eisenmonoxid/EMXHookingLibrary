@@ -131,10 +131,10 @@ EMXHookLibrary.SetEntityTypeMinimapIcon(_entityType, _iconIndex)
 -> Setzt ein Minimap-Icon für einen Entitätentyp. Es sind Icons aus der Icontabelle möglich. 0 entfernt das Icon wieder.
 Für bereits auf der Map existierende Entitäten sollte die Funktion in der FMA aufgerufen werden, ansonsten sind nur neu erstellte Entitäten betroffen.
 
-EMXHookLibrary.SetColorSetColorRGB(_ColorSetEntryIndex, _season, _rgb)
+EMXHookLibrary.SetColorSetColorRGB(_ColorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
 -> Setzt die Farben eines ColorSets per Jahreszeit. Es wird ein Table zurückgegeben, der die originalen Values enthält, damit man
 das ColorSet wieder zurücksetzen kann. Für den ersten Parameter entweder von 0 beginnend aufsteigend durchprobieren, oder anfragen.
-Bspw. EMXHookLibrary.SetColorSetColorRGB(2, 1, {0.3, 0.7, 0.4, 0.7})
---> 2 = ColorSetIndex; 1 = Season (Spring); {Red, Green, Blue, Alpha}.
+Bspw. EMXHookLibrary.SetColorSetColorRGB(2, 1, {0.3, 0.7, 0.4, 0.7}, nil, true)
+--> ColorSetIndex; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor, Use the alternative ColorSet array.
 ```
 When errors occur, please notify me so i can fix them! ;)
