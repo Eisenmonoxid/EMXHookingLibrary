@@ -584,7 +584,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.3.9 - 20.11.2023 02:02 - Eisenmonoxid",
+	CurrentVersion = "1.4 - 20.11.2023 07:13 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -597,24 +597,23 @@ EMXHookLibrary = {
 	CachedClassPointers = {}
 };
 
--- EMXHookLibrary.SetColorSetColorRGB(1, 1, {0.3, 0.7, 0.4, 0.7}) --Red, Green, Blue, Alpha
-EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb)
+-- EMXHookLibrary.SetColorSetColorRGB(0, 1, {0.3, 0.7, 0.4, 0.7}, nil, false) -> {Red, Green, Blue, Alpha}
+EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
 	local SeasonIndizes = {0, 16, 32, 48}
-	local OriginalValues = {}
+	local OriginalValues = {0, 0, 0, 0, 0}
 	
 	local GlobalsBaseEx = EMXHookLibrary.GetCGlobalsBaseEx()
 	local CurrentPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(GlobalsBaseEx, "128")))
 
-	local Counter = 0, CurrentIdentifier, Value
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, Offsets[1])))
+	local Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CurrentPointer, Offsets[1])))
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, "4")))
 
 	for i = 0, _ColorSetEntryIndex, 1 do
 		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, "8")))
 	end
-	
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
+
+	Value = (_useAlternativeStructure and BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))) or Value
 	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, Offsets[3])))
 
 	local CurrentIndex = SeasonIndizes[_season]
@@ -622,6 +621,12 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb
 		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.HelperFunctions.Int2Float(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, CurrentIndex)))
 		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Value, CurrentIndex), EMXHookLibrary.HelperFunctions.Float2Int(_rgb[i]))
 		CurrentIndex = CurrentIndex + 4
+	end
+	
+	local Location = BigNum.mt.add(Value, "64")
+	if _wetFactor then
+		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.HelperFunctions.Int2Float(EMXHookLibrary.GetValueAtPointer(Location))
+		EMXHookLibrary.SetValueAtPointer(Location, EMXHookLibrary.HelperFunctions.Float2Int(_wetFactor))
 	end
 	
 	return OriginalValues
