@@ -584,7 +584,7 @@ end
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.4 - 20.11.2023 07:13 - Eisenmonoxid",
+	CurrentVersion = "1.4 - 21.11.2023 07:57 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -601,7 +601,7 @@ EMXHookLibrary = {
 EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
 	local SeasonIndizes = {0, 16, 32, 48}
-	local OriginalValues = {0, 0, 0, 0, 0}
+	local OriginalValues = {}
 	
 	local GlobalsBaseEx = EMXHookLibrary.GetCGlobalsBaseEx()
 	local CurrentPointer = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(GlobalsBaseEx, "128")))
@@ -623,8 +623,8 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb
 		CurrentIndex = CurrentIndex + 4
 	end
 	
-	local Location = BigNum.mt.add(Value, "64")
 	if _wetFactor then
+		local Location = BigNum.mt.add(Value, "64")
 		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.HelperFunctions.Int2Float(EMXHookLibrary.GetValueAtPointer(Location))
 		EMXHookLibrary.SetValueAtPointer(Location, EMXHookLibrary.HelperFunctions.Float2Int(_wetFactor))
 	end
@@ -649,8 +649,7 @@ EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
 	local CTextSet = EMXHookLibrary.GetCTextSetStructure()
 	CTextSet = EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, "4"))
 	
-	local TextSegment
-	TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, Offsets[1])))
+	local TextSegment = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(CTextSet, Offsets[1])))
 	TextSegment = BigNum.mt.add(TextSegment, BigNum.mt.mul(_IDManagerEntryIndex, Offsets[2]))
 
 	for i = 1, #WideCharAsMultiByte do
