@@ -89,7 +89,7 @@ ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetBuildingTypeOutStockCapacity betrifft
 EMXHookLibrary.SetBuildingInStockGood(_buildingID, _newGood)
 -> Setzt eine neue Ware als InStock eines Gebäudes.
 
-EMXHookLibrary.SetBuildingTypeOutStockProduct(_buildingID, _newGood, _forEntityType)
+EMXHookLibrary.SetBuildingTypeOutStockGood(_buildingID, _newGood, _forEntityType)
 -> Setzt eine neue Ware als OutStock eines Gebäudes. Wenn _forEntityType ~= nil, wird der Wert für den Entitätentyp gesetzt,
 ansonsten für ein Gebäude.
 
@@ -99,9 +99,9 @@ EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource
 Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 Weizen für 1 Brot, 2 Stein für 1 Besen usw.)
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
--> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren. (Eventuell für LuaDebugger Kompatibilität benötigt).
+-> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren.
 _magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden.
-Funktioniert sowohl in Steam - HE als auch in der Ubisoft - HE.
+Funktioniert NUR in der Steam - HE. Für die Ubisoft - HE sollte der S6Patcher verwendet werden!
 
 EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
 -> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein. Beispiele:
@@ -136,5 +136,6 @@ EMXHookLibrary.SetColorSetColorRGB(_ColorSetEntryIndex, _season, _rgb, _wetFacto
 das ColorSet wieder zurücksetzen kann. Für den ersten Parameter entweder von 0 beginnend aufsteigend durchprobieren, oder anfragen.
 Bspw. EMXHookLibrary.SetColorSetColorRGB(2, 1, {0.3, 0.7, 0.4, 0.7}, nil, true)
 --> ColorSetIndex; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor, Use the alternative ColorSet array.
+Bspw. EMXHookLibrary.SetColorSetColorRGB(0, 1, {0.6, 0.3, 0.9, 1}, 55, false) -> Setzt den Fog of War.
 ```
 When errors occur, please notify me so i can fix them! ;)
