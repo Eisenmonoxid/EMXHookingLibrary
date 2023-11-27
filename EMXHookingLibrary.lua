@@ -1,590 +1,13 @@
--- BigNum - Code --
 BigNum = {
 	RADIX = 10^7,
 	RADIX_LEN = math.floor(math.log10(10^7)),
-	
-	mt = {}
+	mt = {}	
 };
-
-function BigNum.new(Number)
-	local BNum = {};
-	setmetatable(BNum, BigNum.mt);
-	BigNum.change(BNum, Number);
-	return BNum;
-end
-
-function BigNum.mt.sub(Number1, Number2)
-	local Temp = BigNum.new();
-	BigNum.sub(BigNum.new(Number1), BigNum.new(Number2), Temp);
-	return Temp;
-end
-
-function BigNum.mt.add(Number1, Number2)
-	local Temp = BigNum.new();
-	BigNum.add(BigNum.new(Number1), BigNum.new(Number2), Temp);
-	return Temp;
-end
-
-function BigNum.mt.mul(Number1, Number2)
-	local Temp = BigNum.new();
-	BigNum.mul(BigNum.new(Number1), BigNum.new(Number2), Temp);
-	return Temp;
-end
-
-function BigNum.mt.div(Number1, Number2)
-	local Quotient = BigNum.new();
-	local Remainder = BigNum.new();
-	BigNum.div(BigNum.new(Number1), BigNum.new(Number2), Quotient, Remainder);
-	return Quotient, Remainder;
-end
-
-function BigNum.mt.tostring(BNum)
-	local str = "";
-	local temp = "";
-	if BNum == nil then
-		return "nil";
-	elseif BNum.len > 0 then
-		for i = BNum.len - 2, 0, -1 do
-			for j = 0, BigNum.RADIX_LEN - string.len(BNum[i]) - 1 do
-				temp = temp .. '0';
-			end
-			temp = temp .. BNum[i];
-		end
-		temp = BNum[BNum.len - 1] .. temp;
-		if BNum.signal == '-' then
-			temp = BNum.signal .. temp;
-		end
-		return temp;
-	else
-		return "";
-	end
-end
-
-function BigNum.mt.eq(Number1, Number2)
-	return BigNum.eq(BigNum.new(Number1), BigNum.new(Number2));
-end
-function BigNum.mt.lt(Number1, Number2)
-	return BigNum.lt(BigNum.new(Number1), BigNum.new(Number2));
-end
-function BigNum.mt.le(Number1, Number2)
-	return BigNum.le(BigNum.new(Number1), BigNum.new(Number2));
-end
-
-function BigNum.mt.unm(num)
-	local ret = BigNum.new(num)
-	if ret.signal == '+' then
-		ret.signal = '-'
-	else
-		ret.signal = '+'
-	end
-	return ret
-end
-
-BigNum.mt.__metatable = "hidden";
-BigNum.mt.__tostring  = BigNum.mt.tostring;
--- arithmetics
-BigNum.mt.__add = BigNum.mt.add;
-BigNum.mt.__sub = BigNum.mt.sub;
-BigNum.mt.__mul = BigNum.mt.mul;
-BigNum.mt.__div = BigNum.mt.div;
-BigNum.mt.__unm = BigNum.mt.unm;
--- Comparisons
-BigNum.mt.__eq = BigNum.mt.eq; 
-BigNum.mt.__le = BigNum.mt.le;
-BigNum.mt.__lt = BigNum.mt.lt;
---concatenation
-setmetatable(BigNum.mt, {__index = "inexistent field", __newindex = "not available", __metatable = "hidden"});
-
-function BigNum.add( bnum1 , bnum2 , bnum3 )
-   local maxlen = 0 ;
-   local i = 0 ;
-   local carry = 0 ;
-   local signal = '+' ;
-   local old_len = 0 ;
-   --Handle the signals
-   if bnum1 == nil or bnum2 == nil or bnum3 == nil then
-      assert(false, "Function BigNum.add: parameter nil") ;
-   elseif bnum1.signal == '-' and bnum2.signal == '+' then
-      bnum1.signal = '+' ;
-      BigNum.sub( bnum2 , bnum1 , bnum3 ) ;
-
-      if not rawequal(bnum1, bnum3) then
-         bnum1.signal = '-' ;
-      end
-      return 0 ;
-   elseif bnum1.signal == '+' and bnum2.signal == '-' then   
-      bnum2.signal = '+' ;
-      BigNum.sub( bnum1 , bnum2 , bnum3 ) ;
-      if not rawequal(bnum2, bnum3) then
-         bnum2.signal = '-' ;
-      end
-      return 0 ;
-   elseif bnum1.signal == '-' and bnum2.signal == '-' then
-      signal = '-' ;
-   end
-   --
-   old_len = bnum3.len ;
-   if bnum1.len > bnum2.len then
-      maxlen = bnum1.len ;
-   else
-      maxlen = bnum2.len ;
-      bnum1 , bnum2 = bnum2 , bnum1 ;
-   end
-   --School grade sum
-   for i = 0 , maxlen - 1 do
-      if bnum2[i] ~= nil then
-         bnum3[i] = bnum1[i] + bnum2[i] + carry ;
-      else
-         bnum3[i] = bnum1[i] + carry ;
-      end
-      if bnum3[i] >= BigNum.RADIX then
-         bnum3[i] = bnum3[i] - BigNum.RADIX ;
-         carry = 1 ;
-      else
-         carry = 0 ;
-      end
-   end
-   --Update the answer's size
-   if carry == 1 then
-      bnum3[maxlen] = 1 ;
-   end
-   bnum3.len = maxlen + carry ;
-   bnum3.signal = signal ;
-   for i = bnum3.len, old_len do
-      bnum3[i] = nil ;
-   end
-   return 0 ;
-end
-
-function BigNum.sub( bnum1 , bnum2 , bnum3 )
-   local maxlen = 0 ;
-   local i = 0 ;
-   local carry = 0 ;
-   local old_len = 0 ;
-   --Handle the signals
-   
-   if bnum1 == nil or bnum2 == nil or bnum3 == nil then
-      assert(false, "Function BigNum.sub: parameter nil") ;
-   elseif bnum1.signal == '-' and bnum2.signal == '+' then
-      bnum1.signal = '+' ;
-      BigNum.add( bnum1 , bnum2 , bnum3 ) ;
-      bnum3.signal = '-' ;
-      if not rawequal(bnum1, bnum3) then
-         bnum1.signal = '-' ;
-      end
-      return 0 ;
-   elseif bnum1.signal == '-' and bnum2.signal == '-' then
-      bnum1.signal = '+' ;
-      bnum2.signal = '+' ;
-      BigNum.sub( bnum2, bnum1 , bnum3 ) ;
-      if not rawequal(bnum1, bnum3) then
-         bnum1.signal = '-' ;
-      end
-      if not rawequal(bnum2, bnum3) then
-         bnum2.signal = '-' ;
-      end
-      return 0 ;
-   elseif bnum1.signal == '+' and bnum2.signal == '-' then
-      bnum2.signal = '+' ;
-      BigNum.add( bnum1 , bnum2 , bnum3 ) ;
-      if not rawequal(bnum2, bnum3) then
-         bnum2.signal = '-' ;
-      end
-      return 0 ;
-   end
-   --Tests if bnum2 > bnum1
-   if BigNum.compareAbs( bnum1 , bnum2 ) == 2 then
-      BigNum.sub( bnum2 , bnum1 , bnum3 ) ;
-      bnum3.signal = '-' ;
-      return 0 ;
-   else
-      maxlen = bnum1.len ;
-   end
-   old_len = bnum3.len ;
-   bnum3.len = 0 ;
-   --School grade subtraction
-   for i = 0 , maxlen - 1 do
-      if bnum2[i] ~= nil then
-         bnum3[i] = bnum1[i] - bnum2[i] - carry ;
-      else
-         bnum3[i] = bnum1[i] - carry ;
-      end
-      if bnum3[i] < 0 then
-         bnum3[i] = BigNum.RADIX + bnum3[i] ;
-         carry = 1 ;
-      else
-         carry = 0 ;
-      end
-
-      if bnum3[i] ~= 0 then
-         bnum3.len = i + 1 ;
-      end
-   end
-   bnum3.signal = '+' ;
-   --Check if answer's size if zero
-   if bnum3.len == 0 then
-      bnum3.len = 1 ;
-      bnum3[0]  = 0 ;
-   end
-   if carry == 1 then
-      assert(false, "Error in function sub" ) ;
-   end
-   for i = bnum3.len , BigNum.max( old_len , maxlen - 1 ) do
-      bnum3[i] = nil ;
-   end
-   return 0 ;
-end
-
-function BigNum.mul( bnum1 , bnum2 , bnum3 )
-   local i = 0 ; j = 0 ;
-   local temp = BigNum.new( ) ;
-   local temp2 = 0 ;
-   local carry = 0 ;
-   local oldLen = bnum3.len ;
-   if bnum1 == nil or bnum2 == nil or bnum3 == nil then
-      assert(false, "Function BigNum.mul: parameter nil") ;
-   --Handle the signals
-   elseif bnum1.signal ~= bnum2.signal then
-      BigNum.mul( bnum1 , -bnum2 , bnum3 ) ;
-      bnum3.signal = '-' ;
-      return 0 ;
-   end
-   bnum3.len =  ( bnum1.len ) + ( bnum2.len ) ;
-   --Fill with zeros
-   for i = 1 , bnum3.len do
-      bnum3[i - 1] = 0 ;
-   end
-   --Places nil where passes through this
-   for i = bnum3.len , oldLen do
-      bnum3[i] = nil ;
-   end
-   --School grade multiplication
-   for i = 0 , bnum1.len - 1 do
-      for j = 0 , bnum2.len - 1 do
-         carry =  ( bnum1[i] * bnum2[j] + carry ) ;
-         carry = carry + bnum3[i + j] ;
-         bnum3[i + j] = math.mod ( carry , BigNum.RADIX ) ;
-         temp2 = bnum3[i + j] ;
-         carry =  math.floor ( carry / BigNum.RADIX ) ;
-      end
-      if carry ~= 0 then
-         bnum3[i + bnum2.len] = carry ;
-      end
-      carry = 0 ;
-   end
-
-   --Update the answer's size
-   for i = bnum3.len - 1 , 1 , -1 do
-      if bnum3[i] ~= nil and bnum3[i] ~= 0 then
-         break ;
-      else
-         bnum3[i] = nil ;
-      end
-      bnum3.len = bnum3.len - 1 ;
-   end
-   return 0 ; 
-end
-
-function BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 )
-   local temp = BigNum.new() ;
-   local temp2 = BigNum.new() ;
-   local one = BigNum.new( "1" ) ;
-   local zero = BigNum.new( "0" ) ;
-   --Check division by zero
-   if BigNum.compareAbs( bnum2 , zero ) == 0 then
-      assert(false, "Function BigNum.div: Division by zero" ) ;
-   end     
-   --Handle the signals
-   if bnum1 == nil or bnum2 == nil or bnum3 == nil or bnum4 == nil then
-      assert(false, "Function BigNum.div: parameter nil" ) ;
-   elseif bnum1.signal == "+" and bnum2.signal == "-" then
-      bnum2.signal = "+" ;
-      BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 ) ;
-      bnum2.signal = "-" ;
-      bnum3.signal = "-" ;
-      return 0 ;
-   elseif bnum1.signal == "-" and bnum2.signal == "+" then
-      bnum1.signal = "+" ;
-      BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 ) ;
-      bnum1.signal = "-" ;
-      if bnum4 < zero then --Check if remainder is negative
-         BigNum.add( bnum3 , one , bnum3 ) ;
-         BigNum.sub( bnum2 , bnum4 , bnum4 ) ;
-      end
-      bnum3.signal = "-" ;
-      return 0 ;
-   elseif bnum1.signal == "-" and bnum2.signal == "-" then
-      bnum1.signal = "+" ;
-      bnum2.signal = "+" ;
-      BigNum.div( bnum1 , bnum2 , bnum3 , bnum4 ) ;
-      bnum1.signal = "-" ;
-      if bnum4 < zero then --Check if remainder is negative      
-         BigNum.add( bnum3 , one , bnum3 ) ;
-         BigNum.sub( bnum2 , bnum4 , bnum4 ) ;
-      end
-      bnum2.signal = "-" ;
-      return 0 ;
-   end
-   temp.len = bnum1.len - bnum2.len - 1 ;
-
-   --Reset variables
-   BigNum.change( bnum3 , "0" ) ;
-   BigNum.change( bnum4 , "0" ) ; 
-
-   BigNum.copy( bnum1 , bnum4 ) ;
-
-   --Check if can continue dividing
-   while( BigNum.compareAbs( bnum4 , bnum2 ) ~= 2 ) do
-      if bnum4[bnum4.len - 1] >= bnum2[bnum2.len - 1] then
-         BigNum.put( temp , math.floor( bnum4[bnum4.len - 1] / bnum2[bnum2.len - 1] ) , bnum4.len - bnum2.len ) ;
-         temp.len = bnum4.len - bnum2.len + 1 ;
-      else
-         BigNum.put( temp , math.floor( ( bnum4[bnum4.len - 1] * BigNum.RADIX + bnum4[bnum4.len - 2] ) / bnum2[bnum2.len -1] ) , bnum4.len - bnum2.len - 1 ) ;
-         temp.len = bnum4.len - bnum2.len ;
-      end
-    
-      if bnum4.signal ~= bnum2.signal then
-         temp.signal = "-";
-      else
-         temp.signal = "+";
-      end
-      BigNum.add( temp , bnum3 , bnum3 )  ;
-      temp = temp * bnum2 ;
-      BigNum.sub( bnum4 , temp , bnum4 ) ;
-   end
-
-   --Update if the remainder is negative
-   if bnum4.signal == '-' then
-      BigNum.decr( bnum3 ) ;
-      BigNum.add( bnum2 , bnum4 , bnum4 ) ;
-   end
-   return 0 ;
-end
-
-function BigNum.eq( bnum1 , bnum2 )
-   if BigNum.compare( bnum1 , bnum2 ) == 0 then
-      return true ;
-   else
-      return false ;
-   end
-end
-
-function BigNum.lt( bnum1 , bnum2 )
-   if BigNum.compare( bnum1 , bnum2 ) == 2 then
-      return true ;
-   else
-      return false ;
-   end
-end
-
-function BigNum.le( bnum1 , bnum2 )
-   local temp = -1 ;
-   temp = BigNum.compare( bnum1 , bnum2 )
-   if temp == 0 or temp == 2 then
-      return true ;
-   else
-      return false ;
-   end
-end
-
-function BigNum.compareAbs( bnum1 , bnum2 )
-   if bnum1 == nil or bnum2 == nil then
-      assert(false, "Function compare: parameter nil") ;
-   elseif bnum1.len > bnum2.len then
-      return 1 ;
-   elseif bnum1.len < bnum2.len then
-      return 2 ;
-   else
-      local i ;
-      for i = bnum1.len - 1 , 0 , -1 do
-         if bnum1[i] > bnum2[i] then
-            return 1 ;
-         elseif bnum1[i] < bnum2[i] then
-            return 2 ;
-         end
-      end
-   end
-   return 0 ;
-end
-
-function BigNum.compare( bnum1 , bnum2 )
-   local signal = 0 ;
-   
-   if bnum1 == nil or bnum2 == nil then
-      assert(false, "Funtion BigNum.compare: parameter nil") ;
-   elseif bnum1.signal == '+' and bnum2.signal == '-' then
-      return 1 ;
-   elseif bnum1.signal == '-' and bnum2.signal == '+' then
-      return 2 ;
-   elseif bnum1.signal == '-' and bnum2.signal == '-' then
-      signal = 1 ;
-   end
-   if bnum1.len > bnum2.len then
-      return 1 + signal ;
-   elseif bnum1.len < bnum2.len then
-      return 2 - signal ;
-   else
-      local i ;
-      for i = bnum1.len - 1 , 0 , -1 do
-         if bnum1[i] > bnum2[i] then
-            return 1 + signal ;
-	 elseif bnum1[i] < bnum2[i] then
-	    return 2 - signal ;
-	 end
-      end
-   end
-   return 0 ;
-end         
-
-function BigNum.copy( bnum1 , bnum2 )
-   if bnum1 ~= nil and bnum2 ~= nil then
-      local i ;
-      for i = 0 , bnum1.len - 1 do
-         bnum2[i] = bnum1[i] ;
-      end
-      bnum2.len = bnum1.len ;
-   else
-      assert(false, "Function BigNum.copy: parameter nil") ;
-   end
-end
-
-function BigNum.change(bnum1, num)
-	local j = 0;
-	local len = 0 ;
-	local num = num;
-	local l;
-	local oldLen = 0;
-	
-	if bnum1 == nil then
-		assert(false, "BigNum.change: parameter nil");
-	elseif type(bnum1) ~= "table" then
-		assert(false, "BigNum.change: parameter error, type unexpected");
-	elseif num == nil then
-		bnum1.len = 1;
-		bnum1[0] = 0;
-		bnum1.signal = "+";
-	elseif type(num) == "table" and num.len ~= nil then  --check if num is a big number
-		--copy given table to the new one
-		for i = 0, num.len do
-			bnum1[i] = num[i];
-		end
-		if num.signal ~= '-' and num.signal ~= '+' then
-			bnum1.signal = '+';
-		else
-			bnum1.signal = num.signal;
-		end
-		
-		oldLen = bnum1.len;
-		bnum1.len = num.len;
-	elseif type(num) == "string" or type(num) == "number" then
-		if string.sub(num, 1, 1) == '+' or string.sub(num, 1, 1) == '-' then
-			bnum1.signal = string.sub(num, 1, 1);
-			num = string.sub(num, 2);
-		else
-			bnum1.signal = '+';
-		end
-		num = string.gsub( num , " " , "" ) ;
-		local sf = string.find( num , "e" ) ;
-		--Handles if the number is in exp notation
-		if sf ~= nil then
-			num = string.gsub( num , "%." , "" ) ;
-			local e = string.sub( num , sf + 1 ) ;
-			e = tonumber(e) ;
-			if e ~= nil and e > 0 then 
-				e = tonumber(e) ;
-			else
-				assert(false, "Function BigNum.change: string is not a valid number" ) ;
-			end
-			num = string.sub( num , 1 , sf - 2 ) ;
-			for i = string.len( num ) , e do
-				num = num .. "0" ;
-			end
-		else
-			sf = string.find( num , "%." ) ;
-			if sf ~= nil then
-				num = string.sub( num , 1 , sf - 1 ) ;
-			end
-		end
-
-		l = string.len( num ) ;
-		oldLen = bnum1.len ;
-		if (l > BigNum.RADIX_LEN) then
-			local mod = l-( math.floor( l / BigNum.RADIX_LEN ) * BigNum.RADIX_LEN ) ;
-			for i = 1 , l-mod, BigNum.RADIX_LEN do
-				bnum1[j] = tonumber( string.sub( num, -( i + BigNum.RADIX_LEN - 1 ) , -i ) );
-				--Check if string dosn't represents a number
-				if bnum1[j] == nil then
-				assert(false, "Function BigNum.change: string is not a valid number" ) ;
-				bnum1.len = 0 ;
-				return 1 ;
-				end
-				j = j + 1 ; 
-				len = len + 1 ;
-			end
-			if (mod ~= 0) then
-				bnum1[j] = tonumber( string.sub( num , 1 , mod ) ) ;
-				bnum1.len = len + 1 ;
-			else
-				bnum1.len = len ;            
-			end
-			--Eliminate trailing zeros
-			for i = bnum1.len - 1 , 1 , -1 do
-				if bnum1[i] == 0 then
-				bnum1[i] = nil ;
-				bnum1.len = bnum1.len - 1 ;
-				else
-				break ;
-				end
-			end
-		 
-		else     
-			-- string.len(num) <= BigNum.RADIX_LEN
-			bnum1[j] = tonumber( num ) ;
-			bnum1.len = 1 ;
-		end
-	else
-		assert(false, "Function BigNum.change: parameter error, type unexpected");
-	end
-
-	-- eliminates the deprecated higher order 'algarisms'
-	if oldLen ~= nil then
-		for i = bnum1.len, oldLen do
-			bnum1[i] = nil;
-		end
-	end
-
-	return 0;
-end 
-
-function BigNum.put(bnum, int, pos)
-	for i = 0, pos - 1 do
-		bnum[i] = 0;
-	end
-	bnum[pos] = int;
-	for i = pos + 1, bnum.len do
-		bnum[i] = nil;
-	end
-	bnum.len = pos;
-	return 0
-end
-
-function BigNum.max(int1, int2)
-	if int1 > int2 then
-		return int1;
-	else
-		return int2;
-	end
-end
-
-function BigNum.decr(bnum1)
-   BigNum.sub(bnum1, BigNum.new("1"), bnum1);
-   return 0
-end
 
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.5 - 26.11.2023 21:29 - Eisenmonoxid",
+	CurrentVersion = "1.5 - 27.11.2023 14:51 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -636,7 +59,6 @@ EMXHookLibrary.RawPointer = {
 	end,
 };
 
--- EMXHookLibrary.SetColorSetColorRGB(0, 1, {0.3, 0.7, 0.4, 0.7}, nil, false) -> {Red, Green, Blue, Alpha}
 EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
 	local SeasonIndizes = {0, 16, 32, 48}
@@ -675,12 +97,12 @@ EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
 	for i = 1, #WideCharAsMultiByte do TextSegment(Index + Offsets[3], WideCharAsMultiByte[i]) Offsets[3] = Offsets[3] + 4 end
 end
 
-EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers = function(_buildingID, _maxWorkers) -- TEST
+EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers = function(_buildingID, _maxWorkers)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "256") or "288"	
 	EMXHookLibrary.CalculateEntityIDToObject(_buildingID)["128"](Offset, _maxWorkers)
 end
-EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID) -- TEST
-	EMXHookLibrary.CalculateEntityIDToObject(_buildingID)["84"]("0", _buildingID)
+EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
+	EMXHookLibrary.CalculateEntityIDToObject(_settlerID)["84"]["0"]("0", _buildingID)
 end
 
 EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
@@ -704,49 +126,31 @@ end
 
 EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 	if not EMXHookLibrary.IsHistoryEdition then 
-		local Word = EMXHookLibrary.GetValueAtPointer(BigNum.new("11190056"))
+		local Word = EMXHookLibrary.GetValueAtPointer(EMXHookLibrary.RawPointer.New("11190056"))
 		Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 		Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 		
 		if _setNewMagicWord ~= nil then
-			EMXHookLibrary.SetValueAtPointer(BigNum.new("11190056"), _magicWord)
+			EMXHookLibrary.SetValueAtPointer(EMXHookLibrary.RawPointer.New("11190056"), _magicWord)
 		end
-		return;
-	end
-
-	local Value = BigNum.new(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, -78))
-	local PointerValue = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-	
-	local LowestDigit, HighestDigit, DereferenceString
-	if EMXHookLibrary.HistoryEditionVariant == 1 then
-		DereferenceString = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, "2100263")))
-	else
-		LowestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, "1069996")))
-		HighestDigit = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.sub(PointerValue, "1069995")))
-		LowestDigit = string.format("%x", BigNum.mt.tostring(LowestDigit))
-		HighestDigit = string.format("%x", BigNum.mt.tostring(HighestDigit))
-
-		while (string.len(LowestDigit) < 8) do
-			LowestDigit = "0" .. LowestDigit
-		end
-		while (string.len(HighestDigit) < 8) do
-			HighestDigit = "0" .. HighestDigit
-		end
-	
-		LowestDigit = string.sub(LowestDigit, 1, 6)
-		HighestDigit = string.sub(HighestDigit, 7, 8)
-
-		DereferenceString = HighestDigit .. LowestDigit	
-		DereferenceString = BigNum.new(tonumber("0x" .. DereferenceString))
+		return Word;
 	end
 	
-	local Word = EMXHookLibrary.GetValueAtPointer(DereferenceString)
+	if EMXHookLibrary.HistoryEditionVariant ~= 1 then
+		assert(false, "EMXHookLibrary: ERROR -> Can't set Debug mode in Ubisoft-HE, use the S6Patcher for that!")
+		return "";
+	end
+
+	local Pointer = EMXHookLibrary.RawPointer.New(Logic.GetEntityScriptingValue(EMXHookLibrary.GlobalAdressEntity, -78))["0"]
+	Pointer = (Pointer - "2100263")["0"]
+
+	local Word = tostring(Pointer["0"])
 	Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 	Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 
-	if _setNewMagicWord ~= nil then
-		EMXHookLibrary.SetValueAtPointer(DereferenceString, _magicWord)
-	end
+	if _setNewMagicWord ~= nil then Pointer("0", _magicWord) end
+	
+	return Word;
 end
 
 EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
@@ -765,88 +169,41 @@ EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDu
 	if _festivalDuration ~= nil then Pointer(Offsets[6], _festivalDuration) end
 end
 
-EMXHookLibrary.SetBuildingTypeOutStockProduct = function(_buildingID, _newGood, _forEntityType)
-	local HEValues = {"352", "4", "8", "20", "20", "128", "564"}
-	local OVValues = {"364", "4", "8", "16", "24", "128", "612"}
-	local SharedIdentifier = "-1035359747"
+EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _forEntityType)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "564", "16"}) or {"368", "16", "24", "612", "12"}
+	local SharedIdentifier = BigNum.new("-1035359747")
 	
-	local CurrentGoodType = Logic.GetGoodTypeOnOutStockByIndex(_buildingID, 0)
-	if CurrentGoodType == _newGood then
-		return;
+	if _forEntityType ~= nil then EMXHookLibrary.CalculateEntityIDToObject(_buildingID)["128"](Offsets[4], _newGood) end
+	
+	local Pointer = EMXHookLibrary.CalculateEntityIDToObject(_buildingID)[Offsets[1]]["4"]
+	local CurrentIdentifier = Pointer[Offsets[5]].Pointer
+	while BigNum.compareAbs(CurrentIdentifier, SharedIdentifier) ~= 0 do
+		Pointer = Pointer["0"]
+		CurrentIdentifier = Pointer[Offsets[5]].Pointer
 	end
 	
-	local Value, Props
-	local CorrespondingValues = {}
-	if not EMXHookLibrary.IsHistoryEdition then 
-		CorrespondingValues = OVValues
-		Value = BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[1]))	
-		Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[2]))
-	else
-		CorrespondingValues = HEValues
-		Value = BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[1]))	
-	end
-
-	if _forEntityType ~= nil then
-		Props = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[6]))))
-		EMXHookLibrary.SetValueAtPointer(BigNum.mt.add(Props, BigNum.new(CorrespondingValues[7])), _newGood)
-	end
-
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-	Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[2]))	
-	Value = EMXHookLibrary.CompareIdentifierToStaticValue(Value, SharedIdentifier)	
-	Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[4]))
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-	Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[5]))
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	EMXHookLibrary.SetValueAtPointer(Value, _newGood)
+	Pointer[Offsets[2]][Offsets[3]]("0", _newGood)
 	
 	if Logic.GetGoodTypeOnOutStockByIndex(_buildingID, 0) ~= _newGood then
-		assert(false, "EMXHookLibrary: ERROR setting the building OutStock!")
+		assert(false, "EMXHookLibrary: ERROR setting the building OutStock good!")
 	end
 end
 
 EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
-	local HEValues = {"352", "4", "8", "20", "18", "16"}
-	local OVValues = {"364", "4", "8", "16", "24", "12"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "18", "16"}) or {"368", "16", "24", "12"}
 	local SharedIdentifier = BigNum.new("1501117341")
-	
-	local CurrentGoodType = Logic.GetGoodTypeOnInStockByIndex(_buildingID, 0)
-	if CurrentGoodType == _newGood then
-		return;
-	end
 
-	local Value
-	local CorrespondingValues = {}
-	if not EMXHookLibrary.IsHistoryEdition then 
-		CorrespondingValues = OVValues
-		Value = BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[1]))	
-		Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[2]))
-	else
-		CorrespondingValues = HEValues
-		Value = BigNum.mt.add(EMXHookLibrary.CalculateEntityIDToObject(_buildingID), BigNum.new(CorrespondingValues[1]))	
-	end
-	
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-	Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[2]))
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	local CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new(CorrespondingValues[6]))))
+	local Pointer = EMXHookLibrary.CalculateEntityIDToObject(_buildingID)[Offsets[1]]["4"]
+	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
-		Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[3]))
-		Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-		CurrentIdentifier = BigNum.new(EMXHookLibrary.GetValueAtPointer(BigNum.mt.add(Value, BigNum.new(CorrespondingValues[6]))))
+		Pointer = Pointer["8"]
+		CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	end
 
-	Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[4]))
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-	Value = BigNum.mt.add(Value, BigNum.new(CorrespondingValues[5]))
-	Value = BigNum.new(EMXHookLibrary.GetValueAtPointer(Value))
-
-	EMXHookLibrary.SetValueAtPointer(Value, _newGood)
+	Pointer[Offsets[2]][Offsets[3]]("0", _newGood)
 	
 	if Logic.GetGoodTypeOnInStockByIndex(_buildingID, 0) ~= _newGood then
-		assert(false, "EMXHookLibrary: ERROR setting the building InStock!")
+		assert(false, "EMXHookLibrary: ERROR setting the building InStock good!")
 	end
 end
 
@@ -857,7 +214,7 @@ EMXHookLibrary.SetMaxBuildingStockSize = function(_buildingID, _maxStockSize)
 	local Pointer = EMXHookLibrary.CalculateEntityIDToObject(_buildingID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
-		Pointer = Pointer["8"]
+		Pointer = Pointer["0"]
 		CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	end
 	
@@ -1132,94 +489,49 @@ EMXHookLibrary.GetHistoryEditionVariant = function()
 end
 
 EMXHookLibrary.OverrideSavegameHandling = function()
-	-- This is necessary if you do not want to reset the hooked values at the end of the map
-	Logic.ExecuteInLuaLocalState([[
-		local CurrentLanguage = Network.GetDesiredLanguage()
-		
-		GUI_Window.MainMenuExit = function()
-			Framework.ExitGame()
-		end
-	
-		if InitBottomButtons_ORIG == nil then
-			InitBottomButtons_ORIG = GUI_MissionStatistic.InitBottomButtons;
-		end
-		GUI_MissionStatistic.InitBottomButtons = function()
-			InitBottomButtons_ORIG()
-		
-			local ContainerBottomWidget = "/InGame/MissionStatistic/ContainerBottom"
-			if CurrentLanguage == "de" then
-				XGUIEng.SetText(ContainerBottomWidget .. "/BackMenu", "{center}{@color:255,80,80,255}Spiel Beenden")
-			else
-				XGUIEng.SetText(ContainerBottomWidget .. "/BackMenu", "{center}{@color:255,80,80,255}Exit Game")
-			end
-		end
-
-		GUI_Window.QuickLoad = function() return true end
-		KeyBindings_LoadGame = function() return true end
-
-		if ToggleInGameMenu == nil then
-			ToggleInGameMenu = GUI_Window.ToggleInGameMenu;
-		end
-		GUI_Window.ToggleInGameMenu = function()
-			ToggleInGameMenu()
-		
-			XGUIEng.ShowWidget("/InGame/InGame/MainMenu/Container/QuickLoad", 0)
-		end
-		
-		OpenLoadDialog = function()
-			LoadDialog.Starting = false
-			LockInputForDialog()
-			XGUIEng.ShowWidget(LoadDialog.Widget.Dialog,1)
-			XGUIEng.PushPage(LoadDialog.Widget.Dialog,false)
-
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.FileList)
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.MapList)
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.DateList)
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.TimeList)
-	
-			local Names = Framework.GetSaveGameNamesExEx()
-			local Extension = GetSaveGameExtension()
-			local ID = Names[1]
-			local Count = 2
-			local Entries = #Names
-			
-			Entries = (Entries - 1) / 4
-			LoadDialog.FileId = ID + 1
-
-			for i = 1, Entries do
-				local Name = Names[Count]
-				local Date = Names[Count + 1]
-				local Time = Names[Count + 2]
-				local Map = Tool_GetLocalizedMapName(Names[Count + 3])
-
-				if string.lower(Names[Count + 3]) == string.lower(Framework.GetCurrentMapName()) then
-					local FinalName = string.gsub(Name, Extension, "")
- 	
-					-- make sure the listboxes are filled from right to left (against the linking order)
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.TimeList, Time)
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.DateList, Date)
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.MapList, Map) 	
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.FileList, FinalName)
-				end
- 		
-				Count = Count + 4
-			end
-
-			if Game ~= nil then
-				LoadDialog.Backup.Speed = Game.GameTimeGetFactor()
-				Game.GameTimeSetFactor( GUI.GetPlayerID(), 0 )
-			end
-
-			UpdateLoadDialog()
-		end
-	]]);
+-- This is necessary if you do not want to reset the hooked values at the end of the map
+Logic.ExecuteInLuaLocalState([[
+local LmcA2auZ=Network.GetDesiredLanguage()GUI_Window.MainMenuExit=function()
+Framework.ExitGame()end;if InitBottomButtons_ORIG==nil then
+InitBottomButtons_ORIG=GUI_MissionStatistic.InitBottomButtons end
+GUI_MissionStatistic.InitBottomButtons=function()
+InitBottomButtons_ORIG()local Q="/InGame/MissionStatistic/ContainerBottom"
+if LmcA2auZ=="de"then
+XGUIEng.SetText(Q..
+"/BackMenu","{center}{@color:255,80,80,255}Spiel Beenden")else
+XGUIEng.SetText(Q.."/BackMenu","{center}{@color:255,80,80,255}Exit Game")end end;GUI_Window.QuickLoad=function()return true end;KeyBindings_LoadGame=function()
+return true end;if ToggleInGameMenu==nil then
+ToggleInGameMenu=GUI_Window.ToggleInGameMenu end
+GUI_Window.ToggleInGameMenu=function()
+ToggleInGameMenu()
+XGUIEng.ShowWidget("/InGame/InGame/MainMenu/Container/QuickLoad",0)end
+OpenLoadDialog=function()LoadDialog.Starting=false;LockInputForDialog()
+XGUIEng.ShowWidget(LoadDialog.Widget.Dialog,1)
+XGUIEng.PushPage(LoadDialog.Widget.Dialog,false)
+XGUIEng.ListBoxPopAll(LoadDialog.Widget.FileList)
+XGUIEng.ListBoxPopAll(LoadDialog.Widget.MapList)
+XGUIEng.ListBoxPopAll(LoadDialog.Widget.DateList)
+XGUIEng.ListBoxPopAll(LoadDialog.Widget.TimeList)local ZA=Framework.GetSaveGameNamesExEx()
+local _IQQ=GetSaveGameExtension()local XpkjA=ZA[1]local pVRj=2;local fuZ3z86=#ZA;fuZ3z86=(fuZ3z86-1)/4;LoadDialog.FileId=
+XpkjA+1
+for er=1,fuZ3z86 do local DFb100j=ZA[pVRj]local XL_=ZA[pVRj+1]
+local WYdR=ZA[pVRj+2]local QKKks_zt=Tool_GetLocalizedMapName(ZA[pVRj+3])
+if string.lower(ZA[
+pVRj+3])==
+string.lower(Framework.GetCurrentMapName())then
+local Are7xU=string.gsub(DFb100j,_IQQ,"")
+XGUIEng.ListBoxPushItem(LoadDialog.Widget.TimeList,WYdR)
+XGUIEng.ListBoxPushItem(LoadDialog.Widget.DateList,XL_)
+XGUIEng.ListBoxPushItem(LoadDialog.Widget.MapList,QKKks_zt)
+XGUIEng.ListBoxPushItem(LoadDialog.Widget.FileList,Are7xU)end;pVRj=pVRj+4 end
+if Game~=nil then
+LoadDialog.Backup.Speed=Game.GameTimeGetFactor()Game.GameTimeSetFactor(GUI.GetPlayerID(),0)end;UpdateLoadDialog()end
+]]);
 end
 
 -- Some Helpers --
 
-function EMXHookLibrary.HelperFunctions.qmod(a, b)
-	return a - math.floor(a / b) * b
-end
+function EMXHookLibrary.HelperFunctions.qmod(a, b) return a - math.floor(a / b) * b end
 
 function EMXHookLibrary.HelperFunctions.Int2Float(num)
 	if (num == 0) then
@@ -1227,7 +539,6 @@ function EMXHookLibrary.HelperFunctions.Int2Float(num)
 	end
 
 	local sign = 1
-
 	if (num < 0) then
 		num = 2147483648 + num
 		sign = -1
@@ -1336,12 +647,12 @@ function EMXHookLibrary.HelperFunctions.BitAnd(a, b)
     local result = 0
     local bitval = 1
     while a > 0 and b > 0 do
-      if a % 2 == 1 and b % 2 == 1 then
-          result = result + bitval
-      end
-      bitval = bitval * 2 
-      a = math.floor(a / 2)
-      b = math.floor(b / 2)
+		if a % 2 == 1 and b % 2 == 1 then
+			result = result + bitval
+		end
+		bitval = bitval * 2 
+		a = math.floor(a / 2)
+		b = math.floor(b / 2)
     end
     return result
 end
@@ -1362,7 +673,187 @@ function EMXHookLibrary.HelperFunctions.ConvertCharToMultiByte(_string)
 	end
 	
 	OutputNumbers[#OutputNumbers + 1] = 0
-	
 	return OutputNumbers
 end
+
+-- Here starts the BigNum - Code (minified, since it does not change) --
+
+function BigNum.new(QDnlt)local LmcA2auZ={}setmetatable(LmcA2auZ,BigNum.mt)
+BigNum.change(LmcA2auZ,QDnlt)return LmcA2auZ end;function BigNum.mt.sub(Q,ZA)
+local _IQQ=BigNum.new()
+BigNum.sub(BigNum.new(Q),BigNum.new(ZA),_IQQ)return _IQQ end
+function BigNum.mt.add(XpkjA,pVRj)
+local fuZ3z86=BigNum.new()
+BigNum.add(BigNum.new(XpkjA),BigNum.new(pVRj),fuZ3z86)return fuZ3z86 end;function BigNum.mt.mul(er,DFb100j)local XL_=BigNum.new()
+BigNum.mul(BigNum.new(er),BigNum.new(DFb100j),XL_)return XL_ end
+function BigNum.mt.div(WYdR,QKKks_zt)
+local Are7xU=BigNum.new()local yxjl=BigNum.new()
+BigNum.div(BigNum.new(WYdR),BigNum.new(QKKks_zt),Are7xU,yxjl)return Are7xU,yxjl end
+function BigNum.mt.tostring(ZG)local Vu0cCAf=""local q=""
+if ZG==nil then return"nil"elseif ZG.len>0 then
+for kP7O5=ZG.len-2,0,-1 do for lqT=0,
+BigNum.RADIX_LEN-string.len(ZG[kP7O5])-1 do
+q=q..'0'end;q=q..ZG[kP7O5]end;q=ZG[ZG.len-1]..q
+if ZG.signal=='-'then q=ZG.signal..q end;return q else return""end end
+function BigNum.mt.eq(mP3mlD,PrPyxMK)return
+BigNum.eq(BigNum.new(mP3mlD),BigNum.new(PrPyxMK))end;function BigNum.mt.lt(tczrIB,a)return
+BigNum.lt(BigNum.new(tczrIB),BigNum.new(a))end;function BigNum.mt.le(wqU76o,LB1Z)return
+BigNum.le(BigNum.new(wqU76o),BigNum.new(LB1Z))end
+function BigNum.mt.unm(N9L)
+local hDc_M=BigNum.new(N9L)
+if hDc_M.signal=='+'then hDc_M.signal='-'else hDc_M.signal='+'end;return hDc_M end;BigNum.mt.__metatable="hidden"
+BigNum.mt.__tostring=BigNum.mt.tostring;BigNum.mt.__add=BigNum.mt.add
+BigNum.mt.__sub=BigNum.mt.sub;BigNum.mt.__mul=BigNum.mt.mul
+BigNum.mt.__div=BigNum.mt.div;BigNum.mt.__unm=BigNum.mt.unm
+BigNum.mt.__eq=BigNum.mt.eq;BigNum.mt.__le=BigNum.mt.le
+BigNum.mt.__lt=BigNum.mt.lt
+setmetatable(BigNum.mt,{__index="inexistent field",__newindex="not available",__metatable="hidden"})
+function BigNum.add(qW0lRiD1,iD1IUx,JLCOx_ak)local hPQ=0;local R1FIoQI=0;local NsoTwDs=0;local HGli='+'local iy=0
+if
+qW0lRiD1 ==nil or iD1IUx==nil or JLCOx_ak==nil then
+assert(false,"Function BigNum.add: parameter nil")elseif qW0lRiD1.signal=='-'and iD1IUx.signal=='+'then
+qW0lRiD1.signal='+'BigNum.sub(iD1IUx,qW0lRiD1,JLCOx_ak)if not
+rawequal(qW0lRiD1,JLCOx_ak)then qW0lRiD1.signal='-'end;return 0 elseif
+qW0lRiD1.signal=='+'and iD1IUx.signal=='-'then iD1IUx.signal='+'
+BigNum.sub(qW0lRiD1,iD1IUx,JLCOx_ak)
+if not rawequal(iD1IUx,JLCOx_ak)then iD1IUx.signal='-'end;return 0 elseif qW0lRiD1.signal=='-'and iD1IUx.signal=='-'then
+HGli='-'end;iy=JLCOx_ak.len
+if qW0lRiD1.len>iD1IUx.len then hPQ=qW0lRiD1.len else
+hPQ=iD1IUx.len;qW0lRiD1,iD1IUx=iD1IUx,qW0lRiD1 end
+for R1FIoQI=0,hPQ-1 do
+if iD1IUx[R1FIoQI]~=nil then JLCOx_ak[R1FIoQI]=qW0lRiD1[R1FIoQI]+
+iD1IUx[R1FIoQI]+NsoTwDs else JLCOx_ak[R1FIoQI]=
+qW0lRiD1[R1FIoQI]+NsoTwDs end
+if JLCOx_ak[R1FIoQI]>=BigNum.RADIX then JLCOx_ak[R1FIoQI]=JLCOx_ak[R1FIoQI]-
+BigNum.RADIX;NsoTwDs=1 else NsoTwDs=0 end end;if NsoTwDs==1 then JLCOx_ak[hPQ]=1 end
+JLCOx_ak.len=hPQ+NsoTwDs;JLCOx_ak.signal=HGli
+for R1FIoQI=JLCOx_ak.len,iy do JLCOx_ak[R1FIoQI]=nil end;return 0 end
+function BigNum.sub(m6SCS0,NUhYw6R4,Hv)local Ch=0;local urkh=0;local zhzpBSx=0;local rHSjalVy=0
+if m6SCS0 ==nil or NUhYw6R4 ==nil or
+Hv==nil then
+assert(false,"Function BigNum.sub: parameter nil")elseif m6SCS0.signal=='-'and NUhYw6R4.signal=='+'then
+m6SCS0.signal='+'BigNum.add(m6SCS0,NUhYw6R4,Hv)Hv.signal='-'if not
+rawequal(m6SCS0,Hv)then m6SCS0.signal='-'end;return 0 elseif
+m6SCS0.signal=='-'and NUhYw6R4.signal=='-'then m6SCS0.signal='+'
+NUhYw6R4.signal='+'BigNum.sub(NUhYw6R4,m6SCS0,Hv)if not rawequal(m6SCS0,Hv)then
+m6SCS0.signal='-'end;if not rawequal(NUhYw6R4,Hv)then
+NUhYw6R4.signal='-'end;return 0 elseif
+m6SCS0.signal=='+'and NUhYw6R4.signal=='-'then NUhYw6R4.signal='+'BigNum.add(m6SCS0,NUhYw6R4,Hv)if not
+rawequal(NUhYw6R4,Hv)then NUhYw6R4.signal='-'end;return 0 end
+if BigNum.compareAbs(m6SCS0,NUhYw6R4)==2 then
+BigNum.sub(NUhYw6R4,m6SCS0,Hv)Hv.signal='-'return 0 else Ch=m6SCS0.len end;rHSjalVy=Hv.len;Hv.len=0
+for urkh=0,Ch-1 do
+if NUhYw6R4[urkh]~=nil then Hv[urkh]=m6SCS0[urkh]-
+NUhYw6R4[urkh]-zhzpBSx else Hv[urkh]=
+m6SCS0[urkh]-zhzpBSx end;if Hv[urkh]<0 then Hv[urkh]=BigNum.RADIX+Hv[urkh]zhzpBSx=1 else
+zhzpBSx=0 end
+if Hv[urkh]~=0 then Hv.len=urkh+1 end end;Hv.signal='+'if Hv.len==0 then Hv.len=1;Hv[0]=0 end;if zhzpBSx==1 then
+assert(false,"Error in function sub")end;for urkh=Hv.len,BigNum.max(rHSjalVy,Ch-1)do
+Hv[urkh]=nil end;return 0 end
+function BigNum.mul(TjhsnP,t5jzEd9,JZAU2)local zPXTTg=0;j=0;local seMLr=BigNum.new()local qX=0;local h_8=0;local xL7OTb=JZAU2.len
+if
+TjhsnP==nil or t5jzEd9 ==nil or JZAU2 ==nil then
+assert(false,"Function BigNum.mul: parameter nil")elseif TjhsnP.signal~=t5jzEd9.signal then
+BigNum.mul(TjhsnP,-t5jzEd9,JZAU2)JZAU2.signal='-'return 0 end;JZAU2.len=(TjhsnP.len)+ (t5jzEd9.len)for zPXTTg=1,JZAU2.len
+do JZAU2[zPXTTg-1]=0 end;for zPXTTg=JZAU2.len,xL7OTb do
+JZAU2[zPXTTg]=nil end
+for zPXTTg=0,TjhsnP.len-1 do
+for w8T3f=0,t5jzEd9.len-1 do h_8=(TjhsnP[zPXTTg]*
+t5jzEd9[w8T3f]+h_8)h_8=h_8+JZAU2[
+zPXTTg+w8T3f]
+JZAU2[zPXTTg+w8T3f]=math.mod(h_8,BigNum.RADIX)qX=JZAU2[zPXTTg+w8T3f]
+h_8=math.floor(h_8/BigNum.RADIX)end
+if h_8 ~=0 then JZAU2[zPXTTg+t5jzEd9.len]=h_8 end;h_8=0 end
+for zPXTTg=JZAU2.len-1,1,-1 do if
+JZAU2[zPXTTg]~=nil and JZAU2[zPXTTg]~=0 then break else JZAU2[zPXTTg]=nil end;JZAU2.len=
+JZAU2.len-1 end;return 0 end
+function BigNum.div(K,qL,vfIyB,quNsijN)local QUh2tc=BigNum.new()local qboV=BigNum.new()
+local nSBOx7=BigNum.new("1")local u=BigNum.new("0")if BigNum.compareAbs(qL,u)==0 then
+assert(false,"Function BigNum.div: Division by zero")end
+if
+K==nil or qL==nil or vfIyB==nil or quNsijN==nil then
+assert(false,"Function BigNum.div: parameter nil")elseif K.signal=="+"and qL.signal=="-"then qL.signal="+"
+BigNum.div(K,qL,vfIyB,quNsijN)qL.signal="-"vfIyB.signal="-"return 0 elseif
+K.signal=="-"and qL.signal=="+"then K.signal="+"BigNum.div(K,qL,vfIyB,quNsijN)K.signal="-"if
+quNsijN<u then BigNum.add(vfIyB,nSBOx7,vfIyB)
+BigNum.sub(qL,quNsijN,quNsijN)end;vfIyB.signal="-"return 0 elseif
+K.signal=="-"and qL.signal=="-"then K.signal="+"qL.signal="+"
+BigNum.div(K,qL,vfIyB,quNsijN)K.signal="-"if quNsijN<u then BigNum.add(vfIyB,nSBOx7,vfIyB)
+BigNum.sub(qL,quNsijN,quNsijN)end;qL.signal="-"return 0 end;QUh2tc.len=K.len-qL.len-1
+BigNum.change(vfIyB,"0")BigNum.change(quNsijN,"0")BigNum.copy(K,quNsijN)
+while(
+BigNum.compareAbs(quNsijN,qL)~=2)do
+if quNsijN[quNsijN.len-1]>=
+qL[qL.len-1]then
+BigNum.put(QUh2tc,math.floor(quNsijN[quNsijN.len-1]/
+qL[qL.len-1]),quNsijN.len-qL.len)QUh2tc.len=quNsijN.len-qL.len+1 else
+BigNum.put(QUh2tc,math.floor((quNsijN[
+quNsijN.len-1]*BigNum.RADIX+
+quNsijN[quNsijN.len-2])/
+qL[qL.len-1]),
+quNsijN.len-qL.len-1)QUh2tc.len=quNsijN.len-qL.len end
+if quNsijN.signal~=qL.signal then QUh2tc.signal="-"else QUh2tc.signal="+"end;BigNum.add(QUh2tc,vfIyB,vfIyB)QUh2tc=QUh2tc*qL
+BigNum.sub(quNsijN,QUh2tc,quNsijN)end;if quNsijN.signal=='-'then BigNum.decr(vfIyB)
+BigNum.add(qL,quNsijN,quNsijN)end;return 0 end;function BigNum.eq(K,i1)
+if BigNum.compare(K,i1)==0 then return true else return false end end
+function BigNum.lt(zz1QI,kFTAh)if
+BigNum.compare(zz1QI,kFTAh)==2 then return true else return false end end
+function BigNum.le(LBf,dijn4Ph)local CO1=-1;CO1=BigNum.compare(LBf,dijn4Ph)if
+CO1 ==0 or CO1 ==2 then return true else return false end end
+function BigNum.compareAbs(RlZo,SUn)
+if RlZo==nil or SUn==nil then
+assert(false,"Function compare: parameter nil")elseif RlZo.len>SUn.len then return 1 elseif RlZo.len<SUn.len then return 2 else local Ib4;for Ib4=RlZo.len-1,0,-1 do
+if RlZo[Ib4]>
+SUn[Ib4]then return 1 elseif RlZo[Ib4]<SUn[Ib4]then return 2 end end end;return 0 end
+function BigNum.compare(fjV1G2,Do)local _=0
+if fjV1G2 ==nil or Do==nil then
+assert(false,"Funtion BigNum.compare: parameter nil")elseif fjV1G2.signal=='+'and Do.signal=='-'then return 1 elseif
+fjV1G2.signal=='-'and Do.signal=='+'then return 2 elseif
+fjV1G2.signal=='-'and Do.signal=='-'then _=1 end
+if fjV1G2.len>Do.len then return 1+_ elseif fjV1G2.len<Do.len then return 2-_ else local TqYJ4
+for TqYJ4=fjV1G2.len-1,0,
+-1 do if fjV1G2[TqYJ4]>Do[TqYJ4]then return 1+_ elseif fjV1G2[TqYJ4]<Do[TqYJ4]then
+return 2-_ end end end;return 0 end
+function BigNum.copy(DI,b)
+if DI~=nil and b~=nil then local E;for E=0,DI.len-1 do b[E]=DI[E]end
+b.len=DI.len else assert(false,"Function BigNum.copy: parameter nil")end end
+function BigNum.change(KMw7_i1s,CQi)local nHlJ=0;local lw4Q7kbl=0;local CQi=CQi;local IN;local QYf1=0
+if KMw7_i1s==nil then
+assert(false,"BigNum.change: parameter nil")elseif type(KMw7_i1s)~="table"then
+assert(false,"BigNum.change: parameter error, type unexpected")elseif CQi==nil then KMw7_i1s.len=1;KMw7_i1s[0]=0;KMw7_i1s.signal="+"elseif type(CQi)==
+"table"and CQi.len~=nil then for RfsnisO=0,CQi.len do
+KMw7_i1s[RfsnisO]=CQi[RfsnisO]end
+if
+CQi.signal~='-'and CQi.signal~='+'then KMw7_i1s.signal='+'else KMw7_i1s.signal=CQi.signal end;QYf1=KMw7_i1s.len;KMw7_i1s.len=CQi.len elseif type(CQi)=="string"or type(CQi)==
+"number"then
+if string.sub(CQi,1,1)=='+'or
+string.sub(CQi,1,1)=='-'then
+KMw7_i1s.signal=string.sub(CQi,1,1)CQi=string.sub(CQi,2)else KMw7_i1s.signal='+'end;CQi=string.gsub(CQi," ","")
+local lvW2ga=string.find(CQi,"e")
+if lvW2ga~=nil then CQi=string.gsub(CQi,"%.","")
+local T7RKP=string.sub(CQi,lvW2ga+1)T7RKP=tonumber(T7RKP)if T7RKP~=nil and T7RKP>0 then
+T7RKP=tonumber(T7RKP)else
+assert(false,"Function BigNum.change: string is not a valid number")end;CQi=string.sub(CQi,1,
+lvW2ga-2)
+for _L6Bs=string.len(CQi),T7RKP do CQi=CQi.."0"end else lvW2ga=string.find(CQi,"%.")if lvW2ga~=nil then
+CQi=string.sub(CQi,1,lvW2ga-1)end end;IN=string.len(CQi)QYf1=KMw7_i1s.len
+if
+(IN>BigNum.RADIX_LEN)then local SH=IN-
+(math.floor(IN/BigNum.RADIX_LEN)*BigNum.RADIX_LEN)
+for wU4wYbA9=1,IN-SH,BigNum.RADIX_LEN do
+KMw7_i1s[nHlJ]=tonumber(string.sub(CQi,
+- (wU4wYbA9+BigNum.RADIX_LEN-1),-
+wU4wYbA9))
+if KMw7_i1s[nHlJ]==nil then
+assert(false,"Function BigNum.change: string is not a valid number")KMw7_i1s.len=0;return 1 end;nHlJ=nHlJ+1;lw4Q7kbl=lw4Q7kbl+1 end
+if(SH~=0)then
+KMw7_i1s[nHlJ]=tonumber(string.sub(CQi,1,SH))KMw7_i1s.len=lw4Q7kbl+1 else KMw7_i1s.len=lw4Q7kbl end
+for fFeQcIM=KMw7_i1s.len-1,1,-1 do if KMw7_i1s[fFeQcIM]==0 then KMw7_i1s[fFeQcIM]=nil;KMw7_i1s.len=
+KMw7_i1s.len-1 else break end end else KMw7_i1s[nHlJ]=tonumber(CQi)KMw7_i1s.len=1 end else
+assert(false,"Function BigNum.change: parameter error, type unexpected")end;if QYf1 ~=nil then
+for JEHSHPh3=KMw7_i1s.len,QYf1 do KMw7_i1s[JEHSHPh3]=nil end end;return 0 end
+function BigNum.put(bb,o5e6fP,iq7ol)for eMV=0,iq7ol-1 do bb[eMV]=0 end;bb[iq7ol]=o5e6fP;for WDTNkTD=iq7ol+1,bb.len do bb[WDTNkTD]=
+nil end;bb.len=iq7ol;return 0 end
+function BigNum.max(Oejsws,CkD73N0)if Oejsws>CkD73N0 then return Oejsws else return CkD73N0 end end;function BigNum.decr(PlwhaRKJ)
+BigNum.sub(PlwhaRKJ,BigNum.new("1"),PlwhaRKJ)return 0 end
 --#EOF
