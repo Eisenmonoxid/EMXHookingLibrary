@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6 - 29.11.2023 14:13 - Eisenmonoxid",
+	CurrentVersion = "1.6.1 - 29.11.2023 15:11 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -58,6 +58,10 @@ EMXHookLibrary.RawPointer = {
 		return Object
 	end,
 };
+
+-- ************************************************************************************************************************************************************ --
+-- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
+-- ************************************************************************************************************************************************************ --
 
 EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
@@ -239,34 +243,27 @@ EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount = function(_goodType, _requi
 	if _amount ~= nil then Pointer("4", _amount) end
 end
 
-EMXHookLibrary.GetCEntityManager = function() return EMXHookLibrary.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
-EMXHookLibrary.GetLogicPropertiesEx = function() return EMXHookLibrary.GetObjectInstance("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
-EMXHookLibrary.GetCEntityProps = function() return EMXHookLibrary.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
-EMXHookLibrary.GetCGoodProps = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
-EMXHookLibrary.GetTSlotC = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
-EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
-EMXHookLibrary.GetFrameworkCMain = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
-EMXHookLibrary.GetCTextSet = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
-
-EMXHookLibrary.ModifyPlayerInformationStructure = function(_newValue, _vanillaValue, _heValue)
+EMXHookLibrary.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
 	EMXHookLibrary.GetLogicPropertiesEx()((EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue, _newValue)
 end
 
-EMXHookLibrary.SetSettlerIllnessCount = function(_newCount) EMXHookLibrary.ModifyPlayerInformationStructure(_newCount, "760", "700") end
-EMXHookLibrary.SetCarnivoreHealingSeconds = function(_newTime) EMXHookLibrary.ModifyPlayerInformationStructure(_newTime, "680", "624") end
-EMXHookLibrary.SetKnightResurrectionTime = function(_newTime) EMXHookLibrary.ModifyPlayerInformationStructure(_newTime, "184", "164") end
-EMXHookLibrary.SetMaxBuildingTaxAmount = function(_newTaxAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newTaxAmount, "624", "580") end
-EMXHookLibrary.SetAmountOfTaxCollectors = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "808", "744") end
-EMXHookLibrary.SetFogOfWarVisibilityFactor = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "620", "576") end
-EMXHookLibrary.SetBuildingKnockDownCompensation = function(_percent) EMXHookLibrary.ModifyPlayerInformationStructure(_percent, "4", "4") end
+EMXHookLibrary.SetSettlerIllnessCount = function(_newCount) EMXHookLibrary.ModifyLogicPropertiesEx(_newCount, "760", "700") end
+EMXHookLibrary.SetCarnivoreHealingSeconds = function(_newTime) EMXHookLibrary.ModifyLogicPropertiesEx(_newTime, "680", "624") end
+EMXHookLibrary.SetKnightResurrectionTime = function(_newTime) EMXHookLibrary.ModifyLogicPropertiesEx(_newTime, "184", "164") end
+EMXHookLibrary.SetMaxBuildingTaxAmount = function(_newTaxAmount) EMXHookLibrary.ModifyLogicPropertiesEx(_newTaxAmount, "624", "580") end
+EMXHookLibrary.SetAmountOfTaxCollectors = function(_newAmount) EMXHookLibrary.ModifyLogicPropertiesEx(_newAmount, "808", "744") end
+EMXHookLibrary.SetFogOfWarVisibilityFactor = function(_newFactor) EMXHookLibrary.ModifyLogicPropertiesEx(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "620", "576") end
+EMXHookLibrary.SetBuildingKnockDownCompensation = function(_percent) EMXHookLibrary.ModifyLogicPropertiesEx(_percent, "4", "4") end
 -- These three get set correctly but don't seem to do anything ingame. Might need further testing however.
---EMXHookLibrary.SetTrailSpeedModifier = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "496", "464") end
---EMXHookLibrary.SetRoadSpeedModifier = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "320", "300") end
---EMXHookLibrary.SetWaterDepthBlockingThreshold = function(_threshold) EMXHookLibrary.ModifyPlayerInformationStructure(_threshold, "456", "424") end
-EMXHookLibrary.SetTerritoryCombatBonus = function(_newFactor) EMXHookLibrary.ModifyPlayerInformationStructure(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "604", "560") end
-EMXHookLibrary.SetCathedralCollectAmount = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "436", "404") end
-EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibrary.ModifyPlayerInformationStructure(_newAmount, "260", "240") end
-EMXHookLibrary.SetWealthGoodDecayPerSecond = function(_decay) EMXHookLibrary.ModifyPlayerInformationStructure(_decay, "492", "460") end
+--EMXHookLibrary.SetTrailSpeedModifier = function(_newFactor) EMXHookLibrary.ModifyLogicPropertiesEx(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "496", "464") end
+--EMXHookLibrary.SetRoadSpeedModifier = function(_newFactor) EMXHookLibrary.ModifyLogicPropertiesEx(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "320", "300") end
+--EMXHookLibrary.SetWaterDepthBlockingThreshold = function(_threshold) EMXHookLibrary.ModifyLogicPropertiesEx(_threshold, "456", "424") end
+EMXHookLibrary.SetTerritoryCombatBonus = function(_newFactor) EMXHookLibrary.ModifyLogicPropertiesEx(EMXHookLibrary.HelperFunctions.Float2Int(_newFactor), "604", "560") end
+EMXHookLibrary.SetCathedralCollectAmount = function(_newAmount) EMXHookLibrary.ModifyLogicPropertiesEx(_newAmount, "436", "404") end
+EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibrary.ModifyLogicPropertiesEx(_newAmount, "260", "240") end
+EMXHookLibrary.SetWealthGoodDecayPerSecond = function(_decay) EMXHookLibrary.ModifyLogicPropertiesEx(_decay, "492", "460") end
+
+EMXHookLibrary.GetModel = function(_entityID) return tostring(EMXHookLibrary.CalculateEntityIDToObject(_entityID)["28"]) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 628) or 684	
@@ -338,9 +335,7 @@ EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _
 	end
 end
 
-EMXHookLibrary.GetModel = function(_entityID) return tostring(EMXHookLibrary.CalculateEntityIDToObject(_entityID)["28"]) end
-
--- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}
+-- _distances = {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}
 EMXHookLibrary.SetMilitaryMetaFormationParameters = function(_distances) 
 	assert(type(_distances) == "table")
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 652) or 708	
@@ -401,11 +396,22 @@ EMXHookLibrary.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHECha
 	return EMXHookLibrary.RawPointer.New(tonumber("0x" .. DereferenceString))["0"];
 end
 
+-- Get global instances of classes in memory, static value in OV, and offset in both HEs --
+EMXHookLibrary.GetCEntityManager = function() return EMXHookLibrary.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
+EMXHookLibrary.GetLogicPropertiesEx = function() return EMXHookLibrary.GetObjectInstance("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
+EMXHookLibrary.GetCEntityProps = function() return EMXHookLibrary.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
+EMXHookLibrary.GetCGoodProps = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
+EMXHookLibrary.GetTSlotC = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
+EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
+EMXHookLibrary.GetFrameworkCMain = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
+EMXHookLibrary.GetCTextSet = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
+
 EMXHookLibrary.CalculateEntityIDToObject = function(_entityID)
 	local Result = EMXHookLibrary.HelperFunctions.BitAnd(_entityID, 65535)
 	return EMXHookLibrary.GetCEntityManager()[(Result * 8) + 20];
 end
 
+-- Dereference RawPointers --
 EMXHookLibrary.GetValueAtPointer = function(_rawPointer)
 	if not Logic.IsEntityAlive(EMXHookLibrary.GlobalAdressEntity) then
 		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to get value at address "..tostring(_rawPointer).." without existing AdressEntity!")
@@ -423,7 +429,7 @@ end
 
 EMXHookLibrary.SetValueAtPointer = function(_rawPointer, _Value)
 	if not Logic.IsEntityAlive(EMXHookLibrary.GlobalAdressEntity) then
-		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to get value at address "..tostring(_rawPointer).." without existing AdressEntity!")
+		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to set value at address "..tostring(_rawPointer).." without existing AdressEntity!")
 		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
 		return;
 	end
@@ -448,9 +454,9 @@ EMXHookLibrary.FindOffsetValue = function(_VTableOffset, _PointerOffset)
 	local PointerEntity = Logic.CreateEntity(Entities.D_X_TradeShip, posX, posY, 0, 0)
 	local PointerToVTableValue = BigNum.new(Logic.GetEntityScriptingValue(PointerEntity, _PointerOffset))
 	
-	Logic.SetVisible(AdressEntity, false)
 	Logic.DestroyEntity(PointerEntity)
-	
+	Logic.SetVisible(AdressEntity, false)
+
 	EMXHookLibrary.GlobalAdressEntity = AdressEntity
 	EMXHookLibrary.GlobalHeapStart = PointerToVTableValue
 end
