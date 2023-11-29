@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.5 - 27.11.2023 14:51 - Eisenmonoxid",
+	CurrentVersion = "1.6 - 29.11.2023 14:13 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -59,13 +59,13 @@ EMXHookLibrary.RawPointer = {
 	end,
 };
 
-EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
+EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
 	local SeasonIndizes = {0, 16, 32, 48}
 	local OriginalValues = {}
 	
 	local Pointer = EMXHookLibrary.GetCGlobalsBaseEx()["128"][Offsets[1]]["4"]
-	for i = 0, _ColorSetEntryIndex, 1 do Pointer = Pointer["8"] end
+	for i = 0, _colorSetEntryIndex, 1 do Pointer = Pointer["8"] end
 	Pointer = (_useAlternativeStructure and Pointer["0"][Offsets[3]]) or Pointer[Offsets[3]]
 
 	local CurrentIndex = SeasonIndizes[_season]
@@ -83,11 +83,6 @@ EMXHookLibrary.SetColorSetColorRGB = function(_ColorSetEntryIndex, _season, _rgb
 	return OriginalValues
 end
 
-EMXHookLibrary.SetEntityTypeMinimapIcon = function(_entityType, _iconIndex)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "88"}) or {"28", "92"}
-	EMXHookLibrary.CEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _iconIndex)
-end
-
 EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"20", 24, 0}) or {"24", 28, 4}
 	local Index = _IDManagerEntryIndex * Offsets[2]
@@ -95,14 +90,6 @@ EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
 	local TextSegment = EMXHookLibrary.GetCTextSet()["4"][Offsets[1]]
 	
 	for i = 1, #WideCharAsMultiByte do TextSegment(Index + Offsets[3], WideCharAsMultiByte[i]) Offsets[3] = Offsets[3] + 4 end
-end
-
-EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers = function(_buildingID, _maxWorkers)
-	local Offset = (EMXHookLibrary.IsHistoryEdition and "256") or "288"	
-	EMXHookLibrary.CalculateEntityIDToObject(_buildingID)["128"](Offset, _maxWorkers)
-end
-EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
-	EMXHookLibrary.CalculateEntityIDToObject(_settlerID)["84"]["0"]("0", _buildingID)
 end
 
 EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
@@ -113,9 +100,10 @@ EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
 	for i = 1, #_rgb, 1 do
 		ColorStringHex = ColorStringHex .. string.format("%0x", _rgb[i])
 	end
-
-	EMXHookLibrary.GetCGlobalsBaseEx()["108"](Index, tonumber("0x" .. ColorStringHex))[Offsets[1]](Index, tonumber("0x" .. ColorStringHex))
-	EMXHookLibrary.GetCGlobalsBaseEx()["20"][Offsets[2]](Index, tonumber("0x" .. ColorStringHex))
+	
+	ColorStringHex = tonumber("0x" .. ColorStringHex)
+	EMXHookLibrary.GetCGlobalsBaseEx()["108"](Index, ColorStringHex)[Offsets[1]](Index, ColorStringHex)
+	EMXHookLibrary.GetCGlobalsBaseEx()["20"][Offsets[2]](Index, ColorStringHex)
 
 	Logic.ExecuteInLuaLocalState([[
 		Display.UpdatePlayerColors()
@@ -251,14 +239,9 @@ EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount = function(_goodType, _requi
 	if _amount ~= nil then Pointer("4", _amount) end
 end
 
-EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
-	local Offset = (EMXHookLibrary.IsHistoryEdition and "24") or "28"
-	EMXHookLibrary.CEntityProps()[Offset][_entityType * 4]("36", _newMaxHealth)
-end
-
 EMXHookLibrary.GetCEntityManager = function() return EMXHookLibrary.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
 EMXHookLibrary.GetLogicPropertiesEx = function() return EMXHookLibrary.GetObjectInstance("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
-EMXHookLibrary.CEntityProps = function() return EMXHookLibrary.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
+EMXHookLibrary.GetCEntityProps = function() return EMXHookLibrary.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
 EMXHookLibrary.GetCGoodProps = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
 EMXHookLibrary.GetTSlotC = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
@@ -295,38 +278,67 @@ EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)
 	EMXHookLibrary.GetLogicPropertiesEx()[Offset](_cathedralIndex * 4, _limit)
 end
 
-EMXHookLibrary.SetLimitByEntityObject = function(_entityID, _upgradeLevel, _newLimit, _pointerValues)
-	local Offset = (EMXHookLibrary.IsHistoryEdition and _pointerValues[2]) or _pointerValues[1]
-	EMXHookLibrary.CalculateEntityIDToObject(_entityID)["128"][Offset](_upgradeLevel * 4, _newLimit)
+EMXHookLibrary.SetLimitByEntityType = function(_entityType, _upgradeLevel, _newLimit, _pointerValues)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", _pointerValues[2]}) or {"28", _pointerValues[1]}
+	EMXHookLibrary.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]](_upgradeLevel * 4, _newLimit)
 end
 
-EMXHookLibrary.SetSermonSettlerLimit = function(_playerID, _upgradeLevel, _newLimit) 
-	EMXHookLibrary.SetLimitByEntityObject(Logic.GetCathedral(_playerID), _upgradeLevel, _newLimit, {"756", "680"})
+EMXHookLibrary.SetSermonSettlerLimit = function(_cathedralEntityType, _upgradeLevel, _newLimit) 
+	EMXHookLibrary.SetLimitByEntityType(_cathedralEntityType, _upgradeLevel, _newLimit, {"756", "680"})
 end
 
-EMXHookLibrary.SetSoldierLimit = function(_playerID, _upgradeLevel, _newLimit)	
-	EMXHookLibrary.SetLimitByEntityObject(Logic.GetHeadquarters(_playerID), _upgradeLevel, _newLimit, {"788", "704"})
+EMXHookLibrary.SetSoldierLimit = function(_castleEntityType, _upgradeLevel, _newLimit)	
+	EMXHookLibrary.SetLimitByEntityType(_castleEntityType, _upgradeLevel, _newLimit, {"788", "704"})
 end
 
-EMXHookLibrary.SetBuildingTypeOutStockCapacity = function(_buildingID, _upgradeLevel, _newLimit)	
-	EMXHookLibrary.SetLimitByEntityObject(_buildingID, _upgradeLevel, _newLimit, {"676", "612"})
+EMXHookLibrary.SetEntityTypeOutStockCapacity = function(_entityType, _upgradeLevel, _newLimit)	
+	EMXHookLibrary.SetLimitByEntityType(_entityType, _upgradeLevel, _newLimit, {"676", "612"})
 end
 
-EMXHookLibrary.SetStoreHouseOutStockCapacity = function(_playerID, _upgradeLevel, _newLimit)	
-	EMXHookLibrary.SetLimitByEntityObject(Logic.GetStoreHouse(_playerID), _upgradeLevel, _newLimit, {"676", "612"})
+EMXHookLibrary.SetEntityTypeSpouseProbabilityFactor = function(_entityType, _factor)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "596"}) or {"28", "648"}
+	EMXHookLibrary.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _factor, true)
+end
+
+EMXHookLibrary.SetEntityTypeMaxNumberOfWorkers = function(_entityType, _maxWorkers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "256"}) or {"28", "288"}
+	EMXHookLibrary.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _maxWorkers)
+end
+EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
+	EMXHookLibrary.CalculateEntityIDToObject(_settlerID)["84"]["0"]("0", _buildingID)
+end
+
+EMXHookLibrary.SetEntityTypeMinimapIcon = function(_entityType, _iconIndex)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "88"}) or {"28", "92"}
+	EMXHookLibrary.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _iconIndex)
+end
+
+EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "24") or "28"
+	EMXHookLibrary.GetCEntityProps()[Offset][_entityType * 4]("36", _newMaxHealth)
 end
 
 EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136"}) or {"28", "144"}
-	local Pointer = EMXHookLibrary.CEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
-	Pointer("0", _good)
-	Pointer("4", _amount)
+	local Pointer = EMXHookLibrary.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
+	Pointer("0", _good)("4", _amount)
 	
 	if _secondGood ~= nil and _secondAmount ~= nil then
-		Pointer("8", _secondGood)
-		Pointer("12", _secondAmount)
+		Pointer("8", _secondGood)("12", _secondAmount)
 	end
 end
+
+EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount)	
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", (_upgradeLevel == 0 and "0") or "12"}) or {"28", "660", (_upgradeLevel == 0 and "4") or "20"}
+	local Pointer = EMXHookLibrary.GetCEntityProp()[Offsets[1]][_entityType * 4][Offsets[2]][Offsets[3]]
+	Pointer("0", _good)("4", _amount)
+	
+	if _secondGood ~= nil and _secondAmount ~= nil then
+		Pointer("8", _secondGood)("12", _secondAmount)
+	end
+end
+
+EMXHookLibrary.GetModel = function(_entityID) return tostring(EMXHookLibrary.CalculateEntityIDToObject(_entityID)["28"]) end
 
 -- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}
 EMXHookLibrary.SetMilitaryMetaFormationParameters = function(_distances) 
