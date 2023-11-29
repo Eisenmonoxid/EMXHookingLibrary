@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6.1 - 29.11.2023 15:11 - Eisenmonoxid",
+	CurrentVersion = "1.6.1 - 29.11.2023 15:39 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -327,7 +327,7 @@ end
 
 EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount)	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", (_upgradeLevel == 0 and "0") or "12"}) or {"28", "660", (_upgradeLevel == 0 and "4") or "20"}
-	local Pointer = EMXHookLibrary.GetCEntityProp()[Offsets[1]][_entityType * 4][Offsets[2]][Offsets[3]]
+	local Pointer = EMXHookLibrary.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]][Offsets[3]]
 	Pointer("0", _good)("4", _amount)
 	
 	if _secondGood ~= nil and _secondAmount ~= nil then
