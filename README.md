@@ -4,7 +4,7 @@ A work-in-progress Hook for the game "The Settlers 6" and "The Settlers 6: Histo
 Uses the "BigNum.lua" library. Special thanks to the authors!
 
 ## Usage
-Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAdressEntity()" and after that, you can use the exported methods however you like.
+Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAdressEntity()" and after that, you can use the exported methods (listed below) however you like.
 ```
 (If you use the function argument EMXHookLibrary.InitAdressEntity(true), you can use the savegame-override
 and do not have to worry about resetting all values when the player closes the map!)
@@ -39,10 +39,16 @@ EMXHookLibrary.SetAmountOfTaxCollectors(_newAmount)
 EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 -> Setzt den Faktor, um den der Fog of War in bereits aufgedeckten Gebieten angewandt wird. (Normal: 0.75)
 
+EMXHookLibrary.GetModel(_entityID)
+-> Gibt das aktuelle Model einer Entität zurück. (Analog zu Logic.SetModel)
+
 EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
 -> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn der Entitätentyp bereits zwei Kosteneinträge im Originalspiel hat.
 Ansonsten sollte das Baukostensystem für die zweite Ware (bei Gebäuden!) verwendet werden.
-Hinweis: Funktioniert auch bei Einheiten, zB Munitionskarren/Soldaten. 
+Hinweis: Funktioniert auch bei Einheiten, zB Munitionskarren/Soldaten.
+
+EMXHookLibrary.SetEntityTypeUpgradeCost(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount)
+-> Analog zu SetEntityTypeFullCost können hier die Ausbaukosten eines Entitätentyps geändert werden. 
 
 EMXHookLibrary.SetEntityTypeMaxHealth(_entityType, _newMaxHealth)
 -> Setzt die maximalen Lebenspunkte (HP) eines Entitätentyps.
@@ -59,24 +65,25 @@ EMXHookLibrary.SetCathedralCollectAmount(_newAmount)
 EMXHookLibrary.SetFireHealthDecreasePerSecond(_newAmount)
 -> Setzt den Schaden, welches Feuer in der Sekunde anrichtet. (Normal: 5)
 
-EMXHookLibrary.SetSermonSettlerLimit(_playerID, _upgradeLevel, _limit)
+EMXHookLibrary.SetSermonSettlerLimit(_cathedralEntityType, _upgradeLevel, _newLimit) 
 -> Setzt das Limit an Siedlern in der Predigt per Kathedralenausbaulevel. (Normal: 10, 15, 30, 60)    
 
-EMXHookLibrary.SetSoldierLimit(_playerID, _upgradeLevel, _limit)    
+EMXHookLibrary.SetSoldierLimit(_castleEntityType, _upgradeLevel, _newLimit)	
 -> Setzt das Limit an Soldaten per Burgausbaulevel. (Normal: 25, 43, 61, 91)
+
+EMXHookLibrary.SetEntityTypeSpouseProbabilityFactor(_entityType, _factor)
+-> Setzt die Wahrscheinlichkeit, dass Siedler auf dem Fest eine Ehefrau finden. (Normal: 0.3)
+Damit kann bspw. das Badehaus auch Ehefrauen beschäftigen.
 
 EMXHookLibrary.SetMilitaryMetaFormationParameters(_distances)
 -> Setzt einige Parameter zur Truppenanordnung. Der Parameter _distances muss ein table sein nach folgendem Vorbild:
 -- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}.
 Nicht benötigte Werte sind nil.
 
-EMXHookLibrary.SetBuildingTypeOutStockCapacity(_buildingID, _upgradeLevel, _limit)	
--> Setzt den maximalen OutStock eines Gebäudetyps basierend auf dessen Ausbaulevel. (Normal: 3, 6, 9 oder nur 9).
+EMXHookLibrary.SetEntityTypeOutStockCapacity(_entityType, _upgradeLevel, _newLimit)	
+-> Setzt den maximalen OutStock eines Entitätentyps basierend auf dessen Ausbaulevel. (Normal: 3, 6, 9 oder nur 9).
+Funktioniert auch bei Lagerhäusern (bzw. bei allem, was einen OutStock besitzt).
 ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetMaxBuildingStockSize betrifft dies hier neu errichtete Gebäude eines Typs!
-
-EMXHookLibrary.SetStoreHouseOutStockCapacity(_playerID, _upgradeLevel, _newLimit)
--> Setzt den maximalen OutStock des Lagerhauses per Ausbaulevel.
-ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetMaxStorehouseStockSize betrifft dies hier neu erstellte Gebäude eines Typs!
 
 EMXHookLibrary.SetMaxStorehouseStockSize(_storehouseID, _maxStockSize)
 -> Setzt den maximalen OutStock des Lagerhauses.
@@ -115,8 +122,8 @@ EMXHookLibrary.SetSettlersWorkBuilding(_settlerID, _buildingID)
 ACHTUNG: Der Siedler muss bereits einem Gebäude zugeordnet sein, bevor gewechselt werden kann!
 (Bei mehr als 3 Siedlern sollte zuvor EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers entsprechend gesetzt werden)
 
-EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers(_buildingID, _maxWorkers)
--> Setzt die neue Maximalanzahl an Arbeitern eines Gebäudes.
+EMXHookLibrary.SetEntityTypeMaxNumberOfWorkers(_entityType, _maxWorkers)
+-> Setzt die neue Maximalanzahl an Arbeitern eines Gebäudetyps.
 
 EMXHookLibrary.EditFestivalProperties(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
 ->  Verändert einen oder mehrere Parameter der Feste (Aufstiegs- sowie normales Fest). (Nicht benötigte Parameter sind nil).
@@ -131,7 +138,7 @@ EMXHookLibrary.SetEntityTypeMinimapIcon(_entityType, _iconIndex)
 -> Setzt ein Minimap-Icon für einen Entitätentyp. Es sind Icons aus der Icontabelle möglich. 0 entfernt das Icon wieder.
 Für bereits auf der Map existierende Entitäten sollte die Funktion in der FMA aufgerufen werden, ansonsten sind nur neu erstellte Entitäten betroffen.
 
-EMXHookLibrary.SetColorSetColorRGB(_ColorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
+EMXHookLibrary.SetColorSetColorRGB(_colorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
 -> Setzt die Farben eines ColorSets per Jahreszeit. Es wird ein Table zurückgegeben, der die originalen Values enthält, damit man
 das ColorSet wieder zurücksetzen kann. Für den ersten Parameter entweder von 0 beginnend aufsteigend durchprobieren, oder anfragen.
 Bspw. EMXHookLibrary.SetColorSetColorRGB(2, 1, {0.3, 0.7, 0.4, 0.7}, nil, true)
