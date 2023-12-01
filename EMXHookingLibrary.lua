@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6.1 - 29.11.2023 15:39 - Eisenmonoxid",
+	CurrentVersion = "1.6.2 - 01.12.2023 23:35 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -165,9 +165,9 @@ EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _fo
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "564", "16"}) or {"368", "16", "24", "612", "12"}
 	local SharedIdentifier = BigNum.new("-1035359747")
 	
-	if _forEntityType ~= nil then EMXHookLibrary.CalculateEntityIDToObject(_buildingID)["128"](Offsets[4], _newGood) end
+	if _forEntityType ~= nil then EMXHookLibrary.CalculateEntityIDToLogicObject(_buildingID)["128"](Offsets[4], _newGood) end
 	
-	local Pointer = EMXHookLibrary.CalculateEntityIDToObject(_buildingID)[Offsets[1]]["4"]
+	local Pointer = EMXHookLibrary.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[5]].Pointer
 	while BigNum.compareAbs(CurrentIdentifier, SharedIdentifier) ~= 0 do
 		Pointer = Pointer["0"]
@@ -185,7 +185,7 @@ EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "18", "16"}) or {"368", "16", "24", "12"}
 	local SharedIdentifier = BigNum.new("1501117341")
 
-	local Pointer = EMXHookLibrary.CalculateEntityIDToObject(_buildingID)[Offsets[1]]["4"]
+	local Pointer = EMXHookLibrary.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
 		Pointer = Pointer["8"]
@@ -203,7 +203,7 @@ EMXHookLibrary.SetMaxBuildingStockSize = function(_buildingID, _maxStockSize)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "46", "16"}) or {"368", "16", "52", "12"}
 	local SharedIdentifier = BigNum.new("-1035359747")
 	
-	local Pointer = EMXHookLibrary.CalculateEntityIDToObject(_buildingID)[Offsets[1]]["4"]
+	local Pointer = EMXHookLibrary.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
 		Pointer = Pointer["0"]
@@ -221,7 +221,7 @@ EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "68", "16"}) or {"368", "16", "76", "12"}
 	local SharedIdentifier = BigNum.new("625443837")
 
-	local Pointer = EMXHookLibrary.CalculateEntityIDToObject(_storehouseID)[Offsets[1]]["4"]
+	local Pointer = EMXHookLibrary.CalculateEntityIDToLogicObject(_storehouseID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
 		Pointer = Pointer["8"]
@@ -263,7 +263,7 @@ EMXHookLibrary.SetCathedralCollectAmount = function(_newAmount) EMXHookLibrary.M
 EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibrary.ModifyLogicPropertiesEx(_newAmount, "260", "240") end
 EMXHookLibrary.SetWealthGoodDecayPerSecond = function(_decay) EMXHookLibrary.ModifyLogicPropertiesEx(_decay, "492", "460") end
 
-EMXHookLibrary.GetModel = function(_entityID) return tostring(EMXHookLibrary.CalculateEntityIDToObject(_entityID)["28"]) end
+EMXHookLibrary.GetModel = function(_entityID) return tostring(EMXHookLibrary.CalculateEntityIDToLogicObject(_entityID)["28"]) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 628) or 684	
@@ -302,7 +302,7 @@ EMXHookLibrary.SetEntityTypeMaxNumberOfWorkers = function(_entityType, _maxWorke
 	EMXHookLibrary.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _maxWorkers)
 end
 EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
-	EMXHookLibrary.CalculateEntityIDToObject(_settlerID)["84"]["0"]("0", _buildingID)
+	EMXHookLibrary.CalculateEntityIDToLogicObject(_settlerID)["84"]["0"]("0", _buildingID)
 end
 
 EMXHookLibrary.SetEntityTypeMinimapIcon = function(_entityType, _iconIndex)
@@ -403,10 +403,15 @@ EMXHookLibrary.GetCEntityProps = function() return EMXHookLibrary.GetObjectInsta
 EMXHookLibrary.GetCGoodProps = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
 EMXHookLibrary.GetTSlotC = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
+EMXHookLibrary.GetCGlobalsLogicEx = function() return EMXHookLibrary.GetObjectInstance("11674344", {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true) end
 EMXHookLibrary.GetFrameworkCMain = function() return EMXHookLibrary.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
 EMXHookLibrary.GetCTextSet = function() return EMXHookLibrary.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
 
-EMXHookLibrary.CalculateEntityIDToObject = function(_entityID)
+EMXHookLibrary.CalculateEntityIDToDisplayObject = function(_entityID)
+	local Result = EMXHookLibrary.HelperFunctions.BitAnd(_entityID, 65535)
+	return EMXHookLibrary.GetCGlobalsLogicEx()["100"][(Result * 4) + 20];
+end
+EMXHookLibrary.CalculateEntityIDToLogicObject = function(_entityID)
 	local Result = EMXHookLibrary.HelperFunctions.BitAnd(_entityID, 65535)
 	return EMXHookLibrary.GetCEntityManager()[(Result * 8) + 20];
 end
