@@ -144,5 +144,13 @@ das ColorSet wieder zurücksetzen kann. Für den ersten Parameter entweder von 0
 Bspw. EMXHookLibrary.SetColorSetColorRGB(2, 1, {0.3, 0.7, 0.4, 0.7}, nil, true)
 --> ColorSetIndex; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor, Use the alternative ColorSet array.
 Bspw. EMXHookLibrary.SetColorSetColorRGB(0, 1, {0.6, 0.3, 0.9, 1}, 55, false) -> Setzt den Fog of War.
+
+EMXHookLibrary.SetEntityDisplayModelParameters(_entityID, _modelParameters, _lightParameters, _destroyedParameters, _upgradeSiteParameters, _snowFactor, _showDestroyedModelAt)
+-> Ermöglicht es, verschiedene Modelle von Gebäuden zu setzen. Alle Parameter mit "Parameters" im Namen müssen Tables mit den gewünschten Models sein.
+_snowFactor und _showDestroyedModelAt sind Floats. Vor dem Ändern am Besten in der Definitions-xml der Entität nachschauen.
+
+EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
+-> Ändert die Anzeigedauer eines EGL_Effects.
+Bspw. EMXHookLibrary.SetEGLEffectDuration(EGL_Effects.FXLightning, 2)
 ```
 When errors occur, please notify me so i can fix them! ;)
