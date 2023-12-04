@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6.3 - 03.12.2023 02:19 - Eisenmonoxid",
+	CurrentVersion = "1.6.4 - 04.12.2023 23:14 - Eisenmonoxid",
 	
 	GlobalAdressEntity = 0,
 	GlobalHeapStart = 0,
@@ -64,17 +64,12 @@ EMXHookLibrary.RawPointer = {
 -- ************************************************************************************************************************************************************ --
 
 EMXHookLibrary.SetEntityDisplayModelParameters = function(_entityID, _modelParameters, _lightParameters, _destroyedParameters, _upgradeSiteParameters, _snowFactor, _showDestroyedModelAt)
-	assert(type(_modelParameters) == "table")
-	assert(type(_lightParameters) == "table")
-	assert(type(_destroyedParameters) == "table")
-	assert(type(_upgradeSiteParameters) == "table")
-	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "84") or "88"	
 	local Pointer = EMXHookLibrary.CalculateEntityIDToDisplayObject(_entityID)[Offset]
 	
 	if _modelParameters[1] ~= nil then Pointer("8", _modelParameters[1]) end
-	if _snowFactor ~= nil then Pointer((EMXHookLibrary.IsHistoryEdition and "72") or "76", _snowFactor) end
-	if _showDestroyedModelAt ~= nil then Pointer((EMXHookLibrary.IsHistoryEdition and "212") or "220", _showDestroyedModelAt) end
+	if _snowFactor ~= nil then Pointer((EMXHookLibrary.IsHistoryEdition and "72") or "76", _snowFactor, true) end
+	if _showDestroyedModelAt ~= nil then Pointer((EMXHookLibrary.IsHistoryEdition and "212") or "220", _showDestroyedModelAt, true) end
 	
 	local StartOffset = (EMXHookLibrary.IsHistoryEdition and 116) or 124	
 	for i = 2, #_modelParameters do
@@ -395,6 +390,11 @@ EMXHookLibrary.SetMilitaryMetaFormationParameters = function(_distances)
 	end
 end
 
+EMXHookLibrary.SetEGLEffectDuration = function(_effect, _duration)
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "8") or "12"
+	EMXHookLibrary.GetCEffectProps()[Offset][_effect * 4]("16", _duration, true)
+end
+
 -- Hooking Utility Methods --
 
 EMXHookLibrary.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
@@ -446,6 +446,7 @@ end
 EMXHookLibrary.GetCEntityManager = function() return EMXHookLibrary.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
 EMXHookLibrary.GetLogicPropertiesEx = function() return EMXHookLibrary.GetObjectInstance("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
 EMXHookLibrary.GetCEntityProps = function() return EMXHookLibrary.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
+EMXHookLibrary.GetCEffectProps = function() return EMXHookLibrary.GetObjectInstance("11198564", {69981, 1, 4, 5, 8}, {189755, 0, 0, 1, 8}) end
 EMXHookLibrary.GetCGoodProps = function() return EMXHookLibrary.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
 EMXHookLibrary.GetTSlotC = function() return EMXHookLibrary.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.GetCGlobalsBaseEx = function() return EMXHookLibrary.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
