@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6.6 - 07.12.2023 21:45 - Eisenmonoxid",
+	CurrentVersion = "1.6.7 - 08.12.2023 04:28 - Eisenmonoxid",
 
 	IsHistoryEdition = false,
 	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
@@ -113,7 +113,7 @@ EMXHookLibrary.SetEntityDisplayProperties = function(_entityIDOrType, _property,
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"84", "4"}) or {"88", "8"}	
 	local Properties = {
 		{"ShowDestroyedModelAt", "220", "212"}, {"MaxDarknessFactor", "216", "208"}, {"ExplodeOnDestroyedModel", "224", "216"}, 
-		{"SnowFactor", "76", "72"}, {"SeasonColorSet", "68", "64"}, {"LODDistance", "80", "76"}};
+		{"SnowFactor", "76", "72"}, {"SeasonColorSet", "68", "64"}, {"LODDistance", "80", "76"}, {"ConstructionSite", "104", "96"}, {"Decal", "108", "100"}};
 	local BitProperties = {{"HighQualityOnly", "39", "39"}, {"RenderInFow", "38", "38"}, {"CastShadow", "37", "37"}, {"DrawPlayerColor", "36", "36"}};
 
 	local Pointer = 0

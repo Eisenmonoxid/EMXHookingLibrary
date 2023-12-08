@@ -87,11 +87,11 @@ ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetMaxBuildingStockSize betrifft dies hi
 
 EMXHookLibrary.SetMaxStorehouseStockSize(_storehouseID, _maxStockSize)
 -> Setzt den maximalen OutStock des Lagerhauses.
-ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetStoreHouseOutStockCapacity betrifft dies hier einzelne Lagerhäuser!
+ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetEntityTypeOutStockCapacity betrifft dies hier einzelne Lagerhäuser!
 
 EMXHookLibrary.SetMaxBuildingStockSize(_buildingID, _maxStockSize)
 -> Setzt den maximalen OutStock eines Gebäudes.
-ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetBuildingTypeOutStockCapacity betrifft dies hier einzelne Gebäude!
+ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetEntityTypeOutStockCapacity betrifft dies hier einzelne Gebäude!
 
 EMXHookLibrary.SetBuildingInStockGood(_buildingID, _newGood)
 -> Setzt eine neue Ware als InStock eines Gebäudes.
@@ -145,12 +145,17 @@ Bspw. EMXHookLibrary.SetColorSetColorRGB(2, 1, {0.3, 0.7, 0.4, 0.7}, nil, true)
 --> ColorSetIndex; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor, Use the alternative ColorSet array.
 Bspw. EMXHookLibrary.SetColorSetColorRGB(0, 1, {0.6, 0.3, 0.9, 1}, 55, false) -> Setzt den Fog of War.
 
-EMXHookLibrary.SetEntityDisplayModelParameters(_entityID, _modelParameters, _lightParameters, _destroyedParameters, _upgradeSiteParameters, _snowFactor, _showDestroyedModelAt)
+EMXHookLibrary.SetEntityDisplayModelParameters(_entityIDOrType, _modelParameters, _lightParameters, _destroyedParameters, _upgradeSiteParameters)
 -> Ermöglicht es, verschiedene Modelle von Gebäuden zu setzen. Alle Parameter mit "Parameters" im Namen müssen Tables mit den gewünschten Models sein.
-_snowFactor und _showDestroyedModelAt sind Floats. Vor dem Ändern am Besten in der Definitions-xml der Entität nachschauen.
+Vor dem Ändern am Besten in der Definitions-xml der Entität nachschauen. Es kann sowohl eine (existierende) Entity-ID als auch ein Entitätentyp angegeben werden.
 
 EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
 -> Ändert die Anzeigedauer eines EGL_Effects.
 Bspw. EMXHookLibrary.SetEGLEffectDuration(EGL_Effects.FXLightning, 2)
+
+EMXHookLibrary.SetEntityDisplayProperties(_entityIDOrType, _property, _value)
+-> Ermöglicht es, verschiedene Display-Parameter einer Entität bzw. eines Entitätentyps anzupassen. Die möglichen Properties sind:
+"ShowDestroyedModelAt", "MaxDarknessFactor", "ExplodeOnDestroyedModel", "SnowFactor", "SeasonColorSet", "LODDistance", "ConstructionSite", "Decal"
+Einige Parameter müssen als Float gesetzt werden, dazu am Besten anfragen bzw. in der Definitions-xml nachsehen.
 ```
 When errors occur, please notify me so i can fix them! ;)
