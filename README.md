@@ -100,10 +100,14 @@ EMXHookLibrary.SetBuildingTypeOutStockGood(_buildingID, _newGood, _forEntityType
 -> Setzt eine neue Ware als OutStock eines Gebäudes. Wenn _forEntityType ~= nil, wird der Wert für den Entitätentyp gesetzt,
 ansonsten für ein Gebäude.
 
-EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource, _amount)
+EMXHookLibrary.SetGoodTypeParameters(_goodType, _requiredResource, _amount, _goodCategory, _animationParameters)
 -> Setzt das benötigte Produktionsgut einer Ware und/oder deren benötigte Menge. (zB Goods.G_Carcass -> Goods.G_Sausage)
 (Nicht benötigte Parameter sind nil).
 Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 Weizen für 1 Brot, 2 Stein für 1 Besen usw.)
+
+EMXHookLibrary.CopyGoodTypePointer(_good, _copyGood)
+-> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
+für diese Dinge haben.
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren.
