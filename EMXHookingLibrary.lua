@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6.7 - 08.12.2023 04:28 - Eisenmonoxid",
+	CurrentVersion = "1.6.8 - 10.12.2023 06:13 - Eisenmonoxid",
 
 	IsHistoryEdition = false,
 	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
@@ -302,12 +302,23 @@ EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize
 	end
 end
 
-EMXHookLibrary.SetGoodTypeRequiredResourceAndAmount = function(_goodType, _requiredResource, _amount)
+EMXHookLibrary.SetGoodTypeParameters = function(_goodType, _requiredResource, _amount, _goodCategory, _animationParameters)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36"}) or {"8", "40"}
-	local Pointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4][Offsets[2]]
+	local Pointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
 	
-	if _requiredResource ~= nil then Pointer("0", _requiredResource) end
-	if _amount ~= nil then Pointer("4", _amount) end
+	if _requiredResource ~= nil then Pointer[Offsets[2]]("0", _requiredResource) end
+	if _amount ~= nil then Pointer[Offsets[2]]("4", _amount) end
+	if _goodCategory ~= nil then Pointer("4", _goodCategory) end
+	if _animationParameters ~= nil then Pointer("8", _animationParameters[1])("12", _animationParameters[2]) end
+end
+
+EMXHookLibrary.CopyGoodTypePointer = function(_good, _copyGood)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40"}) or {"8", "40", "44"}
+	local CopyGoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_copyGood * 4]
+	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_good * 4]
+	
+	GoodPointer(Offsets[2], tonumber(tostring(CopyGoodPointer[Offsets[2]])))
+	GoodPointer(Offsets[3], tonumber(tostring(CopyGoodPointer[Offsets[3]])))
 end
 
 EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
