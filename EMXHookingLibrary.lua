@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6.8 - 10.12.2023 06:13 - Eisenmonoxid",
+	CurrentVersion = "1.6.9 - 16.12.2023 21:19 - Eisenmonoxid",
 
 	IsHistoryEdition = false,
 	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
@@ -16,7 +16,10 @@ EMXHookLibrary = {
 	Internal = {
 		GlobalAdressEntity = 0,
 		GlobalHeapStart = 0,
+		AllocatedMemoryStart = 0,
+		AllocatedMemorySize = 0
 	},
+	
 	Helpers = {},
 	InstanceCache = {}
 };
@@ -312,13 +315,36 @@ EMXHookLibrary.SetGoodTypeParameters = function(_goodType, _requiredResource, _a
 	if _animationParameters ~= nil then Pointer("8", _animationParameters[1])("12", _animationParameters[2]) end
 end
 
+EMXHookLibrary.CreateGoodTypeRequiredResourceAndAmount = function(_goodType, _requiredResource, _amount)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
+	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
+	
+	if _requiredResource == nil then
+		GoodPointer(Offsets[2], 0)
+		GoodPointer(Offsets[3], 0)
+		GoodPointer(Offsets[4], 0)
+		return;
+	end
+	
+	local Pointer = EMXHookLibrary.Internal.GetMemorySpace(16)
+	Pointer("0", _requiredResource)("4", _amount)("8", 48)("12", 21)
+
+	local StartPointer = tonumber(tostring(Pointer))
+	local EndPointer = tonumber(tostring(Pointer + 12))
+
+	GoodPointer(Offsets[2], StartPointer)
+	GoodPointer(Offsets[3], EndPointer)
+	GoodPointer(Offsets[4], EndPointer)
+end
+
 EMXHookLibrary.CopyGoodTypePointer = function(_good, _copyGood)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40"}) or {"8", "40", "44"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
 	local CopyGoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_copyGood * 4]
 	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_good * 4]
 	
 	GoodPointer(Offsets[2], tonumber(tostring(CopyGoodPointer[Offsets[2]])))
 	GoodPointer(Offsets[3], tonumber(tostring(CopyGoodPointer[Offsets[3]])))
+	GoodPointer(Offsets[4], tonumber(tostring(CopyGoodPointer[Offsets[4]])))
 end
 
 EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
@@ -473,7 +499,7 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 	HexString02 = string.sub(HexString02, _hexSplitChars[3], _hexSplitChars[4])
 
 	local DereferenceString = HexString02 .. HexString01	
-	Framework.WriteToLog("EMXHookLibrary: Going to dereference HexString: "..DereferenceString..". OVPointer: ".._ovPointer)
+	Framework.WriteToLog("EMXHookLibrary: Going to dereference HEPointer: 0x"..DereferenceString..". OVPointer: ".._ovPointer)
 	
 	EMXHookLibrary.InstanceCache[_ovPointer] = DereferenceString
 	
@@ -486,7 +512,7 @@ EMXHookLibrary.Internal.GetLogicPropertiesEx = function() return EMXHookLibrary.
 EMXHookLibrary.Internal.GetCEntityProps = function() return EMXHookLibrary.Internal.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
 EMXHookLibrary.Internal.GetCEffectProps = function() return EMXHookLibrary.Internal.GetObjectInstance("11198564", {69981, 1, 4, 5, 8}, {189755, 0, 0, 1, 8}) end
 EMXHookLibrary.Internal.GetCGoodProps = function() return EMXHookLibrary.Internal.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
-EMXHookLibrary.Internal.GetTSlotC = function() return EMXHookLibrary.Internal.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
+EMXHookLibrary.Internal.GetEGLCGameLogic = function() return EMXHookLibrary.Internal.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
 EMXHookLibrary.Internal.GetCGlobalsBaseEx = function() return EMXHookLibrary.Internal.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
 EMXHookLibrary.Internal.GetCGlobalsLogicEx = function() return EMXHookLibrary.Internal.GetObjectInstance("11674344", {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true) end
 EMXHookLibrary.Internal.GetFrameworkCMain = function() return EMXHookLibrary.Internal.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
@@ -574,13 +600,50 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 	end
 	EMXHookLibrary.WasInitialized = true
 	
-	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. ". IsHistoryEdition: "..tostring(EMXHookLibrary.IsHistoryEdition)..". HistoryEditionVariant: "..tostring(EMXHookLibrary.HistoryEditionVariant)..".")
-	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at "..BigNum.mt.tostring(EMXHookLibrary.Internal.GlobalHeapStart)..". AdressEntity ID: "..tostring(EMXHookLibrary.Internal.GlobalAdressEntity)..".")
+	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. 
+						 ". HistoryEditionVariant: " .. tostring(EMXHookLibrary.HistoryEditionVariant) .. ".")
+	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at 0x" .. string.format("%0x", BigNum.mt.tostring(EMXHookLibrary.Internal.GlobalHeapStart)) .. 
+						 ". AddressEntity ID: " .. tostring(EMXHookLibrary.Internal.GlobalAdressEntity) .. ".")
 
 	if _useLoadGameOverride then
 		EMXHookLibrary.Internal.OverrideSavegameHandling()
 		Framework.WriteToLog("EMXHookLibrary: LoadGame Overwritten!")
 	end
+	
+	EMXHookLibrary.Internal.AllocateDynamicMemory()
+end
+
+EMXHookLibrary.Internal.AllocateDynamicMemory = function()
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "268") or "280"
+	local AllocaterString = "................................................................................"
+	local Counter = 0
+	repeat
+		AllocaterString = AllocaterString .. AllocaterString
+		Counter = Counter + 1
+	until Counter == (6)
+	Logic.SetEntityName(EMXHookLibrary.Internal.GlobalAdressEntity, AllocaterString)
+	
+	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(EMXHookLibrary.Internal.GlobalAdressEntity)[Offset]
+	EMXHookLibrary.Internal.AllocatedMemoryStart = Pointer
+	EMXHookLibrary.Internal.AllocatedMemorySize = 0
+	
+	Framework.WriteToLog("EMXHookLibrary: Dynamic Memory allocated: 0x" .. string.format("%0x", tostring(Pointer)))
+end
+
+EMXHookLibrary.Internal.GetMemorySpace = function(_size)
+	local Size = EMXHookLibrary.Internal.AllocatedMemorySize + _size
+	if Size > 120 then
+		Framework.WriteToLog("EMXHookLibrary: Out of Memory ERROR!")
+		assert(false, "EMXHookLibrary: Out of Memory ERROR!")	
+		return;
+	end
+	
+	local Pointer = EMXHookLibrary.Internal.AllocatedMemoryStart + EMXHookLibrary.Internal.AllocatedMemorySize
+	EMXHookLibrary.Internal.AllocatedMemorySize = Size
+
+	Framework.WriteToLog("EMXHookLibrary: Requested Memory: Size: " .. tostring(Size) .. ". Pointer: 0x" .. string.format("%0x", tostring(Pointer)))
+
+	return Pointer
 end
 
 EMXHookLibrary.Internal.GetHistoryEditionVariant = function()
