@@ -107,7 +107,12 @@ Die Menge ist standardmäßig 1:1, kann aber beliebig verändert werden. (zB 3 W
 
 EMXHookLibrary.CopyGoodTypePointer(_good, _copyGood)
 -> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
-für diese Dinge haben.
+für diese Dinge haben. Diese Einträge werden als Referenz auf einen anderen GoodType angelegt.
+
+EMXHookLibrary.CreateGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource, _amount)
+-> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
+für diese Dinge haben. Im Gegensatz zu EMXHookLibrary.CopyGoodTypePointer wird hier in allokiertem Speicher ein neues Array
+angelegt. 
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren.
