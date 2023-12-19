@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.6.9 - 16.12.2023 21:19 - Eisenmonoxid",
+	CurrentVersion = "1.7.1 - 19.12.2023 23:38 - Eisenmonoxid",
 
 	IsHistoryEdition = false,
 	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
@@ -232,7 +232,7 @@ EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDu
 end
 
 EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _forEntityType)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "564", "16"}) or {"368", "16", "24", "612", "12"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "560", "16"}) or {"368", "16", "24", "612", "12"}
 	local SharedIdentifier = BigNum.new("-1035359747")
 	
 	if _forEntityType ~= nil then EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)["128"](Offsets[4], _newGood) end
@@ -270,7 +270,7 @@ EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
 end
 
 EMXHookLibrary.SetMaxBuildingStockSize = function(_buildingID, _maxStockSize)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "46", "16"}) or {"368", "16", "52", "12"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "44", "16"}) or {"368", "16", "52", "12"}
 	local SharedIdentifier = BigNum.new("-1035359747")
 	
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
@@ -620,7 +620,7 @@ EMXHookLibrary.Internal.AllocateDynamicMemory = function()
 	repeat
 		AllocaterString = AllocaterString .. AllocaterString
 		Counter = Counter + 1
-	until Counter == (6)
+	until Counter == (4)
 	Logic.SetEntityName(EMXHookLibrary.Internal.GlobalAdressEntity, AllocaterString)
 	
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(EMXHookLibrary.Internal.GlobalAdressEntity)[Offset]
@@ -632,7 +632,7 @@ end
 
 EMXHookLibrary.Internal.GetMemorySpace = function(_size)
 	local Size = EMXHookLibrary.Internal.AllocatedMemorySize + _size
-	if Size > 120 then
+	if Size > 80 then
 		Framework.WriteToLog("EMXHookLibrary: Out of Memory ERROR!")
 		assert(false, "EMXHookLibrary: Out of Memory ERROR!")	
 		return;
