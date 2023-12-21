@@ -7,7 +7,7 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.7.1 - 19.12.2023 23:38 - Eisenmonoxid",
+	CurrentVersion = "1.7.2 - 21.12.2023 23:50 - Eisenmonoxid",
 
 	IsHistoryEdition = false,
 	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
@@ -251,8 +251,46 @@ EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _fo
 	end
 end
 
+-- _newGoods = {Goods.G_Grain, Goods.G_Wool}
+EMXHookLibrary.CreateBuildingInStockGoods = function(_buildingID, _newGoods)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", 20, "16"}) or {"368", "16", 24, "12"}
+	local SharedIdentifier = BigNum.new("1501117341")
+
+	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
+	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
+	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
+		Pointer = Pointer["8"]
+		CurrentIdentifier = Pointer[Offsets[4]].Pointer
+	end
+
+	assert(type(_newGoods) == "table")
+	local NeededMemorySize = (#_newGoods * 2) * 4
+	local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(NeededMemorySize)
+	
+	if MemoryPointer == nil then
+		return;
+	end
+	
+	local Counter = 0
+	for Key, Value in pairs(_newGoods) do
+		MemoryPointer(Counter, Value)(Counter + 4, 0)
+		Counter = Counter + 8
+	end
+	
+	local StartPointer = tonumber(tostring(MemoryPointer))
+	local EndPointer = tonumber(tostring(MemoryPointer + Counter))
+	
+	local OriginalValues = {tostring(Pointer[Offsets[2]][Offsets[3]]), 
+							tostring(Pointer[Offsets[2]][Offsets[3] + 4]), 
+							tostring(Pointer[Offsets[2]][Offsets[3] + 8])};
+	
+	Pointer[Offsets[2]](Offsets[3], StartPointer)(Offsets[3] + 4, EndPointer)(Offsets[3] + 8, EndPointer)
+	
+	return OriginalValues
+end
+
 EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "18", "16"}) or {"368", "16", "24", "12"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "16"}) or {"368", "16", "24", "12"}
 	local SharedIdentifier = BigNum.new("1501117341")
 
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
@@ -315,22 +353,34 @@ EMXHookLibrary.SetGoodTypeParameters = function(_goodType, _requiredResource, _a
 	if _animationParameters ~= nil then Pointer("8", _animationParameters[1])("12", _animationParameters[2]) end
 end
 
-EMXHookLibrary.CreateGoodTypeRequiredResourceAndAmount = function(_goodType, _requiredResource, _amount)
+-- _requiredResources = {{_resource, _amount, _supplier}, {_resource, _amount, _supplier}, ...}
+EMXHookLibrary.CreateGoodTypeRequiredResources = function(_goodType, _requiredResources)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
 	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
 	
-	if _requiredResource == nil then
+	if _requiredResources == nil then
 		GoodPointer(Offsets[2], 0)
 		GoodPointer(Offsets[3], 0)
 		GoodPointer(Offsets[4], 0)
 		return;
 	end
 	
-	local Pointer = EMXHookLibrary.Internal.GetMemorySpace(16)
-	Pointer("0", _requiredResource)("4", _amount)("8", 48)("12", 21)
+	assert(type(_requiredResources) == "table")
+	local NeededMemorySize = (#_requiredResources * 3) * 4
+	local Pointer = EMXHookLibrary.Internal.MemoryAllocator(NeededMemorySize)
+	
+	if Pointer == nil then
+		return;
+	end
+	
+	local Counter = 0
+	for Key, Value in pairs(_requiredResources) do
+		Pointer(Counter, Value[1])(Counter + 4, Value[2])(Counter + 8, Value[3])
+		Counter = Counter + 12
+	end
 
 	local StartPointer = tonumber(tostring(Pointer))
-	local EndPointer = tonumber(tostring(Pointer + 12))
+	local EndPointer = tonumber(tostring(Pointer + Counter))
 
 	GoodPointer(Offsets[2], StartPointer)
 	GoodPointer(Offsets[3], EndPointer)
@@ -610,17 +660,17 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 		Framework.WriteToLog("EMXHookLibrary: LoadGame Overwritten!")
 	end
 	
-	EMXHookLibrary.Internal.AllocateDynamicMemory()
+	EMXHookLibrary.Internal.AllocateDynamicMemory(5) -- 80 * 5 -> 400 Bytes (100 Possible Entries)
 end
 
-EMXHookLibrary.Internal.AllocateDynamicMemory = function()
+EMXHookLibrary.Internal.AllocateDynamicMemory = function(_maxSize)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "268") or "280"
 	local AllocaterString = "................................................................................"
 	local Counter = 0
 	repeat
 		AllocaterString = AllocaterString .. AllocaterString
 		Counter = Counter + 1
-	until Counter == (4)
+	until Counter == (_maxSize)
 	Logic.SetEntityName(EMXHookLibrary.Internal.GlobalAdressEntity, AllocaterString)
 	
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(EMXHookLibrary.Internal.GlobalAdressEntity)[Offset]
@@ -630,9 +680,9 @@ EMXHookLibrary.Internal.AllocateDynamicMemory = function()
 	Framework.WriteToLog("EMXHookLibrary: Dynamic Memory allocated: 0x" .. string.format("%0x", tostring(Pointer)))
 end
 
-EMXHookLibrary.Internal.GetMemorySpace = function(_size)
+EMXHookLibrary.Internal.MemoryAllocator = function(_size)
 	local Size = EMXHookLibrary.Internal.AllocatedMemorySize + _size
-	if Size > 80 then
+	if Size > 400 then
 		Framework.WriteToLog("EMXHookLibrary: Out of Memory ERROR!")
 		assert(false, "EMXHookLibrary: Out of Memory ERROR!")	
 		return;
