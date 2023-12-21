@@ -96,6 +96,11 @@ ACHTUNG: Im Gegensatz zu EMXHookLibrary.SetEntityTypeOutStockCapacity betrifft d
 EMXHookLibrary.SetBuildingInStockGood(_buildingID, _newGood)
 -> Setzt eine neue Ware als InStock eines Gebäudes.
 
+EMXHookLibrary.CreateBuildingInStockGoods(_buildingID, _newGoods)
+-> Allokiert Speicher und setzt neue InStock Goods eines Gebäudes.
+_newGoods muss folgendermaßen aussehen: {Goods.G_Grain, Goods.G_Wool, ...}
+Es wird ein Table mit den originalen Pointern zurückgegeben, damit man die Werte wieder zurücksetzen kann.
+
 EMXHookLibrary.SetBuildingTypeOutStockGood(_buildingID, _newGood, _forEntityType)
 -> Setzt eine neue Ware als OutStock eines Gebäudes. Wenn _forEntityType ~= nil, wird der Wert für den Entitätentyp gesetzt,
 ansonsten für ein Gebäude.
@@ -109,10 +114,12 @@ EMXHookLibrary.CopyGoodTypePointer(_good, _copyGood)
 -> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
 für diese Dinge haben. Diese Einträge werden als Referenz auf einen anderen GoodType angelegt.
 
-EMXHookLibrary.CreateGoodTypeRequiredResourceAndAmount(_goodType, _requiredResource, _amount)
+EMXHookLibrary.CreateGoodTypeRequiredResources(_goodType, _requiredResources)
 -> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
 für diese Dinge haben. Im Gegensatz zu EMXHookLibrary.CopyGoodTypePointer wird hier in allokiertem Speicher ein neues Array
-angelegt. 
+angelegt. _requiredResources so aussehen: {{_resource, _amount, _supplier}, {_resource, _amount, _supplier}, ...}
+Bspw. EMXHookLibrary.CreateGoodTypeRequiredResources(Goods.G_Soap, {{Goods.G_Wool, 3, EntityCategories.GC_Food_Supplier}, {Goods.G_Stone, 2, EntityCategories.GC_Food_Supplier}})
+Wenn _requiredResources == nil ist, werden die Einträge zur Ware gelöscht.
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren.
