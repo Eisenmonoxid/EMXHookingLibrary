@@ -7,21 +7,22 @@ BigNum = {
 -- Here starts the main hook lib code --
 
 EMXHookLibrary = {
-	CurrentVersion = "1.7.2 - 21.12.2023 23:50 - Eisenmonoxid",
-
 	IsHistoryEdition = false,
-	HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
 	WasInitialized = false,
 	
 	Internal = {
+		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
 		GlobalAdressEntity = 0,
 		GlobalHeapStart = 0,
 		AllocatedMemoryStart = 0,
-		AllocatedMemorySize = 0
+		AllocatedMemorySize = 0,
+		
+		InstanceCache = {},
+		
+		CurrentVersion = "1.7.3 - 22.12.2023 20:55 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
-	InstanceCache = {}
 };
 
 EMXHookLibrary.RawPointer = {
@@ -198,7 +199,7 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 		return Word;
 	end
 	
-	if EMXHookLibrary.HistoryEditionVariant ~= 1 then
+	if EMXHookLibrary.Internal.HistoryEditionVariant ~= 1 then
 		assert(false, "EMXHookLibrary: ERROR -> Can't set Debug mode in Ubisoft-HE, use the S6Patcher for that!")
 		return "";
 	end
@@ -231,11 +232,11 @@ EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDu
 	if _festivalDuration ~= nil then Pointer(Offsets[6], _festivalDuration) end
 end
 
-EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _forEntityType)
+EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _setEntityTypeProduct)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "560", "16"}) or {"368", "16", "24", "612", "12"}
 	local SharedIdentifier = BigNum.new("-1035359747")
 	
-	if _forEntityType ~= nil then EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)["128"](Offsets[4], _newGood) end
+	if _setEntityTypeProduct ~= nil then EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)["128"](Offsets[4], _newGood) end
 	
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[5]].Pointer
@@ -470,12 +471,16 @@ EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
 end
 
 EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136"}) or {"28", "144"}
-	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136", "140", "144"}) or {"28", "144", "148", "152"}
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
+	local ValuePointer = Pointer[Offsets[2]]
 	
-	Pointer("0", _good)("4", _amount)	
+	ValuePointer("0", _good)("4", _amount)	
 	if _secondGood ~= nil and _secondAmount ~= nil then
-		Pointer("8", _secondGood)("12", _secondAmount)
+		ValuePointer("8", _secondGood)("12", _secondAmount)
+		
+		local EndPointer = Pointer[Offsets[3]]
+		Pointer(Offsets[3], tonumber(tostring(EndPointer + 8)))(Offsets[4], tonumber(tostring(EndPointer + 8)))
 	end
 end
 
@@ -516,15 +521,15 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 		return EMXHookLibrary.RawPointer.New(_ovPointer)["0"];
 	end
 	
-	if EMXHookLibrary.InstanceCache[_ovPointer] ~= nil then
-		return EMXHookLibrary.RawPointer.New(tonumber("0x" .. EMXHookLibrary.InstanceCache[_ovPointer]))["0"];
+	if EMXHookLibrary.Internal.InstanceCache[_ovPointer] ~= nil then
+		return EMXHookLibrary.RawPointer.New(tonumber("0x" .. EMXHookLibrary.Internal.InstanceCache[_ovPointer]))["0"];
 	end
 	
 	local _hexSplitChars = {}
 	local _lowestDigit = 0
 	local HexString01, HexString02
 	
-	if EMXHookLibrary.HistoryEditionVariant == 1 then -- Steam HE
+	if EMXHookLibrary.Internal.HistoryEditionVariant == 1 then -- Steam HE
 		_lowestDigit = _steamHEChars[1]
 		_hexSplitChars = {_steamHEChars[2], _steamHEChars[3], _steamHEChars[4], _steamHEChars[5]}
 	else -- Ubi Connect HE
@@ -551,7 +556,7 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 	local DereferenceString = HexString02 .. HexString01	
 	Framework.WriteToLog("EMXHookLibrary: Going to dereference HEPointer: 0x"..DereferenceString..". OVPointer: ".._ovPointer)
 	
-	EMXHookLibrary.InstanceCache[_ovPointer] = DereferenceString
+	EMXHookLibrary.Internal.InstanceCache[_ovPointer] = DereferenceString
 	
 	return EMXHookLibrary.RawPointer.New(tonumber("0x" .. DereferenceString))["0"];
 end
@@ -635,23 +640,23 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 		return;
 	end
 	
-	for Key, Value in pairs(EMXHookLibrary.InstanceCache) do
-		EMXHookLibrary.InstanceCache[Key] = nil
+	for Key, Value in pairs(EMXHookLibrary.Internal.InstanceCache) do
+		EMXHookLibrary.Internal.InstanceCache[Key] = nil
 	end
 	
 	if (Network.IsNATReady == nil) then
 		EMXHookLibrary.Internal.FindOffsetValue(-81, 36)
 		EMXHookLibrary.IsHistoryEdition = false
-		EMXHookLibrary.HistoryEditionVariant = 0
+		EMXHookLibrary.Internal.HistoryEditionVariant = 0
 	else
 		EMXHookLibrary.Internal.FindOffsetValue(-78, 34)
 		EMXHookLibrary.IsHistoryEdition = true
-		EMXHookLibrary.HistoryEditionVariant = EMXHookLibrary.Internal.GetHistoryEditionVariant()
+		EMXHookLibrary.Internal.HistoryEditionVariant = EMXHookLibrary.Internal.GetHistoryEditionVariant()
 	end
 	EMXHookLibrary.WasInitialized = true
 	
-	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.CurrentVersion .. 
-						 ". HistoryEditionVariant: " .. tostring(EMXHookLibrary.HistoryEditionVariant) .. ".")
+	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.Internal.CurrentVersion .. 
+						 ". HistoryEditionVariant: " .. tostring(EMXHookLibrary.Internal.HistoryEditionVariant) .. ".")
 	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at 0x" .. string.format("%0x", BigNum.mt.tostring(EMXHookLibrary.Internal.GlobalHeapStart)) .. 
 						 ". AddressEntity ID: " .. tostring(EMXHookLibrary.Internal.GlobalAdressEntity) .. ".")
 
@@ -660,18 +665,18 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 		Framework.WriteToLog("EMXHookLibrary: LoadGame Overwritten!")
 	end
 	
-	EMXHookLibrary.Internal.AllocateDynamicMemory(5) -- 80 * 5 -> 400 Bytes (100 Possible Entries)
+	EMXHookLibrary.Internal.AllocateDynamicMemory(20000) -- 20000 * (1/4) = 5000 possible entries
 end
 
 EMXHookLibrary.Internal.AllocateDynamicMemory = function(_maxSize)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "268") or "280"
-	local AllocaterString = "................................................................................"
+	local Allocater = {}
 	local Counter = 0
 	repeat
-		AllocaterString = AllocaterString .. AllocaterString
+		table.insert(Allocater, 1)
 		Counter = Counter + 1
 	until Counter == (_maxSize)
-	Logic.SetEntityName(EMXHookLibrary.Internal.GlobalAdressEntity, AllocaterString)
+	Logic.SetEntityName(EMXHookLibrary.Internal.GlobalAdressEntity, table.concat(Allocater))
 	
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(EMXHookLibrary.Internal.GlobalAdressEntity)[Offset]
 	EMXHookLibrary.Internal.AllocatedMemoryStart = Pointer
@@ -682,7 +687,7 @@ end
 
 EMXHookLibrary.Internal.MemoryAllocator = function(_size)
 	local Size = EMXHookLibrary.Internal.AllocatedMemorySize + _size
-	if Size > 400 then
+	if Size > 5000 then
 		Framework.WriteToLog("EMXHookLibrary: Out of Memory ERROR!")
 		assert(false, "EMXHookLibrary: Out of Memory ERROR!")	
 		return;
