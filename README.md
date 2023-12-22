@@ -43,8 +43,9 @@ EMXHookLibrary.GetModel(_entityID)
 -> Gibt das aktuelle Model einer Entität zurück. (Analog zu Logic.SetModel)
 
 EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
--> Setzt neue Kosten für einen Entitätentyp. _secondGood und _secondAmount dürfen nur verwendet werden, wenn der Entitätentyp bereits zwei Kosteneinträge im Originalspiel hat.
-Ansonsten sollte das Baukostensystem für die zweite Ware (bei Gebäuden!) verwendet werden.
+-> Setzt neue Kosten für einen Entitätentyp. Es können auch zwei Kosten gesetzt werden, wenn der Typ im Originalspiel
+nur einen Eintrag hat. Wenn der zweite Eintrag ein Produktionsgut sein soll (zB Goods.G_Cheese), dann sollte das
+Baukostensystem BCS verwendet werden.
 Hinweis: Funktioniert auch bei Einheiten, zB Munitionskarren/Soldaten.
 
 EMXHookLibrary.SetEntityTypeUpgradeCost(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount)
@@ -98,12 +99,12 @@ EMXHookLibrary.SetBuildingInStockGood(_buildingID, _newGood)
 
 EMXHookLibrary.CreateBuildingInStockGoods(_buildingID, _newGoods)
 -> Allokiert Speicher und setzt neue InStock Goods eines Gebäudes.
-_newGoods muss folgendermaßen aussehen: {Goods.G_Grain, Goods.G_Wool, ...}
+_newGoods muss zB folgendermaßen aussehen: {Goods.G_Grain, Goods.G_Wool}.
 Es wird ein Table mit den originalen Pointern zurückgegeben, damit man die Werte wieder zurücksetzen kann.
 
-EMXHookLibrary.SetBuildingTypeOutStockGood(_buildingID, _newGood, _forEntityType)
--> Setzt eine neue Ware als OutStock eines Gebäudes. Wenn _forEntityType ~= nil, wird der Wert für den Entitätentyp gesetzt,
-ansonsten für ein Gebäude.
+EMXHookLibrary.SetBuildingTypeOutStockGood(_buildingID, _newGood, _setEntityTypeProduct)
+-> Setzt eine neue Ware als OutStock eines Gebäudes. Wenn _setEntityTypeProduct ~= nil, wird auch das Product
+des Entitätentyps gesetzt, ansonsten nur der OutStock für ein Gebäude.
 
 EMXHookLibrary.SetGoodTypeParameters(_goodType, _requiredResource, _amount, _goodCategory, _animationParameters)
 -> Setzt das benötigte Produktionsgut einer Ware und/oder deren benötigte Menge. (zB Goods.G_Carcass -> Goods.G_Sausage)
@@ -117,9 +118,9 @@ für diese Dinge haben. Diese Einträge werden als Referenz auf einen anderen Go
 EMXHookLibrary.CreateGoodTypeRequiredResources(_goodType, _requiredResources)
 -> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
 für diese Dinge haben. Im Gegensatz zu EMXHookLibrary.CopyGoodTypePointer wird hier in allokiertem Speicher ein neues Array
-angelegt. _requiredResources so aussehen: {{_resource, _amount, _supplier}, {_resource, _amount, _supplier}, ...}
+angelegt. _requiredResources muss so aussehen: {{_resource, _amount, _supplier}, {_resource, _amount, _supplier}, ...}
 Bspw. EMXHookLibrary.CreateGoodTypeRequiredResources(Goods.G_Soap, {{Goods.G_Wool, 3, EntityCategories.GC_Food_Supplier}, {Goods.G_Stone, 2, EntityCategories.GC_Food_Supplier}})
-Wenn _requiredResources == nil ist, werden die Einträge zur Ware gelöscht.
+Wenn _requiredResources == nil ist, werden die Einträge zur Ware wieder gelöscht.
 
 EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 -> Ermöglicht es, auch in der History Edition den Debug-Mode zu aktivieren.
