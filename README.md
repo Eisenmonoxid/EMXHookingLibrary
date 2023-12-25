@@ -76,6 +76,9 @@ EMXHookLibrary.SetEntityTypeSpouseProbabilityFactor(_entityType, _factor)
 -> Setzt die Wahrscheinlichkeit, dass Siedler auf dem Fest eine Ehefrau finden. (Normal: 0.3)
 Damit kann bspw. das Badehaus auch Ehefrauen beschäftigen.
 
+EMXHookLibrary.SetBallistaAmmunitionAmount(_amount)
+-> Setzt die Maximalanzahl an Munition von Ballisten (Mauerkatapult) per Typ.
+
 EMXHookLibrary.SetMilitaryMetaFormationParameters(_distances)
 -> Setzt einige Parameter zur Truppenanordnung. Der Parameter _distances muss ein table sein nach folgendem Vorbild:
 -- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}.

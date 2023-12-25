@@ -17,9 +17,8 @@ EMXHookLibrary = {
 		AllocatedMemoryStart = 0,
 		AllocatedMemorySize = 0,
 		
-		InstanceCache = {},
-		
-		CurrentVersion = "1.7.3 - 22.12.2023 20:55 - Eisenmonoxid",
+		InstanceCache = {},	
+		CurrentVersion = "1.7.4 - 25.12.2023 23:44 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -456,6 +455,7 @@ EMXHookLibrary.SetEntityTypeMaxNumberOfWorkers = function(_entityType, _maxWorke
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "256"}) or {"28", "288"}
 	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _maxWorkers)
 end
+
 EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
 	EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_settlerID)["84"]["0"]("0", _buildingID)
 end
@@ -468,6 +468,11 @@ end
 EMXHookLibrary.SetEntityTypeMaxHealth = function(_entityType, _newMaxHealth)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "24") or "28"
 	EMXHookLibrary.Internal.GetCEntityProps()[Offset][_entityType * 4]("36", _newMaxHealth)
+end
+
+EMXHookLibrary.SetBallistaAmmunitionAmount = function(_amount)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "152"}) or {"28", "164"}
+	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][Entities.U_MilitaryBallista * 4][Offsets[2]]["8"]("20", _amount)
 end
 
 EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
