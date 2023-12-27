@@ -42,10 +42,11 @@ EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 EMXHookLibrary.GetModel(_entityID)
 -> Gibt das aktuelle Model einer Entität zurück. (Analog zu Logic.SetModel)
 
-EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount)
+EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)
 -> Setzt neue Kosten für einen Entitätentyp. Es können auch zwei Kosten gesetzt werden, wenn der Typ im Originalspiel
 nur einen Eintrag hat. Wenn der zweite Eintrag ein Produktionsgut sein soll (zB Goods.G_Cheese), dann sollte das
-Baukostensystem BCS verwendet werden.
+Baukostensystem BCS verwendet werden. Wenn der Typ im Originalspiel nur einen Kosteneintrag hatte (zB Stadtgebäude),
+muss _overrideSecondGoodPointer == true sein. Bei Entitäten mit zwei Einträgen (zB Ziergebäude) ist dies nicht notwendig.
 Hinweis: Funktioniert auch bei Einheiten, zB Munitionskarren/Dieben/Mauerkatapulten.
 
 EMXHookLibrary.SetEntityTypeUpgradeCost(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)	
