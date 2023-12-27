@@ -19,7 +19,7 @@ EMXHookLibrary = {
 		AllocatedMemorySize = 0,
 		
 		InstanceCache = {},	
-		CurrentVersion = "1.7.5 - 27.12.2023 03:23 - Eisenmonoxid",
+		CurrentVersion = "1.7.6 - 27.12.2023 05:17 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -476,7 +476,7 @@ EMXHookLibrary.SetBallistaAmmunitionAmount = function(_amount)
 	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][Entities.U_MilitaryBallista * 4][Offsets[2]]["8"]("20", _amount)
 end
 
-EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount)	
+EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136", "140", "144"}) or {"28", "144", "148", "152"}
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
 	local ValuePointer = Pointer[Offsets[2]]
@@ -485,8 +485,10 @@ EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _se
 	if _secondGood ~= nil and _secondAmount ~= nil then
 		ValuePointer("8", _secondGood)("12", _secondAmount)
 		
-		local EndPointer = Pointer[Offsets[3]]
-		Pointer(Offsets[3], tonumber(tostring(EndPointer + 8)))(Offsets[4], tonumber(tostring(EndPointer + 8)))
+		if _overrideSecondGoodPointer then 
+			local EndPointer = Pointer[Offsets[3]]
+			Pointer(Offsets[3], tonumber(tostring(EndPointer + 8)))(Offsets[4], tonumber(tostring(EndPointer + 8)))
+		end
 	end
 end
 
@@ -517,6 +519,9 @@ EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _
 					if CurrentGoodCost ~= 0 then
 						table.insert(Costs, Value)
 						table.insert(Costs, CurrentGoodCost)
+					end
+					if #Costs >= 4 then
+						break;
 					end
 				end
 				return Costs
