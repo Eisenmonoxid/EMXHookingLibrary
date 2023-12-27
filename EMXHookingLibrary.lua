@@ -9,6 +9,7 @@ BigNum = {
 EMXHookLibrary = {
 	IsHistoryEdition = false,
 	WasInitialized = false,
+	OverriddenUpgradeCosts = false,
 	
 	Internal = {
 		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
@@ -18,7 +19,7 @@ EMXHookLibrary = {
 		AllocatedMemorySize = 0,
 		
 		InstanceCache = {},	
-		CurrentVersion = "1.7.4 - 25.12.2023 23:44 - Eisenmonoxid",
+		CurrentVersion = "1.7.5 - 27.12.2023 03:23 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -489,14 +490,40 @@ EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _se
 	end
 end
 
-EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount)	
+EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", 0, 12}) or {"28", "660", 4, 16}
 	local UpgradeLevelOffset = Offsets[3] + (_upgradeLevel * Offsets[4])
-	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]][UpgradeLevelOffset]
-	
-	Pointer("0", _good)("4", _amount)
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
+	local ValuePointer = Pointer[UpgradeLevelOffset]
+
+	ValuePointer("0", _good)("4", _amount)
 	if _secondGood ~= nil and _secondAmount ~= nil then
-		Pointer("8", _secondGood)("12", _secondAmount)
+		ValuePointer("8", _secondGood)("12", _secondAmount)
+		
+		if _overrideSecondGoodPointer then 
+			local EndPointer = Pointer[UpgradeLevelOffset + 4]
+			Pointer(UpgradeLevelOffset + 4, tonumber(tostring(EndPointer + 8)))(UpgradeLevelOffset + 8, tonumber(tostring(EndPointer + 8)))
+		end
+	end
+	
+	if not EMXHookLibrary.OverriddenUpgradeCosts then
+		Logic.ExecuteInLuaLocalState([[
+			function GUI_BuildingButtons.GetUpgradeCosts()
+				local EntityID = GUI.GetSelectedEntity()
+				local Costs = {}
+				local CurrentGoodCost = 0
+				for Key, Value in pairs(Goods) do
+					CurrentGoodCost = Logic.GetBuildingUpgradeCostByGoodType(EntityID, Value, 0)
+					if CurrentGoodCost ~= 0 then
+						table.insert(Costs, Value)
+						table.insert(Costs, CurrentGoodCost)
+					end
+				end
+				return Costs
+			end
+		]]);
+		
+		EMXHookLibrary.OverriddenUpgradeCosts = true
 	end
 end
 
@@ -659,6 +686,7 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 		EMXHookLibrary.Internal.HistoryEditionVariant = EMXHookLibrary.Internal.GetHistoryEditionVariant()
 	end
 	EMXHookLibrary.WasInitialized = true
+	EMXHookLibrary.OverriddenUpgradeCosts = false
 	
 	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.Internal.CurrentVersion .. 
 						 ". HistoryEditionVariant: " .. tostring(EMXHookLibrary.Internal.HistoryEditionVariant) .. ".")
