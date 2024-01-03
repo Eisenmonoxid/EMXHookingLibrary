@@ -19,7 +19,7 @@ EMXHookLibrary = {
 		AllocatedMemorySize = 0,
 		
 		InstanceCache = {},	
-		CurrentVersion = "1.7.6 - 27.12.2023 05:17 - Eisenmonoxid",
+		CurrentVersion = "1.7.7 - 03.01.2024 18:59 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -68,7 +68,7 @@ EMXHookLibrary.RawPointer = {
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
 
-EMXHookLibrary.SetEntityDisplayModelParameters = function(_entityIDOrType, _modelParameters, _lightParameters, _destroyedParameters, _upgradeSiteParameters)
+EMXHookLibrary.Internal.ModifyEntityDisplay = function(_entityIDOrType, _vanillaOffset, _heOffset, _params) -- Model: Pointer("8", _model)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"84", "4"}) or {"88", "8"}	
 	
 	local Pointer = 0
@@ -78,38 +78,43 @@ EMXHookLibrary.SetEntityDisplayModelParameters = function(_entityIDOrType, _mode
 		Pointer = EMXHookLibrary.Internal.CalculateEntityIDToDisplayObject(_entityIDOrType)[Offsets[1]]
 	end
 
-	if _modelParameters[1] ~= nil then Pointer("8", _modelParameters[1]) end
-	
-	local StartOffset = (EMXHookLibrary.IsHistoryEdition and 116) or 124	
-	for i = 2, #_modelParameters do
-		if _modelParameters[i] ~= nil then
-			Pointer(StartOffset, _modelParameters[i])
+	local StartOffset = (EMXHookLibrary.IsHistoryEdition and _heOffset) or _vanillaOffset
+	for i = 1, #_params do
+		if _params[i] ~= nil then
+			Pointer(StartOffset, _params[i])
 		end
 		StartOffset = StartOffset + 4
 	end
+end
+
+EMXHookLibrary.SetEntityDisplayModelParameters = function(_entityIDOrType, _paramType, _params, _model)
+	local Mapping = {{"Models", 124, 116}, {"UpgradeSite", 140, 132}, {"Destroyed", 160, 152}, {"Lights", 180, 172}}
 	
-	StartOffset = (EMXHookLibrary.IsHistoryEdition and 132) or 140
-	for i = 1, #_upgradeSiteParameters do
-		if _upgradeSiteParameters[i] ~= nil then
-			Pointer(StartOffset, _upgradeSiteParameters[i])
+	for Key, Value in pairs(Mapping) do
+		if Value[1] == _paramType then
+			EMXHookLibrary.Internal.ModifyEntityDisplay(_entityIDOrType, Value[2], Value[3], _params)
+			break;
 		end
-		StartOffset = StartOffset + 4
 	end
 	
-	StartOffset = (EMXHookLibrary.IsHistoryEdition and 152) or 160 
-	for i = 1, #_destroyedParameters do
-		if _destroyedParameters[i] ~= nil then
-			Pointer(StartOffset, _destroyedParameters[i])
+	if _model ~= nil then
+		EMXHookLibrary.Internal.ModifyEntityDisplay(_entityIDOrType, 8, 8, _model)
+	end
+end
+
+EMXHookLibrary.SetBuildingDisplayModelParameters = function(_entityIDOrType, _paramType, _params, _model)
+	local Mapping = {{"Yards", 124, 116}, {"Roofs", 136, 128}, {"RoofDestroyed", 148, 140}, {"UpgradeSite", 160, 152}, 
+					 {"Floors", 204, 196}, {"Gables", 216, 108}, {"Lights", 324, 316}, {"FireCounts", 188, 180}}
+
+	for Key, Value in pairs(Mapping) do
+		if Value[1] == _paramType then
+			EMXHookLibrary.Internal.ModifyEntityDisplay(_entityIDOrType, Value[2], Value[3], _params)
+			break;
 		end
-		StartOffset = StartOffset + 4
 	end
 	
-	StartOffset = (EMXHookLibrary.IsHistoryEdition and 172) or 180
-	for i = 1, #_lightParameters do
-		if _lightParameters[i] ~= nil then
-			Pointer(StartOffset, _lightParameters[i])
-		end
-		StartOffset = StartOffset + 4
+	if _model ~= nil then
+		EMXHookLibrary.Internal.ModifyEntityDisplay(_entityIDOrType, 8, 8, _model)
 	end
 end
 
@@ -452,9 +457,9 @@ EMXHookLibrary.SetEntityTypeSpouseProbabilityFactor = function(_entityType, _fac
 	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _factor, true)
 end
 
-EMXHookLibrary.SetEntityTypeMaxNumberOfWorkers = function(_entityType, _maxWorkers)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "256"}) or {"28", "288"}
-	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _maxWorkers)
+EMXHookLibrary.SetTypeAndMaxNumberOfWorkersForBuilding = function(_entityType, _maxWorkers, _workerType)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "256", "260"}) or {"28", "288", "292"}
+	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4](Offsets[2], _maxWorkers)(Offsets[3], _workerType)
 end
 
 EMXHookLibrary.SetSettlersWorkBuilding = function(_settlerID, _buildingID)
