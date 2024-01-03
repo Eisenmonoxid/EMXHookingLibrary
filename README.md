@@ -145,8 +145,8 @@ EMXHookLibrary.SetSettlersWorkBuilding(_settlerID, _buildingID)
 ACHTUNG: Der Siedler muss bereits einem Gebäude zugeordnet sein, bevor gewechselt werden kann!
 (Bei mehr als 3 Siedlern sollte zuvor EMXHookLibrary.SetWorkBuildingMaxNumberOfWorkers entsprechend gesetzt werden)
 
-EMXHookLibrary.SetEntityTypeMaxNumberOfWorkers(_entityType, _maxWorkers)
--> Setzt die neue Maximalanzahl an Arbeitern eines Gebäudetyps.
+EMXHookLibrary.SetTypeAndMaxNumberOfWorkersForBuilding(_entityType, _maxWorkers, _workerType)
+-> Setzt eine neue Maximalanzahl und einen neuen Typ an Arbeitern eines Gebäudetyps.
 
 EMXHookLibrary.EditFestivalProperties(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
 ->  Verändert einen oder mehrere Parameter der Feste (Aufstiegs- sowie normales Fest). (Nicht benötigte Parameter sind nil).
@@ -168,9 +168,16 @@ Bspw. EMXHookLibrary.SetColorSetColorRGB(2, 1, {0.3, 0.7, 0.4, 0.7}, nil, true)
 --> ColorSetIndex; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor, Use the alternative ColorSet array.
 Bspw. EMXHookLibrary.SetColorSetColorRGB(0, 1, {0.6, 0.3, 0.9, 1}, 55, false) -> Setzt den Fog of War.
 
-EMXHookLibrary.SetEntityDisplayModelParameters(_entityIDOrType, _modelParameters, _lightParameters, _destroyedParameters, _upgradeSiteParameters)
--> Ermöglicht es, verschiedene Modelle von Gebäuden zu setzen. Alle Parameter mit "Parameters" im Namen müssen Tables mit den gewünschten Models sein.
+EMXHookLibrary.SetEntityDisplayModelParameters(_entityIDOrType, _paramType, _params, _model)
+-> Ermöglicht es, verschiedene Modelle von Gebäuden zu setzen. _params muss ein Table mit den Modellen sein.
+_paramType muss ein String mit dem Typ sein. Mögliche Typen: "Models", "UpgradeSite", "Destroyed", "Lights".
+_model setzt das derzeitige Model, kann auch nil sein.
 Vor dem Ändern am Besten in der Definitions-xml der Entität nachschauen. Es kann sowohl eine (existierende) Entity-ID als auch ein Entitätentyp angegeben werden.
+Bsp: EMXHookLibrary.SetEntityDisplayModelParameters(Entities.B_StoreHouse, "Models", {Models.Buildings_B_Jewelry_Buildingsite_1, Models.Buildings_B_Jewelry_Buildingsite_1, Models.Buildings_B_Jewelry_Buildingsite_1, Models.Buildings_B_Jewelry_Buildingsite_1}, {Models.Buildings_B_Jewelry_Buildingsite_1})
+
+EMXHookLibrary.SetBuildingDisplayModelParameters(_entityIDOrType, _paramType, _params, _model)
+-> Analog zu EMXHookLibrary.SetEntityDisplayModelParameters können hier die Modelle von (Produktions-)Gebäuden geändert werden.
+Mögliche Typen: "Yards", "Roofs", "RoofDestroyed", "UpgradeSite", "Floors", "Gables", "Lights", "FireCounts".
 
 EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
 -> Ändert die Anzeigedauer eines EGL_Effects.
