@@ -20,7 +20,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.7.8 - 30.01.2024 21:14 - Eisenmonoxid",
+		CurrentVersion = "1.7.8 - 30.01.2024 21:51 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -720,6 +720,10 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 	
 	for Key, Value in pairs(EMXHookLibrary.Internal.InstanceCache) do
 		EMXHookLibrary.Internal.InstanceCache[Key] = nil
+	end
+	
+	for Key, Value in pairs(EMXHookLibrary.Internal.ColorSetCache) do
+		EMXHookLibrary.Internal.ColorSetCache[Key] = nil
 	end
 	
 	if (Network.IsNATReady == nil) then
