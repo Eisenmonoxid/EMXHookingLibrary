@@ -19,7 +19,8 @@ EMXHookLibrary = {
 		AllocatedMemorySize = 0,
 		
 		InstanceCache = {},	
-		CurrentVersion = "1.7.7 - 03.01.2024 18:59 - Eisenmonoxid",
+		ColorSetCache = {},	
+		CurrentVersion = "1.7.8 - 30.01.2024 21:14 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -139,24 +140,59 @@ EMXHookLibrary.SetEntityDisplayProperties = function(_entityIDOrType, _property,
 	end
 end
 
-EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor, _useAlternativeStructure)
+EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
 	local SeasonIndizes = {0, 16, 32, 48}
-	local OriginalValues = {}
+	local OriginalValues = {0, 0, 0, 0, 0}
 	
-	local Pointer = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["128"][Offsets[1]]["4"]
-	for i = 0, _colorSetEntryIndex, 1 do Pointer = Pointer["8"] end
-	Pointer = (_useAlternativeStructure and Pointer["0"][Offsets[3]]) or Pointer[Offsets[3]]
+	local Pointer = 0
+	local OriginalPointer = 0
+	local EntryFound = false
+	local CurrentEntry = 0
 
+	if EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] == nil then
+		OriginalPointer = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["128"][Offsets[1]]
+		
+		for i = 0, 8, 4 do
+			Pointer = OriginalPointer[i]
+			EntryFound = false
+			
+			repeat
+				CurrentEntry = tonumber(tostring(Pointer[Offsets[2]]))
+				if CurrentEntry == _colorSetEntryIndex then
+					EntryFound = true
+					break;
+				end
+				Pointer = Pointer["8"]
+			until tonumber(tostring(Pointer["0"])) == tonumber(tostring(Pointer["8"]))
+			
+			if EntryFound == true then
+				break;
+			end
+		end
+
+		if EntryFound == false then
+			Framework.WriteToLog("EMXHookLibrary: No ColorSet entry found for index ".._colorSetEntryIndex.."! Aborting ...")
+			return;
+		end
+	
+		Pointer = Pointer[Offsets[3]]
+		EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] = Pointer
+	else
+		Pointer = EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex]
+	end
+	
 	local CurrentIndex = SeasonIndizes[_season]
-	for i = 1, 4, 1 do
-		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.Helpers.Int2Float(tonumber(tostring(Pointer[CurrentIndex])))
+	local IntToFloat = EMXHookLibrary.Helpers.Int2Float
+	
+	for i = 1, 4 do
+		OriginalValues[i] = IntToFloat(tonumber(tostring(Pointer[CurrentIndex])))
 		Pointer(CurrentIndex, _rgb[i], true)	
 		CurrentIndex = CurrentIndex + 4
 	end
 	
 	if _wetFactor then
-		OriginalValues[#OriginalValues + 1] = EMXHookLibrary.Helpers.Int2Float(tonumber(tostring(Pointer["64"])))
+		OriginalValues[5] = IntToFloat(tonumber(tostring(Pointer["64"])))
 		Pointer("64", _wetFactor, true)
 	end
 	
