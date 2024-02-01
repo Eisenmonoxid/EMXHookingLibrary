@@ -54,6 +54,9 @@ EMXHookLibrary.SetEntityTypeUpgradeCost(_entityType, _upgradeLevel, _good, _amou
 Kosteneintrag hatte (zB Stadtgebäude), muss _overrideSecondGoodPointer == true sein. Bei Entitäten mit zwei Einträgen (zB Lagerhaus) ist dies
 nicht notwendig.
 
+EMXHookLibrary.ReplaceUpgradeCategoryEntityType(_upgradeCategory, _newEntityType)
+-> Ändert den EntityType einer UpgradeCategory. Damit kann man bspw. Dorfgebäude vom Spieler setzen lassen.
+
 EMXHookLibrary.SetEntityTypeMaxHealth(_entityType, _newMaxHealth)
 -> Setzt die maximalen Lebenspunkte (HP) eines Entitätentyps.
 
