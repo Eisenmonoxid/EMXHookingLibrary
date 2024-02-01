@@ -20,7 +20,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.7.8 - 30.01.2024 21:51 - Eisenmonoxid",
+		CurrentVersion = "1.7.9 - 01.02.2024 19:09 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -437,6 +437,25 @@ EMXHookLibrary.CopyGoodTypePointer = function(_good, _copyGood)
 	GoodPointer(Offsets[2], tonumber(tostring(CopyGoodPointer[Offsets[2]])))
 	GoodPointer(Offsets[3], tonumber(tostring(CopyGoodPointer[Offsets[3]])))
 	GoodPointer(Offsets[4], tonumber(tostring(CopyGoodPointer[Offsets[4]])))
+end
+
+EMXHookLibrary.ReplaceUpgradeCategoryEntityType = function(_upgradeCategory, _newEntityType)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"364", "40", "552", "12", "4", "16", "24", "0"}) or {"412", "40", "648", "16", "4", "12", "20", "4"}	
+	local Pointer = (EMXHookLibrary.Internal.GetEGLCGameLogic()[Offsets[1]][Offsets[2]][Offsets[3]] + Offsets[4])[Offsets[8]][Offsets[5]]
+	local SharedIdentifier = BigNum.new(_upgradeCategory)
+	local CurrentIdentifier = Pointer[Offsets[6]].Pointer
+	
+	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
+		if tonumber(tostring(CurrentIdentifier)) < _upgradeCategory then
+			Pointer = Pointer["8"]
+		else
+			Pointer = Pointer["0"]
+		end
+	
+		CurrentIdentifier = Pointer[Offsets[6]].Pointer
+	end
+
+	Pointer(Offsets[7], _newEntityType)
 end
 
 EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
