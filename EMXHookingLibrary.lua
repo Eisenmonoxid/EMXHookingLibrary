@@ -20,7 +20,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.7.9 - 01.02.2024 19:09 - Eisenmonoxid",
+		CurrentVersion = "1.8.1 - 03.02.2024 22:46 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -163,7 +163,11 @@ EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb
 					EntryFound = true
 					break;
 				end
-				Pointer = Pointer["8"]
+				if CurrentEntry < _colorSetEntryIndex then
+					Pointer = Pointer["8"]
+				else
+					Pointer = Pointer["0"]
+				end
 			until tonumber(tostring(Pointer["0"])) == tonumber(tostring(Pointer["8"]))
 			
 			if EntryFound == true then
@@ -541,18 +545,29 @@ EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _se
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
 	local ValuePointer = Pointer[Offsets[2]]
 	
-	ValuePointer("0", _good)("4", _amount)	
-	if _secondGood ~= nil and _secondAmount ~= nil then
-		ValuePointer("8", _secondGood)("12", _secondAmount)
+	if tonumber(tostring(ValuePointer)) == 0 then
+		local Size = (_secondGood ~= nil and 16) or 8
+		local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(Size)
+		Pointer(Offsets[2], tonumber(tostring(MemoryPointer)))(Offsets[3], tonumber(tostring(MemoryPointer + Size)))(Offsets[4], tonumber(tostring(MemoryPointer + Size)))
+
+		MemoryPointer("0", _good)("4", _amount)	
+		if _secondGood ~= nil then
+			MemoryPointer("8", _secondGood)("12", _secondAmount)
+		end
+	else
+		ValuePointer("0", _good)("4", _amount)	
+		if _secondGood ~= nil then
+			ValuePointer("8", _secondGood)("12", _secondAmount)
 		
-		if _overrideSecondGoodPointer then 
-			local EndPointer = Pointer[Offsets[3]]
-			Pointer(Offsets[3], tonumber(tostring(EndPointer + 8)))(Offsets[4], tonumber(tostring(EndPointer + 8)))
+			if _overrideSecondGoodPointer then 
+				local EndPointer = Pointer[Offsets[3]]
+				Pointer(Offsets[3], tonumber(tostring(EndPointer + 8)))(Offsets[4], tonumber(tostring(EndPointer + 8)))
+			end
 		end
 	end
 end
 
-EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)	
+EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer, _overrideUpgradeCostHandling)	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", 0, 12}) or {"28", "660", 4, 16}
 	local UpgradeLevelOffset = Offsets[3] + (_upgradeLevel * Offsets[4])
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
@@ -568,7 +583,7 @@ EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _
 		end
 	end
 	
-	if not EMXHookLibrary.OverriddenUpgradeCosts then
+	if not EMXHookLibrary.OverriddenUpgradeCosts and _overrideUpgradeCostHandling then
 		Logic.ExecuteInLuaLocalState([[
 			function GUI_BuildingButtons.GetUpgradeCosts()
 				local EntityID = GUI.GetSelectedEntity()
