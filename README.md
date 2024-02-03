@@ -47,12 +47,14 @@ EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _
 nur einen Eintrag hat. Wenn der zweite Eintrag ein Produktionsgut sein soll (zB Goods.G_Cheese), dann sollte das
 Baukostensystem BCS verwendet werden. Wenn der Typ im Originalspiel nur einen Kosteneintrag hatte (zB Stadtgebäude),
 muss _overrideSecondGoodPointer == true sein. Bei Entitäten mit zwei Einträgen (zB Ziergebäude) ist dies nicht notwendig.
+Kann auch Kosten zu Entitätentypen hinzufügen, welche zuvor keine Einträge dafür hatten. (zB Dorfgebäude)
 Hinweis: Funktioniert auch bei Einheiten, zB Munitionskarren/Dieben/Mauerkatapulten.
 
-EMXHookLibrary.SetEntityTypeUpgradeCost(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)	
+EMXHookLibrary.SetEntityTypeUpgradeCost(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer, _overrideUpgradeCostHandling)
 -> Analog zu SetEntityTypeFullCost können hier die Ausbaukosten eines Entitätentyps geändert werden. Wenn der Typ im Originalspiel nur einen
 Kosteneintrag hatte (zB Stadtgebäude), muss _overrideSecondGoodPointer == true sein. Bei Entitäten mit zwei Einträgen (zB Lagerhaus) ist dies
-nicht notwendig.
+nicht notwendig. _overrideUpgradeCostHandling ist notwendig, wenn Güter verwendet werden sollen, die nicht Holz, Stein oder Eisen sind oder zwei Güter anstatt einem
+als Kosten vorgesehen sind.
 
 EMXHookLibrary.ReplaceUpgradeCategoryEntityType(_upgradeCategory, _newEntityType)
 -> Ändert den EntityType einer UpgradeCategory. Damit kann man bspw. Dorfgebäude vom Spieler setzen lassen.
@@ -167,7 +169,7 @@ Für bereits auf der Map existierende Entitäten sollte die Funktion in der FMA 
 EMXHookLibrary.SetColorSetColorRGB(_colorSetEntryIndex, _season, _rgb, _wetFactor)
 -> Setzt die Farben eines ColorSets per Jahreszeit. Es wird eine Tabelle zurückgegeben, welche die originalen Values enthält, damit man
 das ColorSet wieder zurücksetzen kann. Für den ersten Parameter anfragen.
-Bspw. EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7})
+Bspw. EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7}) -> me_fow
 --> ColorSetIndex; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor
 
 EMXHookLibrary.SetEntityDisplayModelParameters(_entityIDOrType, _paramType, _params, _model)
