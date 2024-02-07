@@ -20,7 +20,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.1 - 03.02.2024 22:46 - Eisenmonoxid",
+		CurrentVersion = "1.8.2 - 07.02.2024 13:11 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -203,13 +203,19 @@ EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb
 	return OriginalValues
 end
 
-EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString)
+EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString, _useAlternativePointer)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"20", 24, 0}) or {"24", 28, 4}
 	local Index = _IDManagerEntryIndex * Offsets[2]
 	local WideCharAsMultiByte = EMXHookLibrary.Helpers.ConvertCharToMultiByte(_newString)
 	local TextSegment = EMXHookLibrary.Internal.GetCTextSet()["4"][Offsets[1]]
-	
-	for i = 1, #WideCharAsMultiByte do TextSegment(Index + Offsets[3], WideCharAsMultiByte[i]) Offsets[3] = Offsets[3] + 4 end
+
+	if not _useAlternativePointer then
+		for i = 1, #WideCharAsMultiByte do TextSegment(Index + Offsets[3], WideCharAsMultiByte[i]) Offsets[3] = Offsets[3] + 4 end
+	else
+		TextSegment = TextSegment[Index + Offsets[3]]
+		local Iterator = 0
+		for i = 1, #WideCharAsMultiByte do TextSegment(Iterator, WideCharAsMultiByte[i]) Iterator = Iterator + 4 end
+	end
 end
 
 EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
