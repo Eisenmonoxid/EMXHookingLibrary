@@ -157,7 +157,7 @@ EMXHookLibrary.EditFestivalProperties(_festivalDuration, _promotionDuration, _pr
 ->  Verändert einen oder mehrere Parameter der Feste (Aufstiegs- sowie normales Fest). (Nicht benötigte Parameter sind nil).
 Geändert werden können Dauer sowie das Limit der möglichen Partizipierenden.
 
-EMXHookLibrary.EditStringTableText(_IDManagerEntryIndex, _newString)
+EMXHookLibrary.EditStringTableText(_IDManagerEntryIndex, _newString, _useAlternativePointer)
 ->  Verändert einen StringTable-Eintrag. Der EntryIndex muss zuerst ausgelesen werden und das Zeichenlimit muss beachtet werden.
 Genaueres zur Verwendung auf Anfrage.
 Bspw. "Saraya" -> "Testritter": EMXHookLibrary.EditStringTableText(5037, "Testritter")
