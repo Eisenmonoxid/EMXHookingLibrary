@@ -20,7 +20,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.2 - 07.02.2024 13:11 - Eisenmonoxid",
+		CurrentVersion = "1.8.3 - 14.02.2024 20:26 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -610,6 +610,18 @@ EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _
 		]]);
 		
 		EMXHookLibrary.OverriddenUpgradeCosts = true
+	end
+end
+
+EMXHookLibrary.SetEntityTypeBlocking = function(_entityType, _blocking, _isBuildBlocking)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "168", "240"}) or {"28", "184", "276"}
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
+	Pointer = Pointer[(_isBuildBlocking and Offsets[3]) or Offsets[2]]
+	
+	local Iterator = 1
+	for i = 0, (#_blocking * 3), 4 do
+		Pointer(i, _blocking[Iterator], true)
+		Iterator = Iterator + 1
 	end
 end
 
