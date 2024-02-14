@@ -87,6 +87,10 @@ Damit kann bspw. das Badehaus auch Ehefrauen beschäftigen.
 EMXHookLibrary.SetBallistaAmmunitionAmount(_amount)
 -> Setzt die Maximalanzahl an Munition von Ballisten (Mauerkatapult) per Typ.
 
+EMXHookLibrary.SetEntityTypeBlocking(_entityType, _blocking, _isBuildBlocking)
+-> Setzt Blocking oder BuildBlocking eines Entitätentyps. _blocking muss immer ein table mit den Werten sein.
+Bspw. EMXHookLibrary.SetEntityTypeBlocking(Entities.B_Cathedral_Big, {0, 0, 0, 0}, false) - Entfernt das Blocking der Kathedrale.
+
 EMXHookLibrary.SetMilitaryMetaFormationParameters(_distances)
 -> Setzt einige Parameter zur Truppenanordnung. Der Parameter _distances muss ein table sein nach folgendem Vorbild:
 -- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}.
