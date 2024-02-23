@@ -13,6 +13,7 @@ EMXHookLibrary = {
 	
 	Internal = {
 		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
+		OriginalGameVariant = 0,
 		GlobalAdressEntity = 0,
 		GlobalHeapStart = 0,
 		AllocatedMemoryStart = 0,
@@ -20,7 +21,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.3 - 14.02.2024 20:26 - Eisenmonoxid",
+		CurrentVersion = "1.8.4 - 23.02.2024 18:07 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -648,6 +649,9 @@ end
 
 EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then
+		if EMXHookLibrary.Internal.OriginalGameVariant == 1 then
+			_ovPointer = _ovPointer - 4128768
+		end
 		return EMXHookLibrary.RawPointer.New(_ovPointer)["0"];
 	end
 	
@@ -692,16 +696,16 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 end
 
 -- Get global instances of classes in memory, static value in OV, and offset in both HEs --
-EMXHookLibrary.Internal.GetCEntityManager = function() return EMXHookLibrary.Internal.GetObjectInstance("11199488", {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetLogicPropertiesEx = function() return EMXHookLibrary.Internal.GetObjectInstance("11198716", {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetCEntityProps = function() return EMXHookLibrary.Internal.GetObjectInstance("11198560", {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetCEffectProps = function() return EMXHookLibrary.Internal.GetObjectInstance("11198564", {69981, 1, 4, 5, 8}, {189755, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetCGoodProps = function() return EMXHookLibrary.Internal.GetObjectInstance("11198636", {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
-EMXHookLibrary.Internal.GetEGLCGameLogic = function() return EMXHookLibrary.Internal.GetObjectInstance("11198552", {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
-EMXHookLibrary.Internal.GetCGlobalsBaseEx = function() return EMXHookLibrary.Internal.GetObjectInstance("11674352", {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
-EMXHookLibrary.Internal.GetCGlobalsLogicEx = function() return EMXHookLibrary.Internal.GetObjectInstance("11674344", {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true) end
-EMXHookLibrary.Internal.GetFrameworkCMain = function() return EMXHookLibrary.Internal.GetObjectInstance("11158232", {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
-EMXHookLibrary.Internal.GetCTextSet = function() return EMXHookLibrary.Internal.GetObjectInstance("11469188", {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
+EMXHookLibrary.Internal.GetCEntityManager = function() return EMXHookLibrary.Internal.GetObjectInstance(11199488, {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
+EMXHookLibrary.Internal.GetLogicPropertiesEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11198716, {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
+EMXHookLibrary.Internal.GetCEntityProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198560, {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
+EMXHookLibrary.Internal.GetCEffectProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198564, {69981, 1, 4, 5, 8}, {189755, 0, 0, 1, 8}) end
+EMXHookLibrary.Internal.GetCGoodProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198636, {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
+EMXHookLibrary.Internal.GetEGLCGameLogic = function() return EMXHookLibrary.Internal.GetObjectInstance(11198552, {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
+EMXHookLibrary.Internal.GetCGlobalsBaseEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674352, {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
+EMXHookLibrary.Internal.GetCGlobalsLogicEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674344, {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true) end
+EMXHookLibrary.Internal.GetFrameworkCMain = function() return EMXHookLibrary.Internal.GetObjectInstance(11158232, {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
+EMXHookLibrary.Internal.GetCTextSet = function() return EMXHookLibrary.Internal.GetObjectInstance(11469188, {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
 
 EMXHookLibrary.Internal.CalculateEntityIDToDisplayObject = function(_entityID)
 	local Result = EMXHookLibrary.Helpers.BitAnd(_entityID, 65535)
@@ -782,6 +786,7 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 		EMXHookLibrary.Internal.FindOffsetValue(-81, 36)
 		EMXHookLibrary.IsHistoryEdition = false
 		EMXHookLibrary.Internal.HistoryEditionVariant = 0
+		EMXHookLibrary.Internal.OriginalGameVariant = EMXHookLibrary.Internal.GetOriginalGameVariant()
 	else
 		EMXHookLibrary.Internal.FindOffsetValue(-78, 34)
 		EMXHookLibrary.IsHistoryEdition = true
@@ -846,6 +851,15 @@ EMXHookLibrary.Internal.GetHistoryEditionVariant = function()
 	else
 		Framework.WriteToLog("EMXHookLibrary: History Edition Variant -> Found "..HexString.." -> Ubisoft Connect HE!")
 		return 2 -- Ubi Connect HE
+	end
+end
+
+EMXHookLibrary.Internal.GetOriginalGameVariant = function()
+	local Word = EMXHookLibrary.Internal.GetValueAtPointer(EMXHookLibrary.RawPointer.New("11190056"))
+	if Word ~= 256 and Word ~= 257 then
+		return 1
+	else
+		return 0
 	end
 end
 
