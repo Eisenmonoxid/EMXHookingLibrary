@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.4 - 23.02.2024 18:07 - Eisenmonoxid",
+		CurrentVersion = "1.8.5 - 23.02.2024 18:55 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -855,8 +855,8 @@ EMXHookLibrary.Internal.GetHistoryEditionVariant = function()
 end
 
 EMXHookLibrary.Internal.GetOriginalGameVariant = function()
-	local Word = EMXHookLibrary.Internal.GetValueAtPointer(EMXHookLibrary.RawPointer.New("11190056"))
-	if Word ~= 256 and Word ~= 257 then
+	local Pointer = Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, -81)
+	if Pointer ~= 9560772 then -- EGL::CSettler VTable Pointer
 		return 1
 	else
 		return 0
