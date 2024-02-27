@@ -42,6 +42,9 @@ EMXHookLibrary.SetFogOfWarVisibilityFactor(_newFactor)
 EMXHookLibrary.GetModel(_entityID)
 -> Gibt das aktuelle Model einer Entität zurück. (Analog zu Logic.SetModel)
 
+EMXHookLibrary.ToggleRTSCameraMouseRotation(_enableMouseRotation, _optionalRotationSpeed)
+-> Setzt die Rotation der RTS - Camera mit STRG/CTRL + Mausrad. Optional kann auch die Geschwindigkeit davon eingestellt werden. (Normal: 2500)
+
 EMXHookLibrary.SetEntityTypeFullCost(_entityType, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)
 -> Setzt neue Kosten für einen Entitätentyp. Es können auch zwei Kosten gesetzt werden, wenn der Typ im Originalspiel
 nur einen Eintrag hat. Wenn der zweite Eintrag ein Produktionsgut sein soll (zB Goods.G_Cheese), dann sollte das
