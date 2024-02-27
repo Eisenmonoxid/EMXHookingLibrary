@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.6 - 27.02.2024 18:42 - Eisenmonoxid",
+		CurrentVersion = "1.8.6 - 27.02.2024 21:48 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -648,7 +648,7 @@ end
 
 EMXHookLibrary.ToggleRTSCameraMouseRotation = function(_enableMouseRotation, _optionalRotationSpeed)
 	local Speed = _optionalRotationSpeed or 2500
-	EMXHookLibrary.Internal.GetCCameraBehaviorRTS("40", (_enableMouseRotation and Speed) or 0, true)
+	EMXHookLibrary.Internal.GetCCameraBehaviorRTS()("40", (_enableMouseRotation and Speed) or 0, true)
 end
 
 -- Hooking Utility Methods --
