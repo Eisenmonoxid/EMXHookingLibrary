@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.5 - 23.02.2024 18:55 - Eisenmonoxid",
+		CurrentVersion = "1.8.6 - 27.02.2024 18:42 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -70,7 +70,7 @@ EMXHookLibrary.RawPointer = {
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
 
-EMXHookLibrary.Internal.ModifyEntityDisplay = function(_entityIDOrType, _vanillaOffset, _heOffset, _params) -- Model: Pointer("8", _model)
+EMXHookLibrary.Internal.ModifyEntityDisplay = function(_entityIDOrType, _vanillaOffset, _heOffset, _params)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"84", "4"}) or {"88", "8"}	
 	
 	local Pointer = 0
@@ -241,18 +241,21 @@ end
 
 EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 	if not EMXHookLibrary.IsHistoryEdition then 
-		local Word = EMXHookLibrary.Internal.GetValueAtPointer(EMXHookLibrary.RawPointer.New("11190056"))
+		local PointerValue = (EMXHookLibrary.Internal.OriginalGameVariant == 1 and (11190056 - 4128768)) or 11190056
+		local Word = EMXHookLibrary.Internal.GetValueAtPointer(EMXHookLibrary.RawPointer.New(PointerValue))
 		Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 		Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
 		
 		if _setNewMagicWord ~= nil then
-			EMXHookLibrary.Internal.SetValueAtPointer(EMXHookLibrary.RawPointer.New("11190056"), _magicWord)
+			EMXHookLibrary.Internal.SetValueAtPointer(EMXHookLibrary.RawPointer.New(PointerValue), _magicWord)
 		end
 		return Word;
 	end
 	
 	if EMXHookLibrary.Internal.HistoryEditionVariant ~= 1 then
-		assert(false, "EMXHookLibrary: ERROR -> Can't set Debug mode in Ubisoft-HE, use the S6Patcher for that!")
+		local Error = "EMXHookLibrary: ERROR -> Can't set Debug mode in Ubisoft-HE, use the S6Patcher for that!"
+		Framework.WriteToLog(Error)
+		assert(false, Error)
 		return "";
 	end
 
@@ -304,7 +307,6 @@ EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _se
 	end
 end
 
--- _newGoods = {Goods.G_Grain, Goods.G_Wool}
 EMXHookLibrary.CreateBuildingInStockGoods = function(_buildingID, _newGoods)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", 20, "16"}) or {"368", "16", 24, "12"}
 	local SharedIdentifier = BigNum.new("1501117341")
@@ -406,7 +408,6 @@ EMXHookLibrary.SetGoodTypeParameters = function(_goodType, _requiredResource, _a
 	if _animationParameters ~= nil then Pointer("8", _animationParameters[1])("12", _animationParameters[2]) end
 end
 
--- _requiredResources = {{_resource, _amount, _supplier}, {_resource, _amount, _supplier}, ...}
 EMXHookLibrary.CreateGoodTypeRequiredResources = function(_goodType, _requiredResources)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
 	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
@@ -645,6 +646,11 @@ EMXHookLibrary.SetEGLEffectDuration = function(_effect, _duration)
 	EMXHookLibrary.Internal.GetCEffectProps()[Offset][_effect * 4]("16", _duration, true)
 end
 
+EMXHookLibrary.ToggleRTSCameraMouseRotation = function(_enableMouseRotation, _optionalRotationSpeed)
+	local Speed = _optionalRotationSpeed or 2500
+	EMXHookLibrary.Internal.GetCCameraBehaviorRTS("40", (_enableMouseRotation and Speed) or 0, true)
+end
+
 -- Hooking Utility Methods --
 
 EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
@@ -652,11 +658,11 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 		if EMXHookLibrary.Internal.OriginalGameVariant == 1 then
 			_ovPointer = _ovPointer - 4128768
 		end
-		return EMXHookLibrary.RawPointer.New(_ovPointer)["0"];
+		return EMXHookLibrary.RawPointer.New(_ovPointer);
 	end
 	
 	if EMXHookLibrary.Internal.InstanceCache[_ovPointer] ~= nil then
-		return EMXHookLibrary.RawPointer.New(tonumber("0x" .. EMXHookLibrary.Internal.InstanceCache[_ovPointer]))["0"];
+		return EMXHookLibrary.RawPointer.New(tonumber("0x" .. EMXHookLibrary.Internal.InstanceCache[_ovPointer]));
 	end
 	
 	local _hexSplitChars = {}
@@ -692,20 +698,21 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 	
 	EMXHookLibrary.Internal.InstanceCache[_ovPointer] = DereferenceString
 	
-	return EMXHookLibrary.RawPointer.New(tonumber("0x" .. DereferenceString))["0"];
+	return EMXHookLibrary.RawPointer.New(tonumber("0x" .. DereferenceString));
 end
 
 -- Get global instances of classes in memory, static value in OV, and offset in both HEs --
-EMXHookLibrary.Internal.GetCEntityManager = function() return EMXHookLibrary.Internal.GetObjectInstance(11199488, {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetLogicPropertiesEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11198716, {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetCEntityProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198560, {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetCEffectProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198564, {69981, 1, 4, 5, 8}, {189755, 0, 0, 1, 8}) end
-EMXHookLibrary.Internal.GetCGoodProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198636, {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8}) end
-EMXHookLibrary.Internal.GetEGLCGameLogic = function() return EMXHookLibrary.Internal.GetObjectInstance(11198552, {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8}) end
-EMXHookLibrary.Internal.GetCGlobalsBaseEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674352, {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8}) end
-EMXHookLibrary.Internal.GetCGlobalsLogicEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674344, {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true) end
-EMXHookLibrary.Internal.GetFrameworkCMain = function() return EMXHookLibrary.Internal.GetObjectInstance(11158232, {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true) end
-EMXHookLibrary.Internal.GetCTextSet = function() return EMXHookLibrary.Internal.GetObjectInstance(11469188, {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8}) end
+EMXHookLibrary.Internal.GetCEntityManager = function() return EMXHookLibrary.Internal.GetObjectInstance(11199488, {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8})["0"] end
+EMXHookLibrary.Internal.GetLogicPropertiesEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11198716, {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8})["0"] end
+EMXHookLibrary.Internal.GetCEntityProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198560, {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8})["0"] end
+EMXHookLibrary.Internal.GetCEffectProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198564, {69981, 1, 4, 5, 8}, {189755, 0, 0, 1, 8})["0"] end
+EMXHookLibrary.Internal.GetCGoodProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198636, {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8})["0"] end
+EMXHookLibrary.Internal.GetEGLCGameLogic = function() return EMXHookLibrary.Internal.GetObjectInstance(11198552, {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8})["0"] end
+EMXHookLibrary.Internal.GetCGlobalsBaseEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674352, {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8})["0"] end
+EMXHookLibrary.Internal.GetCGlobalsLogicEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674344, {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true)["0"] end
+EMXHookLibrary.Internal.GetFrameworkCMain = function() return EMXHookLibrary.Internal.GetObjectInstance(11158232, {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true)["0"] end
+EMXHookLibrary.Internal.GetCTextSet = function() return EMXHookLibrary.Internal.GetObjectInstance(11469188, {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8})["0"] end
+EMXHookLibrary.Internal.GetCCameraBehaviorRTS = function() return EMXHookLibrary.Internal.GetObjectInstance(11568248, {1766975, 1, 6, 7, 8}, {738468, 1, 4, 5, 8}, true) end
 
 EMXHookLibrary.Internal.CalculateEntityIDToDisplayObject = function(_entityID)
 	local Result = EMXHookLibrary.Helpers.BitAnd(_entityID, 65535)
@@ -719,8 +726,9 @@ end
 -- Dereference RawPointers --
 EMXHookLibrary.Internal.GetValueAtPointer = function(_rawPointer)
 	if not Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
-		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to get value at address "..tostring(_rawPointer).." without existing AdressEntity!")
-		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
+		local Error = "EMXHookLibrary: ERROR! Tried to get value at address "..tostring(_rawPointer).." without existing AdressEntity!"
+		Framework.WriteToLog(Error)
+		assert(false, Error)
 		return;
 	end
 	
@@ -734,8 +742,9 @@ end
 
 EMXHookLibrary.Internal.SetValueAtPointer = function(_rawPointer, _Value)
 	if not Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
-		Framework.WriteToLog("EMXHookLibrary: ERROR! Tried to set value at address "..tostring(_rawPointer).." without existing AdressEntity!")
-		assert(false, "EMXHookLibrary: ERROR - AdressEntity is not existing!")
+		local Error = "EMXHookLibrary: ERROR! Tried to set value at address "..tostring(_rawPointer).." without existing AdressEntity!"
+		Framework.WriteToLog(Error)
+		assert(false, Error)
 		return;
 	end
 	
@@ -747,7 +756,7 @@ EMXHookLibrary.Internal.SetValueAtPointer = function(_rawPointer, _Value)
 	Logic.SetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, tonumber(BigNum.mt.tostring(Index)), _Value)
 end
 
--- Initialization of the Library --
+-- Initialization of the library --
 
 EMXHookLibrary.Internal.FindOffsetValue = function(_VTableOffset, _PointerOffset)
 	if EMXHookLibrary.Internal.GlobalAdressEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
@@ -1231,4 +1240,4 @@ function BigNum.put(bb,o5e6fP,iq7ol)for eMV=0,iq7ol-1 do bb[eMV]=0 end;bb[iq7ol]
 nil end;bb.len=iq7ol;return 0 end
 function BigNum.max(Oejsws,CkD73N0)if Oejsws>CkD73N0 then return Oejsws else return CkD73N0 end end;function BigNum.decr(PlwhaRKJ)
 BigNum.sub(PlwhaRKJ,BigNum.new("1"),PlwhaRKJ)return 0 end
---#EOF
+-- #EOF
