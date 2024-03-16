@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.6 - 27.02.2024 21:48 - Eisenmonoxid",
+		CurrentVersion = "1.8.7 - 16.03.2024 16:16 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -468,6 +468,32 @@ EMXHookLibrary.ReplaceUpgradeCategoryEntityType = function(_upgradeCategory, _ne
 	end
 
 	Pointer(Offsets[7], _newEntityType)
+end
+
+EMXHookLibrary.AddBehaviorToEntity = function(_entityID, _helperEntityID, _behaviorID)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "16"}) or {"368", "12"}
+	local SharedIdentifier = BigNum.new(_behaviorID)
+
+	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_helperEntityID)[Offsets[1]]["4"]
+	local CurrentIdentifier = Pointer[Offsets[2]].Pointer
+
+	while BigNum.compareAbs(CurrentIdentifier, SharedIdentifier) ~= 0 do
+		Pointer = Pointer["0"]
+		CurrentIdentifier = Pointer[Offsets[2]].Pointer
+	end
+	
+	-- Link Behavior
+	local HelperPointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_entityID)[Offsets[1]]["4"]
+	
+	local LastElement = Pointer["8"]
+	for i = 0, 8, 4 do
+		Pointer(i, tonumber(tostring(HelperPointer[i])))
+	end
+	
+	HelperPointer("0", tonumber(tostring(Pointer)))
+	Pointer["16"]("8", _entityID) -- Set ID in Behavior
+	
+	LastElement("0", tonumber(tostring(LastElement)))("4", tonumber(tostring(LastElement)))
 end
 
 EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
