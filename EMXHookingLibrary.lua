@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.7 - 16.03.2024 16:16 - Eisenmonoxid",
+		CurrentVersion = "1.8.8 - 19.03.2024 00:08 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -470,30 +470,40 @@ EMXHookLibrary.ReplaceUpgradeCategoryEntityType = function(_upgradeCategory, _ne
 	Pointer(Offsets[7], _newEntityType)
 end
 
-EMXHookLibrary.AddBehaviorToEntity = function(_entityID, _helperEntityID, _behaviorID)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "16"}) or {"368", "12"}
-	local SharedIdentifier = BigNum.new(_behaviorID)
+EMXHookLibrary.ModifyEntityBehaviors = function(_entityTypeToAdd, _entityTypeToReference, _behaviorIndex)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", 152}) or {"28", 164}
 
-	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_helperEntityID)[Offsets[1]]["4"]
-	local CurrentIdentifier = Pointer[Offsets[2]].Pointer
-
-	while BigNum.compareAbs(CurrentIdentifier, SharedIdentifier) ~= 0 do
-		Pointer = Pointer["0"]
-		CurrentIdentifier = Pointer[Offsets[2]].Pointer
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToAdd * 4]
+	local AmountOfBehaviors = tonumber(tostring(Pointer[Offsets[2] + 12]))
+	
+	local OriginalPointers = {0, 0, 0}
+	local MemorySize = (AmountOfBehaviors + 1) * 4
+	local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(MemorySize)
+	
+	local CurrentValue = 0
+	for i = 0, AmountOfBehaviors - 1 do
+		CurrentValue = tonumber(tostring(Pointer[Offsets[2]][i * 4]))
+		MemoryPointer(i * 4, CurrentValue)
 	end
 	
-	-- Link Behavior
-	local HelperPointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_entityID)[Offsets[1]]["4"]
+	local ReferenceEntity = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToReference * 4]
+	MemoryPointer(MemorySize - 4, tonumber(tostring(ReferenceEntity[Offsets[2]][_behaviorIndex])))
 	
-	local LastElement = Pointer["8"]
-	for i = 0, 8, 4 do
-		Pointer(i, tonumber(tostring(HelperPointer[i])))
-	end
-	
-	HelperPointer("0", tonumber(tostring(Pointer)))
-	Pointer["16"]("8", _entityID) -- Set ID in Behavior
-	
-	LastElement("0", tonumber(tostring(LastElement)))("4", tonumber(tostring(LastElement)))
+	OriginalPointers[1] = tonumber(tostring(Pointer[Offsets[2]]))
+	OriginalPointers[2] = tonumber(tostring(Pointer[Offsets[2] + 8]))
+	OriginalPointers[3] = tonumber(tostring(Pointer[Offsets[2] + 12]))
+
+	local EndPointer = tonumber(tostring(MemoryPointer + MemorySize))
+	Pointer(Offsets[2], tonumber(tostring(MemoryPointer)))(Offsets[2] + 4, EndPointer)(Offsets[2] + 8, EndPointer)(Offsets[2] + 12, AmountOfBehaviors + 1)
+
+	return OriginalPointers
+end
+
+EMXHookLibrary.ResetEntityBehaviors = function(_entityType, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", 152}) or {"28", 164}
+
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
+	Pointer(Offsets[2], _resetPointers[1])(Offsets[2] + 4, _resetPointers[2])(Offsets[2] + 8, _resetPointers[2])(Offsets[2] + 12, _resetPointers[3])
 end
 
 EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
