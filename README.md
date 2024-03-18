@@ -133,8 +133,13 @@ EMXHookLibrary.CopyGoodTypePointer(_good, _copyGood)
 -> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
 für diese Dinge haben. Diese Einträge werden als Referenz auf einen anderen GoodType angelegt.
 
-EMXHookLibrary.AddBehaviorToEntity(_entityID, _helperEntityID, _behaviorID)
--> Kopiert eine Referenz eines Behaviors von einer Entität zu einer anderen. Sollte nur mit Vorsicht verwendet werden!
+EMXHookLibrary.ModifyEntityBehaviors(_entityTypeToAdd, _entityTypeToReference, _behaviorIndex)
+-> Kopiert eine Referenz eines Behaviors von einem Entitätentyp zu einem anderen. Alle danach erstellten Entitäten besitzen
+das Behavior. Kann mittels EMXHookLibrary.ResetEntityBehaviors zurückgesetzt werden.
+
+EMXHookLibrary.ResetEntityBehaviors(_entityType, _resetPointers)
+-> Setzt Behavior eines Entitätentyps zurück. _resetPointers ist ein table, welcher von EMXHookLibrary.ModifyEntityBehaviors
+zurückgegeben wird.
 
 EMXHookLibrary.CreateGoodTypeRequiredResources(_goodType, _requiredResources)
 -> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
