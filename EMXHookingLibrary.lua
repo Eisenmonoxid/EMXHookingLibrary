@@ -1,11 +1,6 @@
-BigNum = {
-	RADIX = 10^7,
-	RADIX_LEN = math.floor(math.log10(10^7)),
-	mt = {}	
-};
+BigNum = {RADIX = 10^7, RADIX_LEN = math.floor(math.log10(10^7)), mt = {}};
 
 -- Here starts the main hook lib code --
-
 EMXHookLibrary = {
 	IsHistoryEdition = false,
 	WasInitialized = false,
@@ -21,7 +16,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.8.8 - 19.03.2024 00:08 - Eisenmonoxid",
+		CurrentVersion = "1.9.1 - 06.04.2024 16:28 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -446,9 +441,9 @@ EMXHookLibrary.CopyGoodTypePointer = function(_good, _copyGood)
 	local CopyGoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_copyGood * 4]
 	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_good * 4]
 	
-	GoodPointer(Offsets[2], tonumber(tostring(CopyGoodPointer[Offsets[2]])))
-	GoodPointer(Offsets[3], tonumber(tostring(CopyGoodPointer[Offsets[3]])))
-	GoodPointer(Offsets[4], tonumber(tostring(CopyGoodPointer[Offsets[4]])))
+	for i = 2, 4, 1 do
+		GoodPointer(Offsets[i], tonumber(tostring(CopyGoodPointer[Offsets[i]])))
+	end
 end
 
 EMXHookLibrary.ReplaceUpgradeCategoryEntityType = function(_upgradeCategory, _newEntityType)
@@ -688,7 +683,6 @@ EMXHookLibrary.ToggleRTSCameraMouseRotation = function(_enableMouseRotation, _op
 end
 
 -- Hooking Utility Methods --
-
 EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then
 		if EMXHookLibrary.Internal.OriginalGameVariant == 1 then
@@ -793,7 +787,6 @@ EMXHookLibrary.Internal.SetValueAtPointer = function(_rawPointer, _Value)
 end
 
 -- Initialization of the library --
-
 EMXHookLibrary.Internal.FindOffsetValue = function(_VTableOffset, _PointerOffset)
 	if EMXHookLibrary.Internal.GlobalAdressEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
 		Logic.DestroyEntity(EMXHookLibrary.Internal.GlobalAdressEntity)
@@ -908,51 +901,90 @@ EMXHookLibrary.Internal.GetOriginalGameVariant = function()
 	end
 end
 
+EMXHookLibrary.Internal.ResetHookedValues = function()
+	if EMXHookLibrary_ResetValues then
+		EMXHookLibrary_ResetValues()
+	end
+	
+	Logic.ExecuteInLuaLocalState([[ 
+		Game.GameTimeSetFactor(GUI.GetPlayerID(), 0)
+		GUI_MissionStatistic.Show()
+	]])
+end
+
 EMXHookLibrary.Internal.OverrideSavegameHandling = function()
--- This is necessary if you do not want to reset the hooked values at the end of the map
-Logic.ExecuteInLuaLocalState([[
-local LmcA2auZ=Network.GetDesiredLanguage()GUI_Window.MainMenuExit=function()
-Framework.ExitGame()end;if InitBottomButtons_ORIG==nil then
-InitBottomButtons_ORIG=GUI_MissionStatistic.InitBottomButtons end
-GUI_MissionStatistic.InitBottomButtons=function()
-InitBottomButtons_ORIG()local Q="/InGame/MissionStatistic/ContainerBottom"
-if LmcA2auZ=="de"then
-XGUIEng.SetText(Q..
-"/BackMenu","{center}{@color:255,80,80,255}Spiel Beenden")else
-XGUIEng.SetText(Q.."/BackMenu","{center}{@color:255,80,80,255}Exit Game")end end;GUI_Window.QuickLoad=function()return true end;KeyBindings_LoadGame=function()
-return true end;if ToggleInGameMenu==nil then
-ToggleInGameMenu=GUI_Window.ToggleInGameMenu end
-GUI_Window.ToggleInGameMenu=function()
-ToggleInGameMenu()
-XGUIEng.ShowWidget("/InGame/InGame/MainMenu/Container/QuickLoad",0)end
-OpenLoadDialog=function()LoadDialog.Starting=false;LockInputForDialog()
-XGUIEng.ShowWidget(LoadDialog.Widget.Dialog,1)
-XGUIEng.PushPage(LoadDialog.Widget.Dialog,false)
-XGUIEng.ListBoxPopAll(LoadDialog.Widget.FileList)
-XGUIEng.ListBoxPopAll(LoadDialog.Widget.MapList)
-XGUIEng.ListBoxPopAll(LoadDialog.Widget.DateList)
-XGUIEng.ListBoxPopAll(LoadDialog.Widget.TimeList)local ZA=Framework.GetSaveGameNamesExEx()
-local _IQQ=GetSaveGameExtension()local XpkjA=ZA[1]local pVRj=2;local fuZ3z86=#ZA;fuZ3z86=(fuZ3z86-1)/4;LoadDialog.FileId=
-XpkjA+1
-for er=1,fuZ3z86 do local DFb100j=ZA[pVRj]local XL_=ZA[pVRj+1]
-local WYdR=ZA[pVRj+2]local QKKks_zt=Tool_GetLocalizedMapName(ZA[pVRj+3])
-if string.lower(ZA[
-pVRj+3])==
-string.lower(Framework.GetCurrentMapName())then
-local Are7xU=string.gsub(DFb100j,_IQQ,"")
-XGUIEng.ListBoxPushItem(LoadDialog.Widget.TimeList,WYdR)
-XGUIEng.ListBoxPushItem(LoadDialog.Widget.DateList,XL_)
-XGUIEng.ListBoxPushItem(LoadDialog.Widget.MapList,QKKks_zt)
-XGUIEng.ListBoxPushItem(LoadDialog.Widget.FileList,Are7xU)end;pVRj=pVRj+4 end
-if Game~=nil then
-LoadDialog.Backup.Speed=Game.GameTimeGetFactor()Game.GameTimeSetFactor(GUI.GetPlayerID(),0)end;UpdateLoadDialog()end
-]]);
+	Logic.ExecuteInLuaLocalState([[
+		GUI_Window.QuickLoad = function() return true end
+		KeyBindings_LoadGame = function() return true end
+
+		if EMXHookLibrary_ToggleInGameMenu == nil then
+			EMXHookLibrary_ToggleInGameMenu = GUI_Window.ToggleInGameMenu;
+		end
+		GUI_Window.ToggleInGameMenu = function()
+			EMXHookLibrary_ToggleInGameMenu()
+			XGUIEng.ShowWidget("/InGame/InGame/MainMenu/Container/QuickLoad", 0)
+		end
+		
+		function GUI_Window.ExitToStatistics()
+			if Framework.IsNetworkGame() then
+				Network.LeaveGame()
+			else
+				Game.GameTimeSetFactor(GUI.GetPlayerID(), 1)
+				GUI.SendScriptCommand("EMXHookLibrary.Internal.ResetHookedValues()")
+			end
+		end
+		
+		OpenLoadDialog = function()
+			LoadDialog.Starting = false
+			LockInputForDialog()
+			XGUIEng.ShowWidget(LoadDialog.Widget.Dialog,1)
+			XGUIEng.PushPage(LoadDialog.Widget.Dialog,false)
+
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.FileList)
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.MapList)
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.DateList)
+			XGUIEng.ListBoxPopAll(LoadDialog.Widget.TimeList)
+	
+			local Names = Framework.GetSaveGameNamesExEx()
+			local Extension = GetSaveGameExtension()
+			local ID = Names[1]
+			local Count = 2
+			local Entries = #Names
+			
+			Entries = (Entries - 1) / 4
+			LoadDialog.FileId = ID + 1
+
+			for i = 1, Entries do
+				local Name = Names[Count]
+				local Date = Names[Count + 1]
+				local Time = Names[Count + 2]
+				local Map = Tool_GetLocalizedMapName(Names[Count + 3])
+
+				if string.lower(Names[Count + 3]) == string.lower(Framework.GetCurrentMapName()) then
+					local FinalName = string.gsub(Name, Extension, "")
+ 	
+					-- make sure the listboxes are filled from right to left (against the linking order)
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.TimeList, Time)
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.DateList, Date)
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.MapList, Map) 	
+					XGUIEng.ListBoxPushItem(LoadDialog.Widget.FileList, FinalName)
+				end
+ 		
+				Count = Count + 4
+			end
+
+			if Game ~= nil then
+				LoadDialog.Backup.Speed = Game.GameTimeGetFactor()
+				Game.GameTimeSetFactor(GUI.GetPlayerID(), 0)
+			end
+
+			UpdateLoadDialog()
+		end
+	]]);
 end
 
 -- Some Helpers --
-
 function EMXHookLibrary.Helpers.qmod(a, b) return a - math.floor(a / b) * b end
-
 function EMXHookLibrary.Helpers.Int2Float(num)
 	if (num == 0) then
 		return 0;
@@ -1097,7 +1129,6 @@ function EMXHookLibrary.Helpers.ConvertCharToMultiByte(_string)
 end
 
 -- Here starts the BigNum - Code (minified, since it does not change) --
-
 function BigNum.new(QDnlt)local LmcA2auZ={}setmetatable(LmcA2auZ,BigNum.mt)
 BigNum.change(LmcA2auZ,QDnlt)return LmcA2auZ end;function BigNum.mt.sub(Q,ZA)
 local _IQQ=BigNum.new()
