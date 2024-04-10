@@ -8,7 +8,7 @@ EMXHookLibrary = {
 	
 	Internal = {
 		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
-		OriginalGameVariant = 0,
+		OriginalGameVariant = 0, -- 0 = .text segment starts at 0x4, 1 = .text segment starts at 0x1
 		GlobalAdressEntity = 0,
 		GlobalHeapStart = 0,
 		AllocatedMemoryStart = 0,
@@ -16,7 +16,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.1 - 06.04.2024 16:28 - Eisenmonoxid",
+		CurrentVersion = "1.9.2 - 10.04.2024 10:43 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -406,14 +406,8 @@ end
 EMXHookLibrary.CreateGoodTypeRequiredResources = function(_goodType, _requiredResources)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
 	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
-	
-	if _requiredResources == nil then
-		GoodPointer(Offsets[2], 0)
-		GoodPointer(Offsets[3], 0)
-		GoodPointer(Offsets[4], 0)
-		return;
-	end
-	
+	local OriginalValues = {0, 0, 0}
+
 	assert(type(_requiredResources) == "table")
 	local NeededMemorySize = (#_requiredResources * 3) * 4
 	local Pointer = EMXHookLibrary.Internal.MemoryAllocator(NeededMemorySize)
@@ -430,19 +424,38 @@ EMXHookLibrary.CreateGoodTypeRequiredResources = function(_goodType, _requiredRe
 
 	local StartPointer = tonumber(tostring(Pointer))
 	local EndPointer = tonumber(tostring(Pointer + Counter))
+	
+	for i = 2, 4, 1 do
+		OriginalValues[i - 1] = tonumber(tostring(GoodPointer[Offsets[i]]))
+	end
 
 	GoodPointer(Offsets[2], StartPointer)
 	GoodPointer(Offsets[3], EndPointer)
 	GoodPointer(Offsets[4], EndPointer)
+	
+	return OriginalValues
 end
 
 EMXHookLibrary.CopyGoodTypePointer = function(_good, _copyGood)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
 	local CopyGoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_copyGood * 4]
 	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_good * 4]
+	local OriginalValues = {0, 0, 0}
 	
 	for i = 2, 4, 1 do
+		OriginalValues[i - 1] = tonumber(tostring(GoodPointer[Offsets[i]]))
 		GoodPointer(Offsets[i], tonumber(tostring(CopyGoodPointer[Offsets[i]])))
+	end
+	
+	return OriginalValues
+end
+
+EMXHookLibrary.ResetGoodTypePointer = function(_goodType, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
+	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
+	
+	for i = 2, 4, 1 do
+		GoodPointer(Offsets[i], _resetPointers[i - 1])
 	end
 end
 
@@ -579,24 +592,33 @@ EMXHookLibrary.SetBallistaAmmunitionAmount = function(_amount)
 	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][Entities.U_MilitaryBallista * 4][Offsets[2]]["8"]("20", _amount)
 end
 
-EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer)
+-- _costs = {_good, _amount, _secondGood, _secondAmount}
+EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _costs, _overrideSecondGoodPointer)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136", "140", "144"}) or {"28", "144", "148", "152"}
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
 	local ValuePointer = Pointer[Offsets[2]]
+	local OriginalValues = {0, 0, 0}
 	
-	if tonumber(tostring(ValuePointer)) == 0 then
-		local Size = (_secondGood ~= nil and 16) or 8
-		local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(Size)
-		Pointer(Offsets[2], tonumber(tostring(MemoryPointer)))(Offsets[3], tonumber(tostring(MemoryPointer + Size)))(Offsets[4], tonumber(tostring(MemoryPointer + Size)))
+	assert(type(_costs) == "table" and #_costs >= 2, "Error: Invalid Costtable!")
+	
+	for i = 2, 4, 1 do
+		OriginalValues[i - 1] = tonumber(tostring(Pointer[Offsets[i]]))
+	end
 
-		MemoryPointer("0", _good)("4", _amount)	
-		if _secondGood ~= nil then
-			MemoryPointer("8", _secondGood)("12", _secondAmount)
+	if tonumber(tostring(ValuePointer)) == 0 then
+		local Size = (_costs[3] ~= nil and 16) or 8
+		local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(Size)
+		
+		MemoryPointer("0", _costs[1])("4", _costs[2])	
+		if _costs[3] ~= nil then
+			MemoryPointer("8", _costs[3])("12", _costs[4])
 		end
+			
+		Pointer(Offsets[2], tonumber(tostring(MemoryPointer)))(Offsets[3], tonumber(tostring(MemoryPointer + Size)))(Offsets[4], tonumber(tostring(MemoryPointer + Size)))
 	else
-		ValuePointer("0", _good)("4", _amount)	
-		if _secondGood ~= nil then
-			ValuePointer("8", _secondGood)("12", _secondAmount)
+		ValuePointer("0", _costs[1])("4", _costs[2])	
+		if _costs[3] ~= nil then
+			ValuePointer("8", _costs[3])("12", _costs[4])
 		
 			if _overrideSecondGoodPointer then 
 				local EndPointer = Pointer[Offsets[3]]
@@ -604,17 +626,31 @@ EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _good, _amount, _se
 			end
 		end
 	end
+	
+	return OriginalValues
 end
 
-EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _good, _amount, _secondGood, _secondAmount, _overrideSecondGoodPointer, _overrideUpgradeCostHandling)	
+EMXHookLibrary.ResetEntityTypeFullCost = function(_entityType, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136", "140", "144"}) or {"28", "144", "148", "152"}
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
+
+	for i = 2, 4, 1 do
+		Pointer(Offsets[i], _resetPointers[i - 1])
+	end
+end
+
+-- _costs = {_good, _amount, _secondGood, _secondAmount}
+EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _costs, _overrideSecondGoodPointer, _overrideUpgradeCostHandling)	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", 0, 12}) or {"28", "660", 4, 16}
 	local UpgradeLevelOffset = Offsets[3] + (_upgradeLevel * Offsets[4])
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
 	local ValuePointer = Pointer[UpgradeLevelOffset]
+	
+	assert(type(_costs) == "table" and #_costs >= 2, "Error: Invalid Costtable!")
 
-	ValuePointer("0", _good)("4", _amount)
-	if _secondGood ~= nil and _secondAmount ~= nil then
-		ValuePointer("8", _secondGood)("12", _secondAmount)
+	ValuePointer("0", _costs[1])("4", _costs[2])
+	if _costs[3] ~= nil then
+		ValuePointer("8", _costs[3])("12", _costs[4])
 		
 		if _overrideSecondGoodPointer then 
 			local EndPointer = Pointer[UpgradeLevelOffset + 4]
@@ -742,7 +778,9 @@ EMXHookLibrary.Internal.GetCGlobalsBaseEx = function() return EMXHookLibrary.Int
 EMXHookLibrary.Internal.GetCGlobalsLogicEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674344, {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true)["0"] end
 EMXHookLibrary.Internal.GetFrameworkCMain = function() return EMXHookLibrary.Internal.GetObjectInstance(11158232, {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true)["0"] end
 EMXHookLibrary.Internal.GetCTextSet = function() return EMXHookLibrary.Internal.GetObjectInstance(11469188, {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8})["0"] end
+EMXHookLibrary.Internal.GetCDisplay = function() return EMXHookLibrary.Internal.GetObjectInstance(11674360, {1617395, 1, 6, 7, 8}, {589264, 1, 2, 3, 8}, true)["0"] end
 EMXHookLibrary.Internal.GetCCameraBehaviorRTS = function() return EMXHookLibrary.Internal.GetObjectInstance(11568248, {1766975, 1, 6, 7, 8}, {738468, 1, 4, 5, 8}, true) end
+EMXHookLibrary.Internal.GetFPPrecisionObject = function() return EMXHookLibrary.Internal.GetObjectInstance(11795144, {6275025, 1, 4, 5, 8}, {7303684, 1, 4, 5, 8}) end
 
 EMXHookLibrary.Internal.CalculateEntityIDToDisplayObject = function(_entityID)
 	local Result = EMXHookLibrary.Helpers.BitAnd(_entityID, 65535)
@@ -778,6 +816,10 @@ EMXHookLibrary.Internal.SetValueAtPointer = function(_rawPointer, _Value)
 		return;
 	end
 	
+	if _Value >= 2147483648 then
+		EMXHookLibrary.Internal.GetFPPrecisionObject()("0", 0)
+	end
+	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "-78") or "-81"
 	local Index = BigNum.mt.sub(_rawPointer.Pointer, EMXHookLibrary.Internal.GlobalHeapStart)
 	Index = BigNum.mt.div(Index, "4")
@@ -807,8 +849,11 @@ end
 EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 	if (nil == string.find(Framework.GetProgramVersion(), "1.71")) then
 		EMXHookLibrary.WasInitialized = false
-		Framework.WriteToLog("EMXHookLibrary: Patch 1.71 was NOT found! Aborting ...")
-		assert(false, "EMXHookLibrary: Patch 1.71 was NOT found! Aborting ...")
+		
+		local Text = "EMXHookLibrary: Patch 1.71 was NOT found! Aborting ..."
+		Framework.WriteToLog(Text)
+		assert(false, Text)
+		
 		return;
 	end
 	
@@ -823,7 +868,6 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 	if (Network.IsNATReady == nil) then
 		EMXHookLibrary.Internal.FindOffsetValue(-81, 36)
 		EMXHookLibrary.IsHistoryEdition = false
-		EMXHookLibrary.Internal.HistoryEditionVariant = 0
 		EMXHookLibrary.Internal.OriginalGameVariant = EMXHookLibrary.Internal.GetOriginalGameVariant()
 	else
 		EMXHookLibrary.Internal.FindOffsetValue(-78, 34)
@@ -895,8 +939,10 @@ end
 EMXHookLibrary.Internal.GetOriginalGameVariant = function()
 	local Pointer = Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, -81)
 	if Pointer ~= 9560772 then -- EGL::CSettler VTable Pointer
+		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 1 -> Found "..Pointer.." -> 0x1!")
 		return 1
 	else
+		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 0 -> Found "..Pointer.." -> 0x4!")
 		return 0
 	end
 end
@@ -1124,6 +1170,7 @@ function EMXHookLibrary.Helpers.ConvertCharToMultiByte(_string)
 		end
 	end
 	
+	-- TODO: If string has an uneven amount of characters, the last character is lost!
 	OutputNumbers[#OutputNumbers + 1] = 0
 	return OutputNumbers
 end
