@@ -8,15 +8,16 @@ EMXHookLibrary = {
 	
 	Internal = {
 		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
-		OriginalGameVariant = 0, -- 0 = .text segment starts at 0x4, 1 = .text segment starts at 0x1
+		OriginalGameVariant = 0, -- 0 = .text segment starts at 0x004, 1 = .text segment starts at 0x001
 		GlobalAdressEntity = 0,
 		GlobalHeapStart = 0,
 		AllocatedMemoryStart = 0,
 		AllocatedMemorySize = 0,
+		GlobalOVOffset = 4128768,
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.2 - 10.04.2024 10:43 - Eisenmonoxid",
+		CurrentVersion = "1.9.2 - 12.04.2024 03:09 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -235,11 +236,13 @@ EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
 end
 
 EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
+	local Text = "EMXHookLibrary: Debug Word for this PC is: " 
 	if not EMXHookLibrary.IsHistoryEdition then 
-		local PointerValue = (EMXHookLibrary.Internal.OriginalGameVariant == 1 and (11190056 - 4128768)) or 11190056
+		local Value = 11190056
+		local PointerValue = (EMXHookLibrary.Internal.OriginalGameVariant == 1 and (Value - EMXHookLibrary.Internal.GlobalOVOffset)) or Value
 		local Word = EMXHookLibrary.Internal.GetValueAtPointer(EMXHookLibrary.RawPointer.New(PointerValue))
-		Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
-		Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
+		Logic.DEBUG_AddNote(Text .. Word)
+		Framework.WriteToLog(Text .. Word)
 		
 		if _setNewMagicWord ~= nil then
 			EMXHookLibrary.Internal.SetValueAtPointer(EMXHookLibrary.RawPointer.New(PointerValue), _magicWord)
@@ -258,8 +261,8 @@ EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 	Pointer = (Pointer - "2100263")["0"]
 
 	local Word = tostring(Pointer["0"])
-	Logic.DEBUG_AddNote("EMXHookLibrary: Debug Word for this PC is: " ..Word)
-	Framework.WriteToLog("EMXHookLibrary: Debug Word for this PC is: " ..Word)
+	Logic.DEBUG_AddNote(Text .. Word)
+	Framework.WriteToLog(Text .. Word)
 
 	if _setNewMagicWord ~= nil then Pointer("0", _magicWord) end
 	
@@ -645,8 +648,13 @@ EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _
 	local UpgradeLevelOffset = Offsets[3] + (_upgradeLevel * Offsets[4])
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
 	local ValuePointer = Pointer[UpgradeLevelOffset]
+	local OriginalValues = {0, 0}
 	
 	assert(type(_costs) == "table" and #_costs >= 2, "Error: Invalid Costtable!")
+	
+	for i = 4, 8, 4 do
+		OriginalValues[i / 4] = tonumber(tostring(Pointer[UpgradeLevelOffset + i]))
+	end
 
 	ValuePointer("0", _costs[1])("4", _costs[2])
 	if _costs[3] ~= nil then
@@ -680,6 +688,16 @@ EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _
 		
 		EMXHookLibrary.OverriddenUpgradeCosts = true
 	end
+	
+	return OriginalValues
+end
+
+EMXHookLibrary.ResetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", 0, 12}) or {"28", "660", 4, 16}
+	local UpgradeLevelOffset = Offsets[3] + (_upgradeLevel * Offsets[4])
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
+
+	Pointer(UpgradeLevelOffset + 4, _resetPointers[1])(UpgradeLevelOffset + 8, _resetPointers[2])
 end
 
 EMXHookLibrary.SetEntityTypeBlocking = function(_entityType, _blocking, _isBuildBlocking)
@@ -722,7 +740,7 @@ end
 EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then
 		if EMXHookLibrary.Internal.OriginalGameVariant == 1 then
-			_ovPointer = _ovPointer - 4128768
+			_ovPointer = _ovPointer - EMXHookLibrary.Internal.GlobalOVOffset
 		end
 		return EMXHookLibrary.RawPointer.New(_ovPointer);
 	end
@@ -816,9 +834,9 @@ EMXHookLibrary.Internal.SetValueAtPointer = function(_rawPointer, _Value)
 		return;
 	end
 	
-	if _Value >= 2147483648 then
-		EMXHookLibrary.Internal.GetFPPrecisionObject()("0", 0)
-	end
+	--if _Value >= 2147483648 then
+	--	EMXHookLibrary.Internal.GetFPPrecisionObject()("0", 0) -- Only works in OV currently, not HE!
+	--end
 	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "-78") or "-81"
 	local Index = BigNum.mt.sub(_rawPointer.Pointer, EMXHookLibrary.Internal.GlobalHeapStart)
@@ -939,10 +957,10 @@ end
 EMXHookLibrary.Internal.GetOriginalGameVariant = function()
 	local Pointer = Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, -81)
 	if Pointer ~= 9560772 then -- EGL::CSettler VTable Pointer
-		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 1 -> Found "..Pointer.." -> 0x1!")
+		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 1 -> Found "..Pointer.." -> 0x001!")
 		return 1
 	else
-		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 0 -> Found "..Pointer.." -> 0x4!")
+		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 0 -> Found "..Pointer.." -> 0x004!")
 		return 0
 	end
 end
