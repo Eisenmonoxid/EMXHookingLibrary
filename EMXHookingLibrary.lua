@@ -17,7 +17,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.2 - 12.04.2024 03:09 - Eisenmonoxid",
+		CurrentVersion = "1.9.3 - 13.04.2024 08:04 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -237,6 +237,7 @@ end
 
 EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
 	local Text = "EMXHookLibrary: Debug Word for this PC is: " 
+	
 	if not EMXHookLibrary.IsHistoryEdition then 
 		local Value = 11190056
 		local PointerValue = (EMXHookLibrary.Internal.OriginalGameVariant == 1 and (Value - EMXHookLibrary.Internal.GlobalOVOffset)) or Value
@@ -938,6 +939,22 @@ EMXHookLibrary.Internal.MemoryAllocator = function(_size)
 
 	Framework.WriteToLog("EMXHookLibrary: Requested Memory: Size: " .. tostring(Size) .. ". Pointer: 0x" .. string.format("%0x", tostring(Pointer)))
 
+	return Pointer
+end
+
+EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
+	if _string == nil then
+		Framework.SetOnGameStartLuaCommand("")
+		return;
+	end
+	
+	local Offset = (EMXHookLibrary.IsHistoryEdition and "404") or "412"
+	
+	Framework.SetOnGameStartLuaCommand(_string)
+	local Pointer = tonumber(tostring(EMXHookLibrary.Internal.GetFrameworkCMain()[Offset]))
+	
+	EMXHookLibrary.Internal.GetFrameworkCMain()(Offset, 0)
+	
 	return Pointer
 end
 
