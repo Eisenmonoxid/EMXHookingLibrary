@@ -13,11 +13,12 @@ EMXHookLibrary = {
 		GlobalHeapStart = 0,
 		AllocatedMemoryStart = 0,
 		AllocatedMemorySize = 0,
+		AllocatedMemoryMaxSize = 20000,
 		GlobalOVOffset = 4128768,
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.3 - 13.04.2024 08:04 - Eisenmonoxid",
+		CurrentVersion = "1.9.4 - 14.04.2024 19:49 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -741,7 +742,7 @@ end
 EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then
 		if EMXHookLibrary.Internal.OriginalGameVariant == 1 then
-			_ovPointer = _ovPointer - EMXHookLibrary.Internal.GlobalOVOffset
+			_ovPointer = (_ovPointer - EMXHookLibrary.Internal.GlobalOVOffset)
 		end
 		return EMXHookLibrary.RawPointer.New(_ovPointer);
 	end
@@ -865,7 +866,7 @@ EMXHookLibrary.Internal.FindOffsetValue = function(_VTableOffset, _PointerOffset
 	EMXHookLibrary.Internal.GlobalHeapStart = PointerToVTableValue
 end
 
-EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
+EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeToAllocate) -- Entry Point
 	if (nil == string.find(Framework.GetProgramVersion(), "1.71")) then
 		EMXHookLibrary.WasInitialized = false
 		
@@ -902,11 +903,15 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride) -- Entry Point
 						 ". AddressEntity ID: " .. tostring(EMXHookLibrary.Internal.GlobalAdressEntity) .. ".")
 
 	if _useLoadGameOverride then
-		EMXHookLibrary.Internal.OverrideSavegameHandling()
+		EMXHookLibrary.Internal.OverrideLoadGameHandling()
 		Framework.WriteToLog("EMXHookLibrary: LoadGame Overwritten!")
 	end
 	
-	EMXHookLibrary.Internal.AllocateDynamicMemory(20000) -- 20000 * (1/4) = 5000 possible entries
+	if _maxMemorySizeToAllocate ~= nil then
+		EMXHookLibrary.Internal.AllocatedMemoryMaxSize = _maxMemorySizeToAllocate
+	end
+	
+	EMXHookLibrary.Internal.AllocateDynamicMemory(EMXHookLibrary.Internal.AllocatedMemoryMaxSize)
 end
 
 EMXHookLibrary.Internal.AllocateDynamicMemory = function(_maxSize)
@@ -923,12 +928,12 @@ EMXHookLibrary.Internal.AllocateDynamicMemory = function(_maxSize)
 	EMXHookLibrary.Internal.AllocatedMemoryStart = Pointer
 	EMXHookLibrary.Internal.AllocatedMemorySize = 0
 	
-	Framework.WriteToLog("EMXHookLibrary: Dynamic Memory allocated: 0x" .. string.format("%0x", tostring(Pointer)))
+	Framework.WriteToLog("EMXHookLibrary: Dynamic Memory with size " .. _maxSize .. " allocated: 0x" .. string.format("%0x", tostring(Pointer)))
 end
 
 EMXHookLibrary.Internal.MemoryAllocator = function(_size)
 	local Size = EMXHookLibrary.Internal.AllocatedMemorySize + _size
-	if Size > 5000 then
+	if Size > (EMXHookLibrary.Internal.AllocatedMemoryMaxSize / 4) then
 		Framework.WriteToLog("EMXHookLibrary: Out of Memory ERROR!")
 		assert(false, "EMXHookLibrary: Out of Memory ERROR!")	
 		return;
@@ -949,13 +954,22 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 	end
 	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "404") or "412"
-	
 	Framework.SetOnGameStartLuaCommand(_string)
 	local Pointer = tonumber(tostring(EMXHookLibrary.Internal.GetFrameworkCMain()[Offset]))
-	
 	EMXHookLibrary.Internal.GetFrameworkCMain()(Offset, 0)
 	
 	return Pointer
+end
+
+EMXHookLibrary.Internal.GetLuaASCIIStringFromPointer = function(_pointer)
+	local CMain = EMXHookLibrary.Internal.GetFrameworkCMain()
+	local SavedPointer = tonumber(tostring(CMain["20"]))
+	
+	CMain("20", tonumber(tostring(_pointer)))
+	local String = Framework.GetCurrentMapName()
+	CMain("20", SavedPointer)
+	
+	return String
 end
 
 EMXHookLibrary.Internal.GetHistoryEditionVariant = function()
@@ -982,84 +996,55 @@ EMXHookLibrary.Internal.GetOriginalGameVariant = function()
 	end
 end
 
-EMXHookLibrary.Internal.ResetHookedValues = function()
+EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
 	if EMXHookLibrary_ResetValues then
 		EMXHookLibrary_ResetValues()
 	end
 	
-	Logic.ExecuteInLuaLocalState([[ 
-		Game.GameTimeSetFactor(GUI.GetPlayerID(), 0)
-		GUI_MissionStatistic.Show()
-	]])
+	local Command = ""
+	if _source == 0 then -- Framework.CloseGame
+		Command = "EMXHookLibrary.CloseGame()"
+	elseif _source == 1 then -- EMXHookLibrary.RestartMap
+		Command = "EMXHookLibrary.RestartMap(\"".._stringParam.."\")"
+	elseif _source == 2 then -- Framework.LoadGameAndExitCurrentGame
+		Command = "EMXHookLibrary.LoadGameAndExitCurrentGame(\"".._stringParam.."\")"
+	elseif _source == 3 then -- Framework.LoadGame
+		Command = "EMXHookLibrary.LoadGame(\"".._stringParam.."\")"
+	else
+		Command = "EMXHookLibrary: No valid reset source ERROR!"
+		Framework.WriteToLog(Command)
+		assert(false, Command)
+		return;
+	end
+	
+	Logic.ExecuteInLuaLocalState(Command)
 end
 
-EMXHookLibrary.Internal.OverrideSavegameHandling = function()
-	Logic.ExecuteInLuaLocalState([[
-		GUI_Window.QuickLoad = function() return true end
-		KeyBindings_LoadGame = function() return true end
-
-		if EMXHookLibrary_ToggleInGameMenu == nil then
-			EMXHookLibrary_ToggleInGameMenu = GUI_Window.ToggleInGameMenu;
-		end
-		GUI_Window.ToggleInGameMenu = function()
-			EMXHookLibrary_ToggleInGameMenu()
-			XGUIEng.ShowWidget("/InGame/InGame/MainMenu/Container/QuickLoad", 0)
+EMXHookLibrary.Internal.OverrideLoadGameHandling = function()
+	Logic.ExecuteInLuaLocalState([[	
+		EMXHookLibrary = EMXHookLibrary or {}
+		EMXHookLibrary.LoadGameAndExitCurrentGame = Framework.LoadGameAndExitCurrentGame;
+		Framework.LoadGameAndExitCurrentGame = function(_savegameName)
+			Game.GameTimeSetFactor(GUI.GetPlayerID(), 1)
+			GUI.SendScriptCommand("EMXHookLibrary.Internal.ResetHookedValues(2, \"".._savegameName.."\")")
 		end
 		
-		function GUI_Window.ExitToStatistics()
-			if Framework.IsNetworkGame() then
-				Network.LeaveGame()
-			else
-				Game.GameTimeSetFactor(GUI.GetPlayerID(), 1)
-				GUI.SendScriptCommand("EMXHookLibrary.Internal.ResetHookedValues()")
-			end
+		EMXHookLibrary.LoadGame = Framework.LoadGame;
+		Framework.LoadGame = function(_savegameName)
+			Game.GameTimeSetFactor(GUI.GetPlayerID(), 1)
+			GUI.SendScriptCommand("EMXHookLibrary.Internal.ResetHookedValues(3, \"".._savegameName.."\")")
 		end
 		
-		OpenLoadDialog = function()
-			LoadDialog.Starting = false
-			LockInputForDialog()
-			XGUIEng.ShowWidget(LoadDialog.Widget.Dialog,1)
-			XGUIEng.PushPage(LoadDialog.Widget.Dialog,false)
-
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.FileList)
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.MapList)
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.DateList)
-			XGUIEng.ListBoxPopAll(LoadDialog.Widget.TimeList)
-	
-			local Names = Framework.GetSaveGameNamesExEx()
-			local Extension = GetSaveGameExtension()
-			local ID = Names[1]
-			local Count = 2
-			local Entries = #Names
-			
-			Entries = (Entries - 1) / 4
-			LoadDialog.FileId = ID + 1
-
-			for i = 1, Entries do
-				local Name = Names[Count]
-				local Date = Names[Count + 1]
-				local Time = Names[Count + 2]
-				local Map = Tool_GetLocalizedMapName(Names[Count + 3])
-
-				if string.lower(Names[Count + 3]) == string.lower(Framework.GetCurrentMapName()) then
-					local FinalName = string.gsub(Name, Extension, "")
- 	
-					-- make sure the listboxes are filled from right to left (against the linking order)
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.TimeList, Time)
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.DateList, Date)
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.MapList, Map) 	
-					XGUIEng.ListBoxPushItem(LoadDialog.Widget.FileList, FinalName)
-				end
- 		
-				Count = Count + 4
-			end
-
-			if Game ~= nil then
-				LoadDialog.Backup.Speed = Game.GameTimeGetFactor()
-				Game.GameTimeSetFactor(GUI.GetPlayerID(), 0)
-			end
-
-			UpdateLoadDialog()
+		EMXHookLibrary.CloseGame = Framework.CloseGame;
+		Framework.CloseGame = function()
+			Game.GameTimeSetFactor(GUI.GetPlayerID(), 1)
+			GUI.SendScriptCommand("EMXHookLibrary.Internal.ResetHookedValues(0)")
+		end
+		
+		EMXHookLibrary.RestartMap = Framework.RestartMap;
+		Framework.RestartMap = function(_knightType)
+			Game.GameTimeSetFactor(GUI.GetPlayerID(), 1)
+			GUI.SendScriptCommand("EMXHookLibrary.Internal.ResetHookedValues(1, \"".._knightType.."\")")
 		end
 	]]);
 end
