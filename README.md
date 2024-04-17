@@ -212,6 +212,12 @@ EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
 	-> Ändert die Anzeigedauer eines EGL_Effects.
 	Bspw. EMXHookLibrary.SetEGLEffectDuration(EGL_Effects.FXLightning, 2)
 
+EMXHookLibrary.ModifyModelProperties(_modelID, _referenceModelID, _entryIndex)
+	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps.
+
+EMXHookLibrary.ResetModelProperties(_modelID, _entryIndex, _resetValue)
+	-> Setzt geänderte Parameter eines Modeltyps wieder zurück.
+
 EMXHookLibrary.SetEntityDisplayProperties(_entityIDOrType, _property, _value)
 	-> Ermöglicht es, verschiedene Display-Parameter einer Entität bzw. eines Entitätentyps anzupassen. Die möglichen Properties sind:
 	"ShowDestroyedModelAt", "MaxDarknessFactor", "ExplodeOnDestroyedModel", "SnowFactor", "SeasonColorSet", "LODDistance", "ConstructionSite", "Decal"
