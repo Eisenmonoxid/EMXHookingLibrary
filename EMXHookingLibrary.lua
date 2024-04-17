@@ -18,7 +18,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.5 - 17.04.2024 15:57 - Eisenmonoxid",
+		CurrentVersion = "1.9.5 - 17.04.2024 21:57 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -230,7 +230,7 @@ end
 EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString, _useAlternativePointer)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"20", 24, 0}) or {"24", 28, 4}
 	local Index = _IDManagerEntryIndex * Offsets[2]
-	local WideCharAsMultiByte = EMXHookLibrary.Helpers.ConvertCharToMultiByte(_newString)
+	local WideCharAsMultiByte = EMXHookLibrary.Helpers.ConvertWideCharToMultiByte(_newString)
 	local TextSegment = EMXHookLibrary.Internal.GetCTextSet()["4"][Offsets[1]]
 
 	if not _useAlternativePointer then
@@ -1203,7 +1203,7 @@ function EMXHookLibrary.Helpers.BitAnd(a, b)
     return result
 end
 
-function EMXHookLibrary.Helpers.ConvertCharToMultiByte(_string)
+function EMXHookLibrary.Helpers.ConvertWideCharToMultiByte(_string)
 	local OutputHexString = "" 
 	local OutputNumbers = {}
 	
@@ -1212,13 +1212,12 @@ function EMXHookLibrary.Helpers.ConvertCharToMultiByte(_string)
 		CurrentCharacter = _string:sub(i, i)
 		OutputHexString = "00" .. string.format("%0x", string.byte(CurrentCharacter)) .. OutputHexString
 		
-		if math.fmod(i, 2) == 0 then
+		if math.fmod(i, 2) == 0 or i == #_string then
 			OutputNumbers[#OutputNumbers + 1] = tonumber("0x" .. OutputHexString)
 			OutputHexString = ""
 		end
 	end
-	
-	-- TODO: If string has an uneven amount of characters, the last character is lost!
+
 	OutputNumbers[#OutputNumbers + 1] = 0
 	return OutputNumbers
 end
