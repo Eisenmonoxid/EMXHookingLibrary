@@ -213,7 +213,9 @@ EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
 	Bspw. EMXHookLibrary.SetEGLEffectDuration(EGL_Effects.FXLightning, 2)
 
 EMXHookLibrary.ModifyModelProperties(_modelID, _referenceModelID, _entryIndex)
-	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps.
+	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps. Gibt für die Rücksetzfunktion den Originalwert zurück.
+	Bspw. EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)
+	Setzt für das erste Model den Shader-Effect vom zweiten Model.
 
 EMXHookLibrary.ResetModelProperties(_modelID, _entryIndex, _resetValue)
 	-> Setzt geänderte Parameter eines Modeltyps wieder zurück.
