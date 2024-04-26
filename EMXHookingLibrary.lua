@@ -18,7 +18,7 @@ EMXHookLibrary = {
 		
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.5 - 17.04.2024 21:57 - Eisenmonoxid",
+		CurrentVersion = "1.9.6 - 27.04.2024 00:23 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -68,9 +68,9 @@ EMXHookLibrary.RawPointer = {
 -- ************************************************************************************************************************************************************ --
 
 EMXHookLibrary.ModifyModelProperties = function(_modelID, _referenceModelID, _entryIndex)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4"}) or {"92", "8"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
 	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
-	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"]["12"]
+	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
 
 	local ModelEntry = ModelArray + (_modelID * 108)
 	local ReferenceEntry = ModelArray + (_referenceModelID * 108)
@@ -83,9 +83,9 @@ EMXHookLibrary.ModifyModelProperties = function(_modelID, _referenceModelID, _en
 end
 
 EMXHookLibrary.ResetModelProperties = function(_modelID, _entryIndex, _resetValue)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4"}) or {"92", "8"}
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
 	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
-	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"]["12"]
+	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
 	
 	local ModelEntry = ModelArray + (_modelID * 108)
 
@@ -962,8 +962,9 @@ end
 EMXHookLibrary.Internal.MemoryAllocator = function(_size)
 	local Size = EMXHookLibrary.Internal.AllocatedMemorySize + _size
 	if Size > (EMXHookLibrary.Internal.AllocatedMemoryMaxSize / 4) then
-		Framework.WriteToLog("EMXHookLibrary: Out of Memory ERROR!")
-		assert(false, "EMXHookLibrary: Out of Memory ERROR!")	
+		local Text = "EMXHookLibrary: Out of Memory ERROR!"
+		Framework.WriteToLog(Text)
+		assert(false, Text)
 		return;
 	end
 	
@@ -981,10 +982,10 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 		return;
 	end
 	
-	local Offset = (EMXHookLibrary.IsHistoryEdition and "404") or "412"
+	local Offset = (EMXHookLibrary.IsHistoryEdition and 404) or 412
 	Framework.SetOnGameStartLuaCommand(_string)
 	local Pointer = tonumber(tostring(EMXHookLibrary.Internal.GetFrameworkCMain()[Offset]))
-	EMXHookLibrary.Internal.GetFrameworkCMain()(Offset, 0)
+	EMXHookLibrary.Internal.GetFrameworkCMain()(Offset, 0)(Offset + 4, 0)
 	
 	return Pointer
 end
@@ -1025,7 +1026,7 @@ EMXHookLibrary.Internal.GetOriginalGameVariant = function()
 end
 
 EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
-	if EMXHookLibrary_ResetValues then
+	if EMXHookLibrary_ResetValues and type(EMXHookLibrary_ResetValues) == "function" then
 		EMXHookLibrary_ResetValues()
 	end
 	
@@ -1045,7 +1046,7 @@ EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
 		return;
 	end
 	
-	Logic.ExecuteInLuaLocalState(Command)
+	Logic.ExecuteInLuaLocalState(Command) -- Exit Point
 end
 
 EMXHookLibrary.Internal.OverrideLoadGameHandling = function()
