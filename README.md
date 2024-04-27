@@ -4,9 +4,9 @@ A work-in-progress Hook for the game "The Settlers 6" and "The Settlers 6: Histo
 Uses the "BigNum.lua" library. Special thanks to the authors!
 
 ## Usage
-Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then you call the function "EMXHookLibrary.InitAdressEntity()" and after that, you can use the exported methods (listed below) however you like.
+Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then call the function "EMXHookLibrary.InitAdressEntity(_useLoadGameOverride, _maxMemorySizeToAllocate)" and after that, you can use the exported methods (listed below) however you like. Both function arguments are optional.
 
-Hint: To reset the hooked values, use the function argument `EMXHookLibrary.InitAdressEntity(true)` and have the function `EMXHookLibrary_ResetValues` in your global map script, which will be automatically called when the map is closed. Put all your functions in there to reset your changed values.
+Hint: To reset the hooked values, use the function argument `EMXHookLibrary.InitAdressEntity(true)` and have the function `EMXHookLibrary_ResetValues(_source, _stringParam)` in your global map script, which will be automatically called when the map is closed. Put all your functions in there to reset your changed values.
 
 ## Features
 ```
@@ -212,10 +212,15 @@ EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
 	-> Ändert die Anzeigedauer eines EGL_Effects.
 	Bspw. EMXHookLibrary.SetEGLEffectDuration(EGL_Effects.FXLightning, 2)
 
-EMXHookLibrary.ModifyModelProperties(_modelID, _referenceModelID, _entryIndex)
+EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
+	-> Ändert den Shader eines Modeltyps. Mögliche Shader im Ordner "Effects" nachschauen. Bspw.
+	"Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall".
+	Gibt für die Rücksetzfunktion den Originalwert zurück.
+
+EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex)
 	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps. Gibt für die Rücksetzfunktion den Originalwert zurück.
 	Bspw. EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)
-	Setzt für das erste Model den Shader-Effect vom zweiten Model.
+	Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
 
 EMXHookLibrary.ResetModelProperties(_modelID, _entryIndex, _resetValue)
 	-> Setzt geänderte Parameter eines Modeltyps wieder zurück.
