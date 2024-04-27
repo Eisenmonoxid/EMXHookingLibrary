@@ -16,9 +16,10 @@ EMXHookLibrary = {
 		AllocatedMemoryMaxSize = 20000,
 		GlobalOVOffset = 4128768,
 		
+		ASCIIStringCache = {},
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.6 - 27.04.2024 00:23 - Eisenmonoxid",
+		CurrentVersion = "1.9.7 - 27.04.2024 05:19 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -66,6 +67,21 @@ EMXHookLibrary.RawPointer = {
 -- ************************************************************************************************************************************************************ --
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
+
+EMXHookLibrary.SetModelSpecificShader = function(_modelID, _shaderName)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
+	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
+	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
+
+	local ModelEntry = ModelArray + (_modelID * 108)
+	local OriginalValue = tonumber(tostring(ModelEntry[0]))
+	
+	local Pointer = EMXHookLibrary.Internal.CreatePureASCIITextInMemory(_shaderName)
+	ModelEntry(0, Pointer)
+	ResourceManager(_modelID * 4, 0)
+	
+	return OriginalValue
+end
 
 EMXHookLibrary.ModifyModelProperties = function(_modelID, _referenceModelID, _entryIndex)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
@@ -912,6 +928,10 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeT
 		EMXHookLibrary.Internal.ColorSetCache[Key] = nil
 	end
 	
+	for Key, Value in pairs(EMXHookLibrary.Internal.ASCIIStringCache) do
+		EMXHookLibrary.Internal.ASCIIStringCache[Key] = nil
+	end
+	
 	if (Network.IsNATReady == nil) then
 		EMXHookLibrary.Internal.FindOffsetValue(36)
 		EMXHookLibrary.IsHistoryEdition = false
@@ -982,10 +1002,19 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 		return;
 	end
 	
+	if EMXHookLibrary.Internal.ASCIIStringCache[_string] ~= nil then
+		Framework.WriteToLog("EMXHookLibrary: ASCII String Pointer loaded from StringCache: " .. _string .. " - " .. tostring(EMXHookLibrary.Internal.ASCIIStringCache[_string]))
+		return EMXHookLibrary.Internal.ASCIIStringCache[_string]
+	end
+	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 404) or 412
 	Framework.SetOnGameStartLuaCommand(_string)
+	
 	local Pointer = tonumber(tostring(EMXHookLibrary.Internal.GetFrameworkCMain()[Offset]))
 	EMXHookLibrary.Internal.GetFrameworkCMain()(Offset, 0)(Offset + 4, 0)
+	
+	EMXHookLibrary.Internal.ASCIIStringCache[_string] = Pointer
+	Framework.WriteToLog("EMXHookLibrary: ASCII String Pointer CREATED! " .. _string .. " - " .. tostring(Pointer))
 	
 	return Pointer
 end
