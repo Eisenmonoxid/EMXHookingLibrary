@@ -19,7 +19,7 @@ EMXHookLibrary = {
 		ASCIIStringCache = {},
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.7 - 27.04.2024 05:19 - Eisenmonoxid",
+		CurrentVersion = "1.9.7 - 27.04.2024 21:58 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -68,7 +68,8 @@ EMXHookLibrary.RawPointer = {
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
 
-EMXHookLibrary.SetModelSpecificShader = function(_modelID, _shaderName)
+EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
+	-- E.G. "Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall"
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
 	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
 	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
@@ -78,12 +79,12 @@ EMXHookLibrary.SetModelSpecificShader = function(_modelID, _shaderName)
 	
 	local Pointer = EMXHookLibrary.Internal.CreatePureASCIITextInMemory(_shaderName)
 	ModelEntry(0, Pointer)
-	ResourceManager(_modelID * 4, 0)
+	ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak :(
 	
 	return OriginalValue
 end
 
-EMXHookLibrary.ModifyModelProperties = function(_modelID, _referenceModelID, _entryIndex)
+EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _referenceModelID, _entryIndex)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
 	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
 	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
@@ -93,7 +94,7 @@ EMXHookLibrary.ModifyModelProperties = function(_modelID, _referenceModelID, _en
 	local OriginalValue = tonumber(tostring(ModelEntry[_entryIndex]))
 	
 	ModelEntry(_entryIndex, tonumber(tostring(ReferenceEntry[_entryIndex])))
-	ResourceManager(_modelID * 4, 0)
+	ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak :(
 	
 	return OriginalValue
 end
@@ -963,7 +964,7 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeT
 end
 
 EMXHookLibrary.Internal.AllocateDynamicMemory = function(_maxSize)
-	local Offset = (EMXHookLibrary.IsHistoryEdition and "268") or "280"
+	local Offset = (EMXHookLibrary.IsHistoryEdition and 268) or 280
 	local Allocater = {}
 	local Counter = 0
 	repeat
@@ -1056,7 +1057,7 @@ end
 
 EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
 	if EMXHookLibrary_ResetValues and type(EMXHookLibrary_ResetValues) == "function" then
-		EMXHookLibrary_ResetValues()
+		EMXHookLibrary_ResetValues(_source, _stringParam)
 	end
 	
 	local Command = ""
