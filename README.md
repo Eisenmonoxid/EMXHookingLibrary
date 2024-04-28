@@ -202,7 +202,9 @@ EMXHookLibrary.SetEntityDisplayModelParameters(_entityIDOrType, _paramType, _par
 	_paramType muss ein String mit dem Typ sein. Mögliche Typen: "Models", "UpgradeSite", "Destroyed", "Lights".
 	_model setzt das derzeitige Model, kann auch nil sein.
 	Vor dem Ändern am Besten in der Definitions-xml der Entität nachschauen. Es kann sowohl eine (existierende) Entity-ID als auch ein Entitätentyp angegeben werden.
-	Bspw. EMXHookLibrary.SetEntityDisplayModelParameters(Entities.B_StoreHouse, "Models", {Models.Buildings_B_Jewelry_Buildingsite_1, Models.Buildings_B_Jewelry_Buildingsite_1, Models.Buildings_B_Jewelry_Buildingsite_1, Models.Buildings_B_Jewelry_Buildingsite_1}, {Models.Buildings_B_Jewelry_Buildingsite_1})
+	Bspw. EMXHookLibrary.SetEntityDisplayModelParameters(Entities.B_StoreHouse, "Models", {Models.Buildings_B_Jewelry_Buildingsite_1,
+	Models.Buildings_B_Jewelry_Buildingsite_1, Models.Buildings_B_Jewelry_Buildingsite_1,
+	Models.Buildings_B_Jewelry_Buildingsite_1}, {Models.Buildings_B_Jewelry_Buildingsite_1})
 
 EMXHookLibrary.SetBuildingDisplayModelParameters(_entityIDOrType, _paramType, _params, _model)
 	-> Analog zu EMXHookLibrary.SetEntityDisplayModelParameters können hier die Modelle von (Produktions-)Gebäuden geändert werden.
@@ -216,13 +218,13 @@ EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
 	-> Ändert den Shader eines Modeltyps. Mögliche Shader im Ordner "Effects" nachschauen. Bspw.
 	"Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall".
 	Gibt für die Rücksetzfunktion den Originalwert zurück.
-	ACHTUNG: Dies kann Memory leaken, von daher nicht übermäßig verwenden! Nur zurücksetzen, wenn kein Savegame dergleichen Map geladen wird.
+	ACHTUNG: Dies kann Memory leaken, von daher nicht übermäßig verwenden! Nur zurücksetzen, wenn kein Savegame der gleichen Map geladen wird.
 
 EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex)
 	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps. Gibt für die Rücksetzfunktion den Originalwert zurück.
 	Bspw. EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)
 	Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
-	ACHTUNG: Dies kann Memory leaken, von daher nicht übermäßig verwenden! Nur zurücksetzen, wenn kein Savegame dergleichen Map geladen wird.
+	ACHTUNG: Dies kann Memory leaken, von daher nicht übermäßig verwenden! Nur zurücksetzen, wenn kein Savegame der gleichen Map geladen wird.
 
 EMXHookLibrary.ResetModelProperties(_modelID, _entryIndex, _resetValue)
 	-> Setzt geänderte Parameter eines Modeltyps wieder zurück.
