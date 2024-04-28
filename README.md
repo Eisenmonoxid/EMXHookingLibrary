@@ -214,7 +214,7 @@ EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
 	-> Ändert die Anzeigedauer eines EGL_Effects.
 	Bspw. EMXHookLibrary.SetEGLEffectDuration(EGL_Effects.FXLightning, 2)
 
-EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
+EMXHookLibrary.SetAndReloadModelSpecificShader(_modelID, _shaderName)
 	-> Ändert den Shader eines Modeltyps. Mögliche Shader im Ordner "Effects" nachschauen. Bspw.
 	"Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall".
 	Gibt für die Rücksetzfunktion den Originalwert zurück.
