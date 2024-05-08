@@ -19,7 +19,7 @@ EMXHookLibrary = {
 		ASCIIStringCache = {},
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.7 - 27.04.2024 21:58 - Eisenmonoxid",
+		CurrentVersion = "1.9.8 - 08.05.2024 17:34 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -67,7 +67,6 @@ EMXHookLibrary.RawPointer = {
 -- ************************************************************************************************************************************************************ --
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
-
 EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
 	-- E.G. "Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall"
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
@@ -97,36 +96,6 @@ EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _refere
 	ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak :(
 	
 	return OriginalValue
-end
-
-EMXHookLibrary.ResetModelProperties = function(_modelID, _entryIndex, _resetValue)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
-	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
-	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
-	
-	local ModelEntry = ModelArray + (_modelID * 108)
-
-	ModelEntry(_entryIndex, _resetValue)
-	ResourceManager(_modelID * 4, 0)
-end
-
-EMXHookLibrary.Internal.ModifyEntityDisplay = function(_entityIDOrType, _vanillaOffset, _heOffset, _params)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"84", "4"}) or {"88", "8"}	
-	
-	local Pointer = 0
-	if math.ceil(math.log10(_entityIDOrType)) <= 4 then
-		Pointer = EMXHookLibrary.Internal.GetCGlobalsLogicEx()["100"]["12"][Offsets[2]][_entityIDOrType * 4]
-	else
-		Pointer = EMXHookLibrary.Internal.CalculateEntityIDToDisplayObject(_entityIDOrType)[Offsets[1]]
-	end
-
-	local StartOffset = (EMXHookLibrary.IsHistoryEdition and _heOffset) or _vanillaOffset
-	for i = 1, #_params do
-		if _params[i] ~= nil then
-			Pointer(StartOffset, _params[i])
-		end
-		StartOffset = StartOffset + 4
-	end
 end
 
 EMXHookLibrary.SetEntityDisplayModelParameters = function(_entityIDOrType, _paramType, _params, _model)
@@ -498,15 +467,6 @@ EMXHookLibrary.CopyGoodTypePointer = function(_good, _copyGood)
 	return OriginalValues
 end
 
-EMXHookLibrary.ResetGoodTypePointer = function(_goodType, _resetPointers)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
-	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
-	
-	for i = 2, 4, 1 do
-		GoodPointer(Offsets[i], _resetPointers[i - 1])
-	end
-end
-
 EMXHookLibrary.ReplaceUpgradeCategoryEntityType = function(_upgradeCategory, _newEntityType)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"364", "40", "552", "12", "4", "16", "24", "0"}) or {"412", "40", "648", "16", "4", "12", "20", "4"}	
 	local Pointer = (EMXHookLibrary.Internal.GetEGLCGameLogic()[Offsets[1]][Offsets[2]][Offsets[3]] + Offsets[4])[Offsets[8]][Offsets[5]]
@@ -532,9 +492,13 @@ EMXHookLibrary.ModifyEntityBehaviors = function(_entityTypeToAdd, _entityTypeToR
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToAdd * 4]
 	local AmountOfBehaviors = tonumber(tostring(Pointer[Offsets[2] + 12]))
 	
-	local OriginalPointers = {0, 0, 0}
+	local OriginalPointers = {0, 0, 0, 0}
 	local MemorySize = (AmountOfBehaviors + 1) * 4
 	local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(MemorySize)
+	
+	if MemoryPointer == nil then
+		return;
+	end
 	
 	local CurrentValue = 0
 	for i = 0, AmountOfBehaviors - 1 do
@@ -545,9 +509,9 @@ EMXHookLibrary.ModifyEntityBehaviors = function(_entityTypeToAdd, _entityTypeToR
 	local ReferenceEntity = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToReference * 4]
 	MemoryPointer(MemorySize - 4, tonumber(tostring(ReferenceEntity[Offsets[2]][_behaviorIndex])))
 	
-	OriginalPointers[1] = tonumber(tostring(Pointer[Offsets[2]]))
-	OriginalPointers[2] = tonumber(tostring(Pointer[Offsets[2] + 8]))
-	OriginalPointers[3] = tonumber(tostring(Pointer[Offsets[2] + 12]))
+	for i = 0, 3, 1 do
+		OriginalPointers[i + 1] = tonumber(tostring(Pointer[Offsets[2] + (i * 4)]))
+	end
 
 	local EndPointer = tonumber(tostring(MemoryPointer + MemorySize))
 	Pointer(Offsets[2], tonumber(tostring(MemoryPointer)))(Offsets[2] + 4, EndPointer)(Offsets[2] + 8, EndPointer)(Offsets[2] + 12, AmountOfBehaviors + 1)
@@ -555,15 +519,14 @@ EMXHookLibrary.ModifyEntityBehaviors = function(_entityTypeToAdd, _entityTypeToR
 	return OriginalPointers
 end
 
-EMXHookLibrary.ResetEntityBehaviors = function(_entityType, _resetPointers)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", 152}) or {"28", 164}
+EMXHookLibrary.AddBehaviorToEntityType = function(_entityType, _behaviorName)
+	local Mapping = {{"CInteractiveObjectBehavior", Entities.I_X_Well_Destroyed, 0}, {"CMountableBehavior", Entities.B_Outpost_ME, 0}}
 
-	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
-	Pointer(Offsets[2], _resetPointers[1])(Offsets[2] + 4, _resetPointers[2])(Offsets[2] + 8, _resetPointers[2])(Offsets[2] + 12, _resetPointers[3])
-end
-
-EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
-	EMXHookLibrary.Internal.GetLogicPropertiesEx()((EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue, _newValue)
+	for Key, Value in pairs(Mapping) do
+		if Value[1] == _behaviorName then
+			return EMXHookLibrary.ModifyEntityBehaviors(_entityType, Value[2], Value[3])
+		end
+	end
 end
 
 EMXHookLibrary.SetSettlerIllnessCount = function(_newCount) EMXHookLibrary.Internal.ModifyLogicPropertiesEx(_newCount, "760", "700") end
@@ -581,7 +544,6 @@ EMXHookLibrary.SetTerritoryCombatBonus = function(_newFactor) EMXHookLibrary.Int
 EMXHookLibrary.SetCathedralCollectAmount = function(_newAmount) EMXHookLibrary.Internal.ModifyLogicPropertiesEx(_newAmount, "436", "404") end
 EMXHookLibrary.SetFireHealthDecreasePerSecond = function(_newAmount) EMXHookLibrary.Internal.ModifyLogicPropertiesEx(_newAmount, "260", "240") end
 EMXHookLibrary.SetWealthGoodDecayPerSecond = function(_decay) EMXHookLibrary.Internal.ModifyLogicPropertiesEx(_decay, "492", "460") end
-
 EMXHookLibrary.GetModel = function(_entityID) return tostring(EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_entityID)["28"]) end
 
 EMXHookLibrary.SetTerritoryGoldCostByIndex = function(_arrayIndex, _price)
@@ -592,11 +554,6 @@ end
 EMXHookLibrary.SetSettlerLimit = function(_cathedralIndex, _limit)	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "376") or "408"
 	EMXHookLibrary.Internal.GetLogicPropertiesEx()[Offset](_cathedralIndex * 4, _limit)
-end
-
-EMXHookLibrary.Internal.SetLimitByEntityType = function(_entityType, _upgradeLevel, _newLimit, _pointerValues)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", _pointerValues[2]}) or {"28", _pointerValues[1]}
-	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]](_upgradeLevel * 4, _newLimit)
 end
 
 EMXHookLibrary.SetSermonSettlerLimit = function(_cathedralEntityType, _upgradeLevel, _newLimit) 
@@ -678,15 +635,6 @@ EMXHookLibrary.SetEntityTypeFullCost = function(_entityType, _costs, _overrideSe
 	return OriginalValues
 end
 
-EMXHookLibrary.ResetEntityTypeFullCost = function(_entityType, _resetPointers)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136", "140", "144"}) or {"28", "144", "148", "152"}
-	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
-
-	for i = 2, 4, 1 do
-		Pointer(Offsets[i], _resetPointers[i - 1])
-	end
-end
-
 -- _costs = {_good, _amount, _secondGood, _secondAmount}
 EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _costs, _overrideSecondGoodPointer, _overrideUpgradeCostHandling)	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", 0, 12}) or {"28", "660", 4, 16}
@@ -737,14 +685,6 @@ EMXHookLibrary.SetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _
 	return OriginalValues
 end
 
-EMXHookLibrary.ResetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _resetPointers)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", 0, 12}) or {"28", "660", 4, 16}
-	local UpgradeLevelOffset = Offsets[3] + (_upgradeLevel * Offsets[4])
-	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
-
-	Pointer(UpgradeLevelOffset + 4, _resetPointers[1])(UpgradeLevelOffset + 8, _resetPointers[2])
-end
-
 EMXHookLibrary.SetEntityTypeBlocking = function(_entityType, _blocking, _isBuildBlocking)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "168", "240"}) or {"28", "184", "276"}
 	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
@@ -780,8 +720,81 @@ EMXHookLibrary.ToggleRTSCameraMouseRotation = function(_enableMouseRotation, _op
 	local Speed = _optionalRotationSpeed or 2500
 	EMXHookLibrary.Internal.GetCCameraBehaviorRTS()("40", (_enableMouseRotation and Speed) or 0, true)
 end
+-- ************************************************************************************************************************************************************ --
+-- Internal library functions
+-- ************************************************************************************************************************************************************ --
+EMXHookLibrary.Internal.ModifyEntityDisplay = function(_entityIDOrType, _vanillaOffset, _heOffset, _params)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"84", "4"}) or {"88", "8"}	
+	
+	local Pointer = 0
+	if math.ceil(math.log10(_entityIDOrType)) <= 4 then
+		Pointer = EMXHookLibrary.Internal.GetCGlobalsLogicEx()["100"]["12"][Offsets[2]][_entityIDOrType * 4]
+	else
+		Pointer = EMXHookLibrary.Internal.CalculateEntityIDToDisplayObject(_entityIDOrType)[Offsets[1]]
+	end
 
--- Hooking Utility Methods --
+	local StartOffset = (EMXHookLibrary.IsHistoryEdition and _heOffset) or _vanillaOffset
+	for i = 1, #_params do
+		if _params[i] ~= nil then
+			Pointer(StartOffset, _params[i])
+		end
+		StartOffset = StartOffset + 4
+	end
+end
+EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
+	EMXHookLibrary.Internal.GetLogicPropertiesEx()((EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue, _newValue)
+end
+EMXHookLibrary.Internal.SetLimitByEntityType = function(_entityType, _upgradeLevel, _newLimit, _pointerValues)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", _pointerValues[2]}) or {"28", _pointerValues[1]}
+	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]](_upgradeLevel * 4, _newLimit)
+end
+-- ************************************************************************************************************************************************************ --
+-- Reset Functions
+-- ************************************************************************************************************************************************************ --
+EMXHookLibrary.ResetModelProperties = function(_modelID, _entryIndex, _resetValue)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
+	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
+	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
+	
+	local ModelEntry = ModelArray + (_modelID * 108)
+
+	ModelEntry(_entryIndex, _resetValue)
+	ResourceManager(_modelID * 4, 0)
+end
+EMXHookLibrary.ResetGoodTypePointer = function(_goodType, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"4", "36", "40", "44"}) or {"8", "40", "44", "48"}
+	local GoodPointer = EMXHookLibrary.Internal.GetCGoodProps()[Offsets[1]][_goodType * 4]
+	
+	for i = 2, 4, 1 do
+		GoodPointer(Offsets[i], _resetPointers[i - 1])
+	end
+end
+EMXHookLibrary.ResetEntityBehaviors = function(_entityType, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", 152}) or {"28", 164}
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
+	
+	for i = 0, 3, 1 do
+		Pointer(Offsets[2] + (i * 4), _resetPointers[i + 1])
+	end
+end
+EMXHookLibrary.ResetEntityTypeFullCost = function(_entityType, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "136", "140", "144"}) or {"28", "144", "148", "152"}
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
+
+	for i = 2, 4, 1 do
+		Pointer(Offsets[i], _resetPointers[i - 1])
+	end
+end
+EMXHookLibrary.ResetEntityTypeUpgradeCost = function(_entityType, _upgradeLevel, _resetPointers)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "600", 0, 12}) or {"28", "660", 4, 16}
+	local UpgradeLevelOffset = Offsets[3] + (_upgradeLevel * Offsets[4])
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]]
+
+	Pointer(UpgradeLevelOffset + 4, _resetPointers[1])(UpgradeLevelOffset + 8, _resetPointers[2])
+end
+-- ************************************************************************************************************************************************************ --
+-- Hooking Utility Methods
+-- ************************************************************************************************************************************************************ --
 EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then
 		if EMXHookLibrary.Internal.OriginalGameVariant == 1 then
@@ -829,8 +842,9 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 	
 	return EMXHookLibrary.RawPointer.New(tonumber("0x" .. DereferenceString));
 end
-
--- Get global instances of classes in memory, static value in OV, and offset in both HEs --
+-- ************************************************************************************************************************************************************ --
+-- Get global instances of classes in memory, static value in OV, and offset in both HEs
+-- ************************************************************************************************************************************************************ --
 EMXHookLibrary.Internal.GetCEntityManager = function() return EMXHookLibrary.Internal.GetObjectInstance(11199488, {85, 1, 4, 5, 8}, {293, 0, 0, 1, 8})["0"] end
 EMXHookLibrary.Internal.GetLogicPropertiesEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11198716, {1601, 1, 2, 3, 8}, {28002, 0, 0, 1, 8})["0"] end
 EMXHookLibrary.Internal.GetCEntityProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198560, {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8})["0"] end
@@ -854,8 +868,9 @@ EMXHookLibrary.Internal.CalculateEntityIDToLogicObject = function(_entityID)
 	local Result = EMXHookLibrary.Helpers.BitAnd(_entityID, 65535)
 	return EMXHookLibrary.Internal.GetCEntityManager()[(Result * 8) + 20];
 end
-
--- Dereference RawPointers --
+-- ************************************************************************************************************************************************************ --
+-- Dereference RawPointers
+-- ************************************************************************************************************************************************************ --
 EMXHookLibrary.Internal.GetValueAtPointer = function(_rawPointer)
 	if not Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
 		local Error = "EMXHookLibrary: ERROR! Tried to get value at address "..tostring(_rawPointer).." without existing AdressEntity!"
@@ -891,8 +906,9 @@ EMXHookLibrary.Internal.SetValueAtPointer = function(_rawPointer, _Value)
 	
 	Logic.SetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, tonumber(BigNum.mt.tostring(Index)), _Value)
 end
-
--- Initialization of the library --
+-- ************************************************************************************************************************************************************ --
+-- Initialization of the library
+-- ************************************************************************************************************************************************************ --
 EMXHookLibrary.Internal.FindOffsetValue = function(_pointerOffset)
 	if EMXHookLibrary.Internal.GlobalAdressEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
 		Logic.DestroyEntity(EMXHookLibrary.Internal.GlobalAdressEntity)
@@ -912,12 +928,9 @@ end
 
 EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeToAllocate) -- Entry Point
 	if (nil == string.find(Framework.GetProgramVersion(), "1.71")) then
-		EMXHookLibrary.WasInitialized = false
-		
 		local Text = "EMXHookLibrary: Patch 1.71 was NOT found! Aborting ..."
 		Framework.WriteToLog(Text)
 		assert(false, Text)
-		
 		return;
 	end
 	
@@ -943,7 +956,6 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeT
 		EMXHookLibrary.Internal.HistoryEditionVariant = EMXHookLibrary.Internal.GetHistoryEditionVariant()
 	end
 	EMXHookLibrary.WasInitialized = true
-	EMXHookLibrary.OverriddenUpgradeCosts = false
 	
 	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.Internal.CurrentVersion .. 
 						 ". HistoryEditionVariant: " .. tostring(EMXHookLibrary.Internal.HistoryEditionVariant) .. ".")
@@ -1107,8 +1119,9 @@ EMXHookLibrary.Internal.OverrideLoadGameHandling = function()
 		end
 	]]);
 end
-
--- Some Helpers --
+-- ************************************************************************************************************************************************************ --
+-- Some Helpers
+-- ************************************************************************************************************************************************************ --
 function EMXHookLibrary.Helpers.qmod(a, b) return a - math.floor(a / b) * b end
 function EMXHookLibrary.Helpers.Int2Float(num)
 	if (num == 0) then
@@ -1252,8 +1265,9 @@ function EMXHookLibrary.Helpers.ConvertWideCharToMultiByte(_string)
 	OutputNumbers[#OutputNumbers + 1] = 0
 	return OutputNumbers
 end
-
--- Here starts the BigNum - Code (minified, since it does not change) --
+-- ************************************************************************************************************************************************************ --
+-- Here starts the BigNum - Code (minified, since it does not change)
+-- ************************************************************************************************************************************************************ --
 function BigNum.new(QDnlt)local LmcA2auZ={}setmetatable(LmcA2auZ,BigNum.mt)
 BigNum.change(LmcA2auZ,QDnlt)return LmcA2auZ end;function BigNum.mt.sub(Q,ZA)
 local _IQQ=BigNum.new()
@@ -1346,8 +1360,7 @@ JZAU2.len-1 end;return 0 end
 function BigNum.div(K,qL,vfIyB,quNsijN)local QUh2tc=BigNum.new()local qboV=BigNum.new()
 local nSBOx7=BigNum.new("1")local u=BigNum.new("0")if BigNum.compareAbs(qL,u)==0 then
 assert(false,"Function BigNum.div: Division by zero")end
-if
-K==nil or qL==nil or vfIyB==nil or quNsijN==nil then
+if K==nil or qL==nil or vfIyB==nil or quNsijN==nil then
 assert(false,"Function BigNum.div: parameter nil")elseif K.signal=="+"and qL.signal=="-"then qL.signal="+"
 BigNum.div(K,qL,vfIyB,quNsijN)qL.signal="-"vfIyB.signal="-"return 0 elseif
 K.signal=="-"and qL.signal=="+"then K.signal="+"BigNum.div(K,qL,vfIyB,quNsijN)K.signal="-"if
