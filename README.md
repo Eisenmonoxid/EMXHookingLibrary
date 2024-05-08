@@ -1,5 +1,5 @@
 # EMXHookingLibrary
-A work-in-progress Hook for the game "The Settlers 6" and "The Settlers 6: History Edition". Will very likely never be truly finished ;)
+A work-in-progress Hook for the games "The Settlers 6" and "The Settlers 6: History Edition". Will very likely never be truly finished ;)
 
 Uses the "BigNum.lua" library. Special thanks to the authors!
 
@@ -144,9 +144,14 @@ EMXHookLibrary.ModifyEntityBehaviors(_entityTypeToAdd, _entityTypeToReference, _
 	-> Kopiert eine Referenz eines Behaviors von einem Entitätentyp zu einem anderen. Alle danach erstellten Entitäten besitzen
 	das Behavior. Kann mittels EMXHookLibrary.ResetEntityBehaviors zurückgesetzt werden.
 
+EMXHookLibrary.AddBehaviorToEntityType(_entityType, _behaviorName)
+	-> Verwendet EMXHookLibrary.ModifyEntityBehaviors, um ein Behavior zu einem Entitätentyp hinzuzufügen. Die möglichen Behavior sind:
+	"CInteractiveObjectBehavior", "CMountableBehavior".
+	Kann mittels EMXHookLibrary.ResetEntityBehaviors zurückgesetzt werden.
+
 EMXHookLibrary.ResetEntityBehaviors(_entityType, _resetPointers)
 	-> Setzt Behavior eines Entitätentyps zurück. _resetPointers ist ein table, welcher von EMXHookLibrary.ModifyEntityBehaviors
-	zurückgegeben wird.
+	und EMXHookLibrary.AddBehaviorToEntityType zurückgegeben wird.
 
 EMXHookLibrary.CreateGoodTypeRequiredResources(_goodType, _requiredResources)
 	-> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
@@ -218,13 +223,13 @@ EMXHookLibrary.SetAndReloadModelSpecificShader(_modelID, _shaderName)
 	-> Ändert den Shader eines Modeltyps. Mögliche Shader im Ordner "Effects" nachschauen. Bspw.
 	"Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall".
 	Gibt für die Rücksetzfunktion den Originalwert zurück.
-	ACHTUNG: Dies kann Memory leaken, von daher nicht übermäßig verwenden! Nur zurücksetzen, wenn kein Savegame der gleichen Map geladen wird.
+	ACHTUNG: Dies kann etwas Memory leaken (148 Byte), von daher nicht übermäßig verwenden!
 
 EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex)
 	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps. Gibt für die Rücksetzfunktion den Originalwert zurück.
 	Bspw. EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)
 	Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
-	ACHTUNG: Dies kann Memory leaken, von daher nicht übermäßig verwenden! Nur zurücksetzen, wenn kein Savegame der gleichen Map geladen wird.
+	ACHTUNG: Dies kann etwas Memory leaken (148 Byte), von daher nicht übermäßig verwenden!
 
 EMXHookLibrary.ResetModelProperties(_modelID, _entryIndex, _resetValue)
 	-> Setzt geänderte Parameter eines Modeltyps wieder zurück.
