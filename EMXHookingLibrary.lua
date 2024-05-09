@@ -1,25 +1,26 @@
 BigNum = {RADIX = 10^7, RADIX_LEN = math.floor(math.log10(10^7)), mt = {}};
-
--- Here starts the main hook lib code --
+-- ************************************************************************************************************************************************************ --
+-- Here starts the main hook lib code
+-- ************************************************************************************************************************************************************ --
 EMXHookLibrary = {
 	IsHistoryEdition = false,
-	WasInitialized = false,
 	OverriddenUpgradeCosts = false,
 	
 	Internal = {
 		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
 		OriginalGameVariant = 0, -- 0 = .text segment starts at 0x004, 1 = .text segment starts at 0x001
-		GlobalAdressEntity = 0,
+		GlobalAdressEntity = 0, -- Helper entity used for pointer dereference
 		GlobalHeapStart = 0,
+		GlobalOVOffset = 4128768,
 		AllocatedMemoryStart = 0,
 		AllocatedMemorySize = 0,
 		AllocatedMemoryMaxSize = 20000,
-		GlobalOVOffset = 4128768,
 		
 		ASCIIStringCache = {},
 		InstanceCache = {},	
 		ColorSetCache = {},	
-		CurrentVersion = "1.9.8 - 08.05.2024 17:34 - Eisenmonoxid",
+		
+		CurrentVersion = "1.9.9 - 10.05.2024 00:45 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -150,63 +151,57 @@ EMXHookLibrary.SetEntityDisplayProperties = function(_entityIDOrType, _property,
 	end
 end
 
-EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor)
+EMXHookLibrary.Internal.FindColorSetEntryPointer = function(_colorSetEntryIndex)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
+	local OriginalPointer = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["128"][Offsets[1]]
+	
+	local Pointer, CurrentEntry = 0, 0;
+	for i = 0, 8, 4 do
+		Pointer = OriginalPointer[i]
+
+		repeat
+			CurrentEntry = tonumber(tostring(Pointer[Offsets[2]]))
+			if CurrentEntry == _colorSetEntryIndex then
+				Pointer = Pointer[Offsets[3]]
+				EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] = Pointer
+		
+				return Pointer;
+			end
+			if CurrentEntry < _colorSetEntryIndex then
+				Pointer = Pointer["8"]
+			else
+				Pointer = Pointer["0"]
+			end
+		until tonumber(tostring(Pointer["0"])) == tonumber(tostring(Pointer["8"]))
+	end
+
+	Framework.WriteToLog("EMXHookLibrary: No ColorSet entry found for index ".._colorSetEntryIndex.."! Aborting ...")
+	return;
+end
+
+EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor)
 	local SeasonIndizes = {0, 16, 32, 48}
 	local OriginalValues = {0, 0, 0, 0, 0}
 	
 	local Pointer = 0
-	local OriginalPointer = 0
-	local EntryFound = false
-	local CurrentEntry = 0
-
 	if EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] == nil then
-		OriginalPointer = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["128"][Offsets[1]]
-		
-		for i = 0, 8, 4 do
-			Pointer = OriginalPointer[i]
-			EntryFound = false
-			
-			repeat
-				CurrentEntry = tonumber(tostring(Pointer[Offsets[2]]))
-				if CurrentEntry == _colorSetEntryIndex then
-					EntryFound = true
-					break;
-				end
-				if CurrentEntry < _colorSetEntryIndex then
-					Pointer = Pointer["8"]
-				else
-					Pointer = Pointer["0"]
-				end
-			until tonumber(tostring(Pointer["0"])) == tonumber(tostring(Pointer["8"]))
-			
-			if EntryFound == true then
-				break;
-			end
-		end
-
-		if EntryFound == false then
-			Framework.WriteToLog("EMXHookLibrary: No ColorSet entry found for index ".._colorSetEntryIndex.."! Aborting ...")
+		Pointer = EMXHookLibrary.Internal.FindColorSetEntryPointer(_colorSetEntryIndex)
+		if Pointer == nil then
 			return;
 		end
-	
-		Pointer = Pointer[Offsets[3]]
-		EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] = Pointer
 	else
 		Pointer = EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex]
 	end
 	
 	local CurrentIndex = SeasonIndizes[_season]
-	local IntToFloat = EMXHookLibrary.Helpers.Int2Float
-	
 	for i = 1, 4 do
-		OriginalValues[i] = IntToFloat(tonumber(tostring(Pointer[CurrentIndex])))
-		Pointer(CurrentIndex, _rgb[i], true)	
+		OriginalValues[i] = EMXHookLibrary.Helpers.Int2Float(tonumber(tostring(Pointer[CurrentIndex])))
+		Pointer(CurrentIndex, _rgb[i], true)
 		CurrentIndex = CurrentIndex + 4
 	end
 	
 	if _wetFactor then
-		OriginalValues[5] = IntToFloat(tonumber(tostring(Pointer["64"])))
+		OriginalValues[5] = EMXHookLibrary.Helpers.Int2Float(tonumber(tostring(Pointer["64"])))
 		Pointer("64", _wetFactor, true)
 	end
 	
@@ -926,12 +921,13 @@ EMXHookLibrary.Internal.FindOffsetValue = function(_pointerOffset)
 	EMXHookLibrary.Internal.GlobalHeapStart = PointerToVTableValue
 end
 
-EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeToAllocate) -- Entry Point
+EMXHookLibrary.Initialize = function(_useLoadGameOverride, _maxMemorySizeToAllocate) -- Entry Point
+	EMXHookLibrary.OverriddenUpgradeCosts = false
+	
 	if (nil == string.find(Framework.GetProgramVersion(), "1.71")) then
 		local Text = "EMXHookLibrary: Patch 1.71 was NOT found! Aborting ..."
 		Framework.WriteToLog(Text)
-		assert(false, Text)
-		return;
+		return false;
 	end
 	
 	for Key, Value in pairs(EMXHookLibrary.Internal.InstanceCache) do
@@ -955,7 +951,6 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeT
 		EMXHookLibrary.IsHistoryEdition = true
 		EMXHookLibrary.Internal.HistoryEditionVariant = EMXHookLibrary.Internal.GetHistoryEditionVariant()
 	end
-	EMXHookLibrary.WasInitialized = true
 	
 	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.Internal.CurrentVersion .. 
 						 ". HistoryEditionVariant: " .. tostring(EMXHookLibrary.Internal.HistoryEditionVariant) .. ".")
@@ -973,6 +968,7 @@ EMXHookLibrary.InitAdressEntity = function(_useLoadGameOverride, _maxMemorySizeT
 	end
 	
 	EMXHookLibrary.Internal.AllocateDynamicMemory(EMXHookLibrary.Internal.AllocatedMemoryMaxSize)
+	return true;
 end
 
 EMXHookLibrary.Internal.AllocateDynamicMemory = function(_maxSize)
