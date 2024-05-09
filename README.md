@@ -4,9 +4,9 @@ A work-in-progress Hook for the games "The Settlers 6" and "The Settlers 6: Hist
 Uses the "BigNum.lua" library. Special thanks to the authors!
 
 ## Usage
-Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then call the function "EMXHookLibrary.InitAdressEntity(_useLoadGameOverride, _maxMemorySizeToAllocate)" and after that, you can use the exported methods (listed below) however you like. Both function arguments are optional.
+Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then call the function `EMXHookLibrary.Initialize(_useLoadGameOverride, _maxMemorySizeToAllocate)` and after that, you can use the exported methods (listed below) however you like. Both function arguments are optional.
 
-Hint: To reset the hooked values, use the function argument `EMXHookLibrary.InitAdressEntity(true)` and have the function `EMXHookLibrary_ResetValues(_source, _stringParam)` in your global map script, which will be automatically called when the map is closed. Put all your functions in there to reset your changed values.
+Hint: To reset the hooked values, use the function argument `EMXHookLibrary.Initialize(true)` and have the function `EMXHookLibrary_ResetValues(_source, _stringParam)` in your global map script, which will be automatically called when the map is closed. Put all your functions in there to reset your changed values.
 
 ## Features
 ```
