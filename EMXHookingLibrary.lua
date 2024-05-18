@@ -20,7 +20,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "1.9.9 - 10.05.2024 00:45 - Eisenmonoxid",
+		CurrentVersion = "2.0.1 - 18.05.2024 18:48 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -151,34 +151,6 @@ EMXHookLibrary.SetEntityDisplayProperties = function(_entityIDOrType, _property,
 	end
 end
 
-EMXHookLibrary.Internal.FindColorSetEntryPointer = function(_colorSetEntryIndex)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
-	local OriginalPointer = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["128"][Offsets[1]]
-	
-	local Pointer, CurrentEntry = 0, 0;
-	for i = 0, 8, 4 do
-		Pointer = OriginalPointer[i]
-
-		repeat
-			CurrentEntry = tonumber(tostring(Pointer[Offsets[2]]))
-			if CurrentEntry == _colorSetEntryIndex then
-				Pointer = Pointer[Offsets[3]]
-				EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] = Pointer
-		
-				return Pointer;
-			end
-			if CurrentEntry < _colorSetEntryIndex then
-				Pointer = Pointer["8"]
-			else
-				Pointer = Pointer["0"]
-			end
-		until tonumber(tostring(Pointer["0"])) == tonumber(tostring(Pointer["8"]))
-	end
-
-	Framework.WriteToLog("EMXHookLibrary: No ColorSet entry found for index ".._colorSetEntryIndex.."! Aborting ...")
-	return;
-end
-
 EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor)
 	local SeasonIndizes = {0, 16, 32, 48}
 	local OriginalValues = {0, 0, 0, 0, 0}
@@ -297,6 +269,7 @@ end
 EMXHookLibrary.SetBuildingTypeOutStockGood = function(_buildingID, _newGood, _setEntityTypeProduct)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "560", "16"}) or {"368", "16", "24", "612", "12"}
 	local SharedIdentifier = BigNum.new("-1035359747")
+	local Good = Logic.GetGoodTypeOnOutStockByIndex(_buildingID, 0) -- If behavior does not exist, create it
 	
 	if _setEntityTypeProduct ~= nil then EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)["128"](Offsets[4], _newGood) end
 	
@@ -354,6 +327,7 @@ end
 EMXHookLibrary.SetBuildingInStockGood = function(_buildingID, _newGood)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "20", "16"}) or {"368", "16", "24", "12"}
 	local SharedIdentifier = BigNum.new("1501117341")
+	local Good = Logic.GetGoodTypeOnInStockByIndex(_buildingID, 0) -- If behavior does not exist, create it
 
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
@@ -372,6 +346,7 @@ end
 EMXHookLibrary.SetMaxBuildingStockSize = function(_buildingID, _maxStockSize)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "44", "16"}) or {"368", "16", "52", "12"}
 	local SharedIdentifier = BigNum.new("-1035359747")
+	local Stock = Logic.GetMaxAmountOnStock(_buildingID) -- If behavior does not exist, create it
 	
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_buildingID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
@@ -390,7 +365,8 @@ end
 EMXHookLibrary.SetMaxStorehouseStockSize = function(_storehouseID, _maxStockSize)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"352", "20", "68", "16"}) or {"368", "16", "76", "12"}
 	local SharedIdentifier = BigNum.new("625443837")
-
+	local Stock = Logic.GetMaxAmountOnStock(_storehouseID) -- If behavior does not exist, create it
+	
 	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_storehouseID)[Offsets[1]]["4"]
 	local CurrentIdentifier = Pointer[Offsets[4]].Pointer
 	while BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) ~= 0 do
@@ -736,6 +712,33 @@ EMXHookLibrary.Internal.ModifyEntityDisplay = function(_entityIDOrType, _vanilla
 		StartOffset = StartOffset + 4
 	end
 end
+EMXHookLibrary.Internal.FindColorSetEntryPointer = function(_colorSetEntryIndex)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"0", "16", "20"}) or {"4", "12", "16"}
+	local OriginalPointer = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["128"][Offsets[1]]
+	
+	local Pointer, CurrentEntry = 0, 0;
+	for i = 0, 8, 4 do
+		Pointer = OriginalPointer[i]
+
+		repeat
+			CurrentEntry = tonumber(tostring(Pointer[Offsets[2]]))
+			if CurrentEntry == _colorSetEntryIndex then
+				Pointer = Pointer[Offsets[3]]
+				EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] = Pointer
+		
+				return Pointer;
+			end
+			if CurrentEntry < _colorSetEntryIndex then
+				Pointer = Pointer["8"]
+			else
+				Pointer = Pointer["0"]
+			end
+		until tonumber(tostring(Pointer["0"])) == tonumber(tostring(Pointer["8"]))
+	end
+
+	Framework.WriteToLog("EMXHookLibrary: No ColorSet entry found for index ".._colorSetEntryIndex.."! Aborting ...")
+	return;
+end
 EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
 	EMXHookLibrary.Internal.GetLogicPropertiesEx()((EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue, _newValue)
 end
@@ -970,6 +973,7 @@ EMXHookLibrary.Initialize = function(_useLoadGameOverride, _maxMemorySizeToAlloc
 	EMXHookLibrary.Internal.AllocateDynamicMemory(EMXHookLibrary.Internal.AllocatedMemoryMaxSize)
 	return true;
 end
+EMXHookLibrary.InitAdressEntity = EMXHookLibrary.Initialize; -- Compatibility with versions prior to 1.9.9 
 
 EMXHookLibrary.Internal.AllocateDynamicMemory = function(_maxSize)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 268) or 280
