@@ -9,18 +9,20 @@ EMXHookLibrary = {
 	Internal = {
 		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
 		OriginalGameVariant = 0, -- 0 = .text segment starts at 0x004, 1 = .text segment starts at 0x001
+		
 		GlobalAdressEntity = 0, -- Helper entity used for pointer dereference
 		GlobalHeapStart = 0,
 		GlobalOVOffset = 4128768,
+		
 		AllocatedMemoryStart = 0,
 		AllocatedMemorySize = 0,
-		AllocatedMemoryMaxSize = 20000,
+		AllocatedMemoryMaxSize = 10000,
 		
 		ASCIIStringCache = {},
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.1 - 18.05.2024 18:48 - Eisenmonoxid",
+		CurrentVersion = "2.0.2 - 04.07.2024 21:04 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -69,7 +71,7 @@ EMXHookLibrary.RawPointer = {
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
 EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
-	-- E.G. "Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall"
+	-- E.G. "Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall", "StaticBanner"
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
 	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
 	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
@@ -79,12 +81,12 @@ EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
 	
 	local Pointer = EMXHookLibrary.Internal.CreatePureASCIITextInMemory(_shaderName)
 	ModelEntry(0, Pointer)
-	ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak :(
+	ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak (148 Byte) :(
 	
 	return OriginalValue
 end
 
-EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _referenceModelID, _entryIndex)
+EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _referenceModelID, _entryIndex, _deleteFromResourceManager)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
 	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
 	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
@@ -94,7 +96,10 @@ EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _refere
 	local OriginalValue = tonumber(tostring(ModelEntry[_entryIndex]))
 	
 	ModelEntry(_entryIndex, tonumber(tostring(ReferenceEntry[_entryIndex])))
-	ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak :(
+	
+	if _deleteFromResourceManager == true then
+		ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak (148 Byte) :(
+	end
 	
 	return OriginalValue
 end
@@ -682,6 +687,14 @@ EMXHookLibrary.SetMilitaryMetaFormationParameters = function(_distances)
 	end
 end
 
+EMXHookLibrary.SetTerritoryAcquiringBuildingID = function(_territoryID, _buildingID)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"332", "4", 168}) or {"372", "8", 180}
+	local Pointer = EMXHookLibrary.Internal.GetEGLCGameLogic()[Offsets[1]][Offsets[2]]
+	Pointer = Pointer + (_territoryID * Offsets[3])
+	
+	Pointer("24", _buildingID)
+end
+
 EMXHookLibrary.SetEGLEffectDuration = function(_effect, _duration)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and "8") or "12"
 	EMXHookLibrary.Internal.GetCEffectProps()[Offset][_effect * 4]("16", _duration, true)
@@ -935,12 +948,10 @@ EMXHookLibrary.Initialize = function(_useLoadGameOverride, _maxMemorySizeToAlloc
 	
 	for Key, Value in pairs(EMXHookLibrary.Internal.InstanceCache) do
 		EMXHookLibrary.Internal.InstanceCache[Key] = nil
-	end
-	
+	end	
 	for Key, Value in pairs(EMXHookLibrary.Internal.ColorSetCache) do
 		EMXHookLibrary.Internal.ColorSetCache[Key] = nil
 	end
-	
 	for Key, Value in pairs(EMXHookLibrary.Internal.ASCIIStringCache) do
 		EMXHookLibrary.Internal.ASCIIStringCache[Key] = nil
 	end
@@ -1034,11 +1045,12 @@ end
 
 EMXHookLibrary.Internal.GetLuaASCIIStringFromPointer = function(_pointer)
 	local CMain = EMXHookLibrary.Internal.GetFrameworkCMain()
-	local SavedPointer = tonumber(tostring(CMain["20"]))
+	local Offset = "20"
+	local SavedPointer = tonumber(tostring(CMain[Offset]))
 	
-	CMain("20", tonumber(tostring(_pointer)))
+	CMain(Offset, tonumber(tostring(_pointer)))
 	local String = Framework.GetCurrentMapName()
-	CMain("20", SavedPointer)
+	CMain(Offset, SavedPointer)
 	
 	return String
 end
@@ -1071,24 +1083,21 @@ EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
 	if EMXHookLibrary_ResetValues and type(EMXHookLibrary_ResetValues) == "function" then
 		EMXHookLibrary_ResetValues(_source, _stringParam)
 	end
-	
-	local Command = ""
-	if _source == 0 then -- Framework.CloseGame
-		Command = "EMXHookLibrary.CloseGame()"
-	elseif _source == 1 then -- EMXHookLibrary.RestartMap
-		Command = "EMXHookLibrary.RestartMap(\"".._stringParam.."\")"
-	elseif _source == 2 then -- Framework.LoadGameAndExitCurrentGame
-		Command = "EMXHookLibrary.LoadGameAndExitCurrentGame(\"".._stringParam.."\")"
-	elseif _source == 3 then -- Framework.LoadGame
-		Command = "EMXHookLibrary.LoadGame(\"".._stringParam.."\")"
-	else
-		Command = "EMXHookLibrary: No valid reset source ERROR!"
+
+	if _source == 0 then
+		Framework.CloseGame()
+	elseif _source == 1 then
+		Framework.RestartMap(_stringParam)
+	elseif _source == 2 then
+		Framework.LoadGameAndExitCurrentGame(_stringParam)
+	elseif _source == 3 then
+		Framework.LoadGame(_stringParam)
+	else -- In general, this should never happen!
+		Command = "EMXHookLibrary: No valid reset source ERROR! " .. tostring(_source) .. " - " .. tostring(_stringParam) .. "."
 		Framework.WriteToLog(Command)
 		assert(false, Command)
 		return;
 	end
-	
-	Logic.ExecuteInLuaLocalState(Command) -- Exit Point
 end
 
 EMXHookLibrary.Internal.OverrideLoadGameHandling = function()
