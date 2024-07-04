@@ -93,6 +93,9 @@ EMXHookLibrary.SetEntityTypeSpouseProbabilityFactor(_entityType, _factor)
 	-> Setzt die Wahrscheinlichkeit, dass Siedler auf dem Fest eine Ehefrau finden. (Normal: 0.3)
 	Damit kann bspw. das Badehaus auch Ehefrauen beschäftigen.
 
+EMXHookLibrary.SetTerritoryAcquiringBuildingID(_territoryID, _buildingID)
+	-> Setzt das Acquiring Building eines Territoriums. Normalerweise der Außenposten.
+
 EMXHookLibrary.SetBallistaAmmunitionAmount(_amount)
 	-> Setzt die Maximalanzahl an Munition von Ballisten (Mauerkatapult) per Typ.
 
@@ -225,7 +228,7 @@ EMXHookLibrary.SetAndReloadModelSpecificShader(_modelID, _shaderName)
 	Gibt für die Rücksetzfunktion den Originalwert zurück.
 	ACHTUNG: Dies kann etwas Memory leaken (148 Byte), von daher nicht übermäßig verwenden!
 
-EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex)
+EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex, _deleteFromResourceManager)
 	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps. Gibt für die Rücksetzfunktion den Originalwert zurück.
 	Bspw. EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)
 	Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
