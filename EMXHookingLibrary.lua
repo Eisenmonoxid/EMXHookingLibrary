@@ -22,7 +22,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.2 - 04.07.2024 21:04 - Eisenmonoxid",
+		CurrentVersion = "2.0.3 - 05.07.2024 22:24 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -102,6 +102,15 @@ EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _refere
 	end
 	
 	return OriginalValue
+end
+
+EMXHookLibrary.ChangeModelFilePath = function(_modelID, _filePath, _pathLength) -- _pathLength max 64 characters!
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "16"}) or {"92", "20"}
+	local CModelsProps = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"]
+	local ModelEntry = CModelsProps[Offsets[2]]["12"]["0"]
+	local Pointer = EMXHookLibrary.Internal.CreatePureASCIITextInMemory(_filePath)
+	
+	ModelEntry[_modelID * 4]("0", Pointer)("4", 64)("8", _pathLength)
 end
 
 EMXHookLibrary.SetEntityDisplayModelParameters = function(_entityIDOrType, _paramType, _params, _model)
@@ -1044,8 +1053,8 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 end
 
 EMXHookLibrary.Internal.GetLuaASCIIStringFromPointer = function(_pointer)
-	local CMain = EMXHookLibrary.Internal.GetFrameworkCMain()
 	local Offset = "20"
+	local CMain = EMXHookLibrary.Internal.GetFrameworkCMain()
 	local SavedPointer = tonumber(tostring(CMain[Offset]))
 	
 	CMain(Offset, tonumber(tostring(_pointer)))
@@ -1093,7 +1102,7 @@ EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
 	elseif _source == 3 then
 		Framework.LoadGame(_stringParam)
 	else -- In general, this should never happen!
-		Command = "EMXHookLibrary: No valid reset source ERROR! " .. tostring(_source) .. " - " .. tostring(_stringParam) .. "."
+		local Command = "EMXHookLibrary: No valid reset source ERROR! " .. tostring(_source) .. " - " .. tostring(_stringParam) .. "."
 		Framework.WriteToLog(Command)
 		assert(false, Command)
 		return;
