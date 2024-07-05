@@ -237,6 +237,11 @@ EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID,
 EMXHookLibrary.ResetModelProperties(_modelID, _entryIndex, _resetValue)
 	-> Setzt geänderte Parameter eines Modeltyps wieder zurück.
 
+EMXHookLibrary.ChangeModelFilePath(_modelID, _filePath, _pathLength)
+	-> Ändert den Dateipfad eines Models.
+	Bspw. ChangeModelFilePath(Models.Buildings_B_Barracks, "Doodads\\D_NA_ExcavationSite_3\0\0", 29)
+	Wenn das Model noch nicht geladen wurde, wird es im ID-Manager durch D_NA_ExcavationSite_3 ersetzt.
+
 EMXHookLibrary.SetEntityDisplayProperties(_entityIDOrType, _property, _value)
 	-> Ermöglicht es, verschiedene Display-Parameter einer Entität bzw. eines Entitätentyps anzupassen. Die möglichen Properties sind:
 	"ShowDestroyedModelAt", "MaxDarknessFactor", "ExplodeOnDestroyedModel", "SnowFactor", "SeasonColorSet", "LODDistance", "ConstructionSite", "Decal"
