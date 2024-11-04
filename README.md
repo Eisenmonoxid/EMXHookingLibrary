@@ -199,11 +199,11 @@ EMXHookLibrary.SetEntityTypeMinimapIcon(_entityType, _iconIndex)
 	-> Setzt ein Minimap-Icon für einen Entitätentyp. Es sind Icons aus der Icontabelle möglich. 0 entfernt das Icon wieder.
 	Für bereits auf der Map existierende Entitäten sollte die Funktion in der FMA aufgerufen werden, ansonsten sind nur neu erstellte Entitäten betroffen.
 
-EMXHookLibrary.SetColorSetColorRGB(_colorSetEntryIndex, _season, _rgb, _wetFactor)
+EMXHookLibrary.SetColorSetColorRGB(_colorSetName, _season, _rgb, _wetFactor)
 	-> Setzt die Farben eines ColorSets per Jahreszeit. Es wird eine Tabelle zurückgegeben, welche die originalen Values enthält, damit man
-	das ColorSet wieder zurücksetzen kann. Für den ersten Parameter anfragen.
-	Bspw. EMXHookLibrary.SetColorSetColorRGB(82, 1, {0.3, 0.7, 0.4, 0.7}) -> me_fow
-	--> ColorSetIndex; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor
+	das ColorSet wieder zurücksetzen kann. Der Name des Sets kann im Ordner im Spielverzeichnis nachgesehen werden.
+	Bspw. EMXHookLibrary.SetColorSetColorRGB("ME_FOW", 1, {0.32, 0.135, 0.4, 1}); -- FoW color for season spring in climate zone ME
+	--> ColorSetName; Season (Spring); {Red, Green, Blue, Alpha}; WetFactor
 
 EMXHookLibrary.SetEntityDisplayModelParameters(_entityIDOrType, _paramType, _params, _model)
 	-> Ermöglicht es, verschiedene Modelle von Gebäuden zu setzen. _params muss ein Table mit den Modellen sein.
