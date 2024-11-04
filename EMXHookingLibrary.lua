@@ -22,7 +22,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.3 - 05.07.2024 22:24 - Eisenmonoxid",
+		CurrentVersion = "2.0.4 - 04.11.2024 19:30 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -165,18 +165,23 @@ EMXHookLibrary.SetEntityDisplayProperties = function(_entityIDOrType, _property,
 	end
 end
 
-EMXHookLibrary.SetColorSetColorRGB = function(_colorSetEntryIndex, _season, _rgb, _wetFactor)
+EMXHookLibrary.SetColorSetColorRGB = function(_colorSetName, _season, _rgb, _wetFactor)
 	local SeasonIndizes = {0, 16, 32, 48}
 	local OriginalValues = {0, 0, 0, 0, 0}
 	
 	local Pointer = 0
-	if EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex] == nil then
-		Pointer = EMXHookLibrary.Internal.FindColorSetEntryPointer(_colorSetEntryIndex)
+	local ColorSetEntryIndex = EMXHookLibrary.Internal.GetColorSetEntryIndexByName(_colorSetName)
+	if ColorSetEntryIndex == -1 then
+		return;
+	end
+	
+	if EMXHookLibrary.Internal.ColorSetCache[ColorSetEntryIndex] == nil then
+		Pointer = EMXHookLibrary.Internal.FindColorSetEntryPointer(ColorSetEntryIndex)
 		if Pointer == nil then
 			return;
 		end
 	else
-		Pointer = EMXHookLibrary.Internal.ColorSetCache[_colorSetEntryIndex]
+		Pointer = EMXHookLibrary.Internal.ColorSetCache[ColorSetEntryIndex]
 	end
 	
 	local CurrentIndex = SeasonIndizes[_season]
@@ -761,6 +766,26 @@ EMXHookLibrary.Internal.FindColorSetEntryPointer = function(_colorSetEntryIndex)
 	Framework.WriteToLog("EMXHookLibrary: No ColorSet entry found for index ".._colorSetEntryIndex.."! Aborting ...")
 	return;
 end
+EMXHookLibrary.Internal.GetColorSetEntryIndexByName = function(_colorSetName)
+	local Input = string.lower(_colorSetName)
+	local Pointer = EMXHookLibrary.Internal.GetColorSetIDManager()["12"]["0"]
+	
+	local Counter = 0
+	while true do
+		if tonumber(tostring(Pointer[Counter * 4])) == 0 then
+			break;
+		end
+		
+		local String = EMXHookLibrary.Internal.GetLuaASCIIStringFromPointer(Pointer[Counter * 4]["0"])
+		if string.find(String, Input) then
+			return Counter;
+		end
+		
+		Counter = Counter + 1
+	end
+	
+	return -1;
+end
 EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
 	EMXHookLibrary.Internal.GetLogicPropertiesEx()((EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue, _newValue)
 end
@@ -879,6 +904,7 @@ EMXHookLibrary.Internal.GetCDisplay = function() return EMXHookLibrary.Internal.
 EMXHookLibrary.Internal.GetCCameraBehaviorRTS = function() return EMXHookLibrary.Internal.GetObjectInstance(11568248, {1766975, 1, 6, 7, 8}, {738468, 1, 4, 5, 8}, true) end
 EMXHookLibrary.Internal.GetFPPrecisionObject = function() return EMXHookLibrary.Internal.GetObjectInstance(11795144, {6275025, 1, 4, 5, 8}, {7303684, 1, 4, 5, 8}) end
 EMXHookLibrary.Internal.GetCFileSystemManager = function() return EMXHookLibrary.Internal.GetObjectInstance(11188828, {424694, 1, 8, 0, 0}, {5752, 1, 4, 5, 8})["0"] end
+EMXHookLibrary.Internal.GetColorSetIDManager = function() return EMXHookLibrary.Internal.GetObjectInstance(11678212, {1351584, 7, 8, 1, 6}, {323476, 1, 6, 7, 8}, true) end
 
 EMXHookLibrary.Internal.CalculateEntityIDToDisplayObject = function(_entityID)
 	local Result = EMXHookLibrary.Helpers.BitAnd(_entityID, 65535)
