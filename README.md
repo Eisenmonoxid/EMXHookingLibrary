@@ -171,7 +171,7 @@ EMXHookLibrary.ToggleDEBUGMode(_magicWord, _setNewMagicWord)
 	_magicWord muss zuerst aus der OV ausgelesen werden und kann danach PC - spezifisch auch in der HE gesetzt werden.
 	Funktioniert NUR in der Steam - HE. Für die Ubisoft - HE sollte der S6Patcher verwendet werden!
 
-EMXHookLibrary.SetPlayerColorRGB(_playerID, _rgb)
+EMXHookLibrary.SetPlayerColorRGB(_playerColorEntryIndex, _rgb)
 	-> Setzt die Spielerfarbe eines Spielers neu. _rgb muss ein table mit den Farbwerten (von 0 - 255) sein. Beispiele:
 	(Der Alphakanal muss immer 127 betragen und der erste Eintrag im table sein. 0 und einstellige Werte müssen durch zwei Ziffern [bspw. 9 -> 09] repräsentiert werden)
 	-- EMXHookLibrary.SetPlayerColorRGB(1, {127, 0, 0, 255, 255}) -- Yellow
@@ -224,11 +224,11 @@ EMXHookLibrary.SetEGLEffectDuration(_effect, _duration)
 
 EMXHookLibrary.SetAndReloadModelSpecificShader(_modelID, _shaderName)
 	-> Ändert den Shader eines Modeltyps. Mögliche Shader im Ordner "Effects" nachschauen. Bspw.
-	"Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall".
+	"Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall", "StaticBanner".
 	Gibt für die Rücksetzfunktion den Originalwert zurück.
 	ACHTUNG: Dies kann etwas Memory leaken (148 Byte), von daher nicht übermäßig verwenden!
 
-EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex, _deleteFromResourceManager)
+EMXHookLibrary.ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex)
 	-> Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps. Gibt für die Rücksetzfunktion den Originalwert zurück.
 	Bspw. EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)
 	Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
@@ -246,5 +246,9 @@ EMXHookLibrary.SetEntityDisplayProperties(_entityIDOrType, _property, _value)
 	-> Ermöglicht es, verschiedene Display-Parameter einer Entität bzw. eines Entitätentyps anzupassen. Die möglichen Properties sind:
 	"ShowDestroyedModelAt", "MaxDarknessFactor", "ExplodeOnDestroyedModel", "SnowFactor", "SeasonColorSet", "LODDistance", "ConstructionSite", "Decal"
 	Einige Parameter müssen als Float gesetzt werden, dazu am Besten anfragen bzw. in der Definitions-xml nachsehen.
+
+EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(_entityID, _height)
+	-> Ändert die Terrainhöhe an der Position einer Entität, ohne die Texturen darunter sofort upzudaten. Damit sind bspw. "schwebende" Entitäten möglich.
+	Bspw. EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(Logic.GetKnightID(1), 4000)
 ```
 When errors occur, please notify me so i can fix them! ;)
