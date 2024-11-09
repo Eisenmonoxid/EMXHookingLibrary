@@ -16,13 +16,13 @@ EMXHookLibrary = {
 		
 		AllocatedMemoryStart = 0,
 		AllocatedMemorySize = 0,
-		AllocatedMemoryMaxSize = 10000,
+		AllocatedMemoryMaxSize = 1000,
 		
 		ASCIIStringCache = {},
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.4 - 04.11.2024 19:30 - Eisenmonoxid",
+		CurrentVersion = "2.0.5 - 09.11.2024 21:52 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -70,6 +70,28 @@ EMXHookLibrary.RawPointer = {
 -- ************************************************************************************************************************************************************ --
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
+
+EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate = function(_entityID, _height)
+	local xPos, yPos = Logic.EntityGetPos(_entityID)
+	xPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(xPos)
+	yPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(yPos)
+	yPos = yPos + 1
+	
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "36", "4"}) or {"32", "44", "8"}
+	local Pointer = EMXHookLibrary.Internal.GetEGLCGameLogic()["48"][Offsets[1]]
+	
+	local CTerrainHiRes = Pointer[Offsets[2]]
+	CTerrainHiRes.Pointer = BigNum.mt.mul(CTerrainHiRes.Pointer, BigNum.new(yPos))
+	CTerrainHiRes = CTerrainHiRes + xPos
+	CTerrainHiRes.Pointer = BigNum.mt.mul(CTerrainHiRes.Pointer, BigNum.new("2"))
+	
+	local TerrainHeightArray = Pointer[Offsets[3]]
+	CTerrainHiRes = CTerrainHiRes + tonumber(tostring(TerrainHeightArray))
+	CTerrainHiRes = CTerrainHiRes + 2
+
+	CTerrainHiRes("0", _height) -- This is a ushort (2 byte), but we can only write 4 byte, so the next index is also changed 
+end
+
 EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
 	-- E.G. "Object_Aligned_Additive", "ShipMovementEx", "WealthLightObject", "IceCliff", "Waterfall", "StaticBanner"
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
@@ -86,7 +108,7 @@ EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
 	return OriginalValue
 end
 
-EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _referenceModelID, _entryIndex, _deleteFromResourceManager)
+EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _referenceModelID, _entryIndex)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"80", "4", "8"}) or {"92", "8", "12"}
 	local ModelArray = EMXHookLibrary.Internal.GetCDisplay()[Offsets[1]]["16"][Offsets[2]]
 	local ResourceManager = EMXHookLibrary.Internal.GetCGlobalsBaseEx()["124"][Offsets[3]]
@@ -96,11 +118,8 @@ EMXHookLibrary.ModifyModelPropertiesByReferenceType = function(_modelID, _refere
 	local OriginalValue = tonumber(tostring(ModelEntry[_entryIndex]))
 	
 	ModelEntry(_entryIndex, tonumber(tostring(ReferenceEntry[_entryIndex])))
-	
-	if _deleteFromResourceManager == true then
-		ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak (148 Byte) :(
-	end
-	
+	ResourceManager(_modelID * 4, 0) -- Yep, if the model was already loaded, then this is a memory leak (148 Byte) :(
+
 	return OriginalValue
 end
 
@@ -214,23 +233,24 @@ EMXHookLibrary.EditStringTableText = function(_IDManagerEntryIndex, _newString, 
 	end
 end
 
-EMXHookLibrary.SetPlayerColorRGB = function(_playerID, _rgb)
+EMXHookLibrary.SetPlayerColorRGB = function(_playerColorEntryIndex, _rgb)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"328", "172"}) or {"332", "176"}
-	local Index = _playerID * 4
-	local ColorStringHex = ""
+	local Index = _playerColorEntryIndex * 4
+	local ColorStringHex = "";
 	
 	for i = 1, #_rgb, 1 do
-		ColorStringHex = ColorStringHex .. string.format("%0x", _rgb[i])
+		ColorStringHex = ColorStringHex .. string.format("%0x", _rgb[i]);
 	end
-	
 	ColorStringHex = tonumber("0x" .. ColorStringHex)
-	EMXHookLibrary.Internal.GetCGlobalsBaseEx()["108"](Index, ColorStringHex)[Offsets[1]](Index, ColorStringHex)
-	EMXHookLibrary.Internal.GetCGlobalsBaseEx()["20"][Offsets[2]](Index, ColorStringHex)
+	
+	local Pointer = EMXHookLibrary.Internal.GetCGlobalsBaseEx()
+	Pointer["108"](Index, ColorStringHex)[Offsets[1]](Index, ColorStringHex)
+	Pointer["20"][Offsets[2]](Index, ColorStringHex)
 
 	Logic.ExecuteInLuaLocalState([[
-		Display.UpdatePlayerColors()
-		GUI.RebuildMinimapTerrain()
-		GUI.RebuildMinimapTerritory()
+		Display.UpdatePlayerColors();
+		GUI.RebuildMinimapTerrain();
+		GUI.RebuildMinimapTerritory();
     ]]);
 end
 
@@ -793,6 +813,9 @@ EMXHookLibrary.Internal.SetLimitByEntityType = function(_entityType, _upgradeLev
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", _pointerValues[2]}) or {"28", _pointerValues[1]}
 	EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4][Offsets[2]](_upgradeLevel * 4, _newLimit)
 end
+EMXHookLibrary.Internal.Convert2DPlanePositionToSingle = function(_position)
+	return math.ceil(math.floor(((_position * 0.01) + (_position * 0.01)) + 0.5) * 0.5);
+end
 -- ************************************************************************************************************************************************************ --
 -- Reset Functions
 -- ************************************************************************************************************************************************************ --
@@ -1079,13 +1102,12 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 end
 
 EMXHookLibrary.Internal.GetLuaASCIIStringFromPointer = function(_pointer)
-	local Offset = "20"
 	local CMain = EMXHookLibrary.Internal.GetFrameworkCMain()
-	local SavedPointer = tonumber(tostring(CMain[Offset]))
+	local SavedPointer = tonumber(tostring(CMain["20"]))
 	
-	CMain(Offset, tonumber(tostring(_pointer)))
-	local String = Framework.GetCurrentMapName()
-	CMain(Offset, SavedPointer)
+	CMain("20", tonumber(tostring(_pointer)))
+	local String = Framework.GetCurrentMapName();
+	CMain("20", SavedPointer)
 	
 	return String
 end
