@@ -143,18 +143,15 @@ EMXHookLibrary.CopyGoodTypePointer(_good, _copyGood)
 	für diese Dinge haben. Diese Einträge werden als Referenz auf einen anderen GoodType angelegt.
 	Es wird eine Tabelle zurückgegeben, welche die originalen Pointer enthält, damit man die Werte wieder zurücksetzen kann.
 
-EMXHookLibrary.ModifyEntityBehaviors(_entityTypeToAdd, _entityTypeToReference, _behaviorIndex)
-	-> Kopiert eine Referenz eines Behaviors von einem Entitätentyp zu einem anderen. Alle danach erstellten Entitäten besitzen
-	das Behavior. Kann mittels EMXHookLibrary.ResetEntityBehaviors zurückgesetzt werden.
-
 EMXHookLibrary.AddBehaviorToEntityType(_entityType, _behaviorName)
-	-> Verwendet EMXHookLibrary.ModifyEntityBehaviors, um ein Behavior zu einem Entitätentyp hinzuzufügen. Die möglichen Behavior sind:
-	"CInteractiveObjectBehavior", "CMountableBehavior".
+	-> Kopiert eine Referenz eines Behaviors von einem Entitätentyp zu einem anderen. Alle danach erstellten Entitäten besitzen
+	das Behavior. Die möglichen Behavior sind:
+	"CInteractiveObjectBehavior", "CMountableBehavior", "CFarmAnimalBehavior", "CAnimalMovementBehavior", "CAmmunitionFillerBehavior".
 	Kann mittels EMXHookLibrary.ResetEntityBehaviors zurückgesetzt werden.
+	Bspw. EMXHookLibrary.AddBehaviorToEntityType(Entities.B_Bakery, "CInteractiveObjectBehavior") -- Macht aus Bäckereien ein interaktives Objekt.
 
 EMXHookLibrary.ResetEntityBehaviors(_entityType, _resetPointers)
-	-> Setzt Behavior eines Entitätentyps zurück. _resetPointers ist ein table, welcher von EMXHookLibrary.ModifyEntityBehaviors
-	und EMXHookLibrary.AddBehaviorToEntityType zurückgegeben wird.
+	-> Setzt Behavior eines Entitätentyps zurück. _resetPointers ist ein table, welcher von EMXHookLibrary.AddBehaviorToEntityType zurückgegeben wird.
 
 EMXHookLibrary.CreateGoodTypeRequiredResources(_goodType, _requiredResources)
 	-> Ermöglicht es, einige Parameter eines GoodTypes (bspw. RequiredResource) auch bei Goods zu verwenden, welche keine Einträge
