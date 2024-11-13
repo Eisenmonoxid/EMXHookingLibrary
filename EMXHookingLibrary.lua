@@ -22,7 +22,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.5 - 09.11.2024 21:52 - Eisenmonoxid",
+		CurrentVersion = "2.0.6 - 13.11.2024 02:25 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -496,45 +496,17 @@ EMXHookLibrary.ReplaceUpgradeCategoryEntityType = function(_upgradeCategory, _ne
 	Pointer(Offsets[7], _newEntityType)
 end
 
-EMXHookLibrary.ModifyEntityBehaviors = function(_entityTypeToAdd, _entityTypeToReference, _behaviorIndex)
-	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", 152}) or {"28", 164}
-
-	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToAdd * 4]
-	local AmountOfBehaviors = tonumber(tostring(Pointer[Offsets[2] + 12]))
-	
-	local OriginalPointers = {0, 0, 0, 0}
-	local MemorySize = (AmountOfBehaviors + 1) * 4
-	local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(MemorySize)
-	
-	if MemoryPointer == nil then
-		return;
-	end
-	
-	local CurrentValue = 0
-	for i = 0, AmountOfBehaviors - 1 do
-		CurrentValue = tonumber(tostring(Pointer[Offsets[2]][i * 4]))
-		MemoryPointer(i * 4, CurrentValue)
-	end
-	
-	local ReferenceEntity = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToReference * 4]
-	MemoryPointer(MemorySize - 4, tonumber(tostring(ReferenceEntity[Offsets[2]][_behaviorIndex])))
-	
-	for i = 0, 3, 1 do
-		OriginalPointers[i + 1] = tonumber(tostring(Pointer[Offsets[2] + (i * 4)]))
-	end
-
-	local EndPointer = tonumber(tostring(MemoryPointer + MemorySize))
-	Pointer(Offsets[2], tonumber(tostring(MemoryPointer)))(Offsets[2] + 4, EndPointer)(Offsets[2] + 8, EndPointer)(Offsets[2] + 12, AmountOfBehaviors + 1)
-
-	return OriginalPointers
-end
-
 EMXHookLibrary.AddBehaviorToEntityType = function(_entityType, _behaviorName)
-	local Mapping = {{"CInteractiveObjectBehavior", Entities.I_X_Well_Destroyed, 0}, {"CMountableBehavior", Entities.B_Outpost_ME, 0}}
+	local Mapping = {{"CInteractiveObjectBehavior", Entities.I_X_Well_Destroyed, "-313534907"}, {"CMountableBehavior", Entities.B_Outpost_ME, "-504538299"},
+					 {"CFarmAnimalBehavior", Entities.A_X_Sheep01, "1234712196"}, {"CAnimalMovementBehavior", Entities.A_X_Sheep01, "-870260891"},
+					 {"CAmmunitionFillerBehavior", Entities.B_Outpost_ME, "1689179045"}};
 
 	for Key, Value in pairs(Mapping) do
 		if Value[1] == _behaviorName then
-			return EMXHookLibrary.ModifyEntityBehaviors(_entityType, Value[2], Value[3])
+			local Index = EMXHookLibrary.Internal.GetObjectBehaviorIndexByID(Value[2], Value[3]);
+			if Index ~= -1 then
+				return EMXHookLibrary.Internal.ModifyEntityBehaviors(_entityType, Value[2], Index);
+			end
 		end
 	end
 end
@@ -802,6 +774,55 @@ EMXHookLibrary.Internal.GetColorSetEntryIndexByName = function(_colorSetName)
 		end
 		
 		Counter = Counter + 1
+	end
+	
+	return -1;
+end
+EMXHookLibrary.Internal.ModifyEntityBehaviors = function(_entityTypeToAdd, _entityTypeToReference, _behaviorIndex)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", 152}) or {"28", 164}
+
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToAdd * 4]
+	local AmountOfBehaviors = tonumber(tostring(Pointer[Offsets[2] + 12]))
+	
+	local OriginalPointers = {0, 0, 0, 0}
+	local MemorySize = (AmountOfBehaviors + 1) * 4
+	local MemoryPointer = EMXHookLibrary.Internal.MemoryAllocator(MemorySize)
+	
+	if MemoryPointer == nil then
+		return;
+	end
+	
+	local CurrentValue = 0
+	for i = 0, AmountOfBehaviors - 1 do
+		CurrentValue = tonumber(tostring(Pointer[Offsets[2]][i * 4]))
+		MemoryPointer(i * 4, CurrentValue)
+	end
+	
+	local ReferenceEntity = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityTypeToReference * 4]
+	MemoryPointer(MemorySize - 4, tonumber(tostring(ReferenceEntity[Offsets[2]][_behaviorIndex])))
+	
+	for i = 0, 3, 1 do
+		OriginalPointers[i + 1] = tonumber(tostring(Pointer[Offsets[2] + (i * 4)]))
+	end
+
+	local EndPointer = tonumber(tostring(MemoryPointer + MemorySize))
+	Pointer(Offsets[2], tonumber(tostring(MemoryPointer)))(Offsets[2] + 4, EndPointer)(Offsets[2] + 8, EndPointer)(Offsets[2] + 12, AmountOfBehaviors + 1)
+
+	return OriginalPointers
+end
+EMXHookLibrary.Internal.GetObjectBehaviorIndexByID = function(_entityType, _behaviorID)
+	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", 152}) or {"28", 164}
+	local Pointer = EMXHookLibrary.Internal.GetCEntityProps()[Offsets[1]][_entityType * 4]
+	local AmountOfBehaviors = tonumber(tostring(Pointer[Offsets[2] + 12]))
+	Pointer = Pointer[Offsets[2]]
+	
+	local SharedIdentifier = BigNum.new(_behaviorID);
+	local CurrentIdentifier = 0;
+	for i = 0, AmountOfBehaviors - 1, 1 do
+		CurrentIdentifier = Pointer[i * 4]["12"].Pointer
+		if BigNum.compareAbs(SharedIdentifier, CurrentIdentifier) == 0 then
+			return i * 4;
+		end
 	end
 	
 	return -1;
