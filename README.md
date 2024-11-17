@@ -8,6 +8,8 @@ Include the file "emxhooklib.bin" in your map folder and load it with Script.Loa
 
 Hint: To reset the hooked values, use the function argument `EMXHookLibrary.Initialize(true)` and have the function `EMXHookLibrary_ResetValues(_source, _stringParam)` in your global map script, which will be automatically called when the map is closed. Put all your functions in there to reset your changed values.
 
+Should you be interested in an example map script that uses the features of the HookLibrary extensively, look here: https://github.com/Eisenmonoxid/MapScripts_Bloodmoon.
+
 ## Features
 ```
 EMXHookLibrary.SetTerritoryGoldCostByIndex(_arrayIndex, _price)
