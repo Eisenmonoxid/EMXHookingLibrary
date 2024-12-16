@@ -7,8 +7,7 @@ EMXHookLibrary = {
 	OverriddenUpgradeCosts = false,
 	
 	Internal = {
-		HistoryEditionVariant = 0, -- 0 = OV, 1 = Steam, 2 = Ubi Connect
-		OriginalGameVariant = 0, -- 0 = .text segment starts at 0x004, 1 = .text segment starts at 0x001
+		CurrentGameVariant = 0,
 		
 		GlobalAdressEntity = 0, -- Helper entity used for pointer dereference
 		GlobalHeapStart = 0,
@@ -22,10 +21,18 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.6 - 13.11.2024 02:25 - Eisenmonoxid",
+		CurrentVersion = "2.0.7 - 16.12.2024 02:00 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
+	Bugfixes = {},
+};
+
+EMXHookLibrary.GameVariant = {
+	Original = 0,
+	OriginalWithOffset = 1,
+	HistoryEditionUbi = 2,
+	HistoryEditionSteam = 3,
 };
 
 EMXHookLibrary.RawPointer = {
@@ -71,10 +78,9 @@ EMXHookLibrary.RawPointer = {
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
 
-EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate = function(_entityID, _height)
-	local xPos, yPos = Logic.EntityGetPos(_entityID)
-	xPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(xPos)
-	yPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(yPos)
+EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate = function(_posX, _posY, _height)
+	local xPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(_posX)
+	local yPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(_posY)
 	yPos = yPos + 1
 	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "36", "4"}) or {"32", "44", "8"}
@@ -89,7 +95,7 @@ EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate = function(_entityID, _he
 	CTerrainHiRes = CTerrainHiRes + tonumber(tostring(TerrainHeightArray))
 	CTerrainHiRes = CTerrainHiRes + 2
 
-	CTerrainHiRes("0", _height) -- This is a ushort (2 byte), but we can only write 4 byte, so the next index is also changed 
+	CTerrainHiRes("0", _height); -- This is a ushort (2 byte), but we can only write 4 byte, so the next index is also changed 
 end
 
 EMXHookLibrary.SetAndReloadModelSpecificShader = function(_modelID, _shaderName)
@@ -255,22 +261,22 @@ EMXHookLibrary.SetPlayerColorRGB = function(_playerColorEntryIndex, _rgb)
 end
 
 EMXHookLibrary.ToggleDEBUGMode = function(_magicWord, _setNewMagicWord)
-	local Text = "EMXHookLibrary: Debug Word for this PC is: " 
+	local Text = "EMXHookLibrary: Debug Word value is: ";
 	
 	if not EMXHookLibrary.IsHistoryEdition then 
-		local Value = 11190056
-		local PointerValue = (EMXHookLibrary.Internal.OriginalGameVariant == 1 and (Value - EMXHookLibrary.Internal.GlobalOVOffset)) or Value
-		local Word = EMXHookLibrary.Internal.GetValueAtPointer(EMXHookLibrary.RawPointer.New(PointerValue))
+		local Value = 11190056;
+		local Pointer = (EMXHookLibrary.Internal.CurrentGameVariant == EMXHookLibrary.GameVariant.OriginalWithOffset and (Value - EMXHookLibrary.Internal.GlobalOVOffset)) or Value;
+		local Word = EMXHookLibrary.Internal.GetValueAtPointer(EMXHookLibrary.RawPointer.New(Pointer))
 		Logic.DEBUG_AddNote(Text .. Word)
 		Framework.WriteToLog(Text .. Word)
 		
 		if _setNewMagicWord ~= nil then
-			EMXHookLibrary.Internal.SetValueAtPointer(EMXHookLibrary.RawPointer.New(PointerValue), _magicWord)
+			EMXHookLibrary.Internal.SetValueAtPointer(EMXHookLibrary.RawPointer.New(Pointer), _magicWord)
 		end
 		return Word;
 	end
 	
-	if EMXHookLibrary.Internal.HistoryEditionVariant ~= 1 then
+	if EMXHookLibrary.Internal.CurrentGameVariant ~= EMXHookLibrary.GameVariant.HistoryEditionSteam then
 		local Error = "EMXHookLibrary: ERROR -> Can't set Debug mode in Ubisoft-HE, use the S6Patcher for that!"
 		Framework.WriteToLog(Error)
 		assert(false, Error)
@@ -886,7 +892,7 @@ end
 -- ************************************************************************************************************************************************************ --
 EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, _ubiHEChars, _subtract)
 	if not EMXHookLibrary.IsHistoryEdition then
-		if EMXHookLibrary.Internal.OriginalGameVariant == 1 then
+		if EMXHookLibrary.Internal.CurrentGameVariant == EMXHookLibrary.GameVariant.OriginalWithOffset then
 			_ovPointer = (_ovPointer - EMXHookLibrary.Internal.GlobalOVOffset)
 		end
 		return EMXHookLibrary.RawPointer.New(_ovPointer);
@@ -896,14 +902,14 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 		return EMXHookLibrary.RawPointer.New(tonumber("0x" .. EMXHookLibrary.Internal.InstanceCache[_ovPointer]));
 	end
 	
-	local _hexSplitChars = {}
-	local _lowestDigit = 0
-	local HexString01, HexString02
+	local _hexSplitChars = {};
+	local _lowestDigit = 0;
+	local HexString01, HexString02;
 	
-	if EMXHookLibrary.Internal.HistoryEditionVariant == 1 then -- Steam HE
+	if EMXHookLibrary.Internal.CurrentGameVariant == EMXHookLibrary.GameVariant.HistoryEditionSteam then
 		_lowestDigit = _steamHEChars[1]
 		_hexSplitChars = {_steamHEChars[2], _steamHEChars[3], _steamHEChars[4], _steamHEChars[5]}
-	else -- Ubi Connect HE
+	else
 		_lowestDigit = _ubiHEChars[1]
 		_hexSplitChars = {_ubiHEChars[2], _ubiHEChars[3], _ubiHEChars[4], _ubiHEChars[5]}
 	end
@@ -927,8 +933,7 @@ EMXHookLibrary.Internal.GetObjectInstance = function(_ovPointer, _steamHEChars, 
 	local DereferenceString = HexString02 .. HexString01	
 	Framework.WriteToLog("EMXHookLibrary: Going to dereference HEPointer: 0x"..DereferenceString..". OVPointer: ".._ovPointer)
 	
-	EMXHookLibrary.Internal.InstanceCache[_ovPointer] = DereferenceString
-	
+	EMXHookLibrary.Internal.InstanceCache[_ovPointer] = DereferenceString	
 	return EMXHookLibrary.RawPointer.New(tonumber("0x" .. DereferenceString));
 end
 -- ************************************************************************************************************************************************************ --
@@ -999,68 +1004,71 @@ end
 -- ************************************************************************************************************************************************************ --
 -- Initialization of the library
 -- ************************************************************************************************************************************************************ --
-EMXHookLibrary.Internal.FindOffsetValue = function(_pointerOffset)
+EMXHookLibrary.Internal.FindOffsetValue = function(_offset)
 	if EMXHookLibrary.Internal.GlobalAdressEntity ~= 0 and Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
-		Logic.DestroyEntity(EMXHookLibrary.Internal.GlobalAdressEntity)
+		Logic.DestroyEntity(EMXHookLibrary.Internal.GlobalAdressEntity);
 	end
 
-	local posX, posY = 3000, 3000
-	local AdressEntity = Logic.CreateEntity(Entities.D_X_TradeShip, posX, posY, 0, 0)
-	local PointerEntity = Logic.CreateEntity(Entities.D_X_TradeShip, posX, posY, 0, 0)
-	local PointerToVTableValue = BigNum.new(Logic.GetEntityScriptingValue(PointerEntity, _pointerOffset))
+	local Position = 3000;
+	local AddressEntity = Logic.CreateEntity(Entities.D_X_TradeShip, Position, Position, 0, 0);
+	local PointerEntity = Logic.CreateEntity(Entities.D_X_TradeShip, Position, Position, 0, 0);
+	local VTableValue = BigNum.new(Logic.GetEntityScriptingValue(PointerEntity, _offset));
 	
-	Logic.DestroyEntity(PointerEntity)
-	Logic.SetVisible(AdressEntity, false)
+	Logic.DestroyEntity(PointerEntity);
+	Logic.SetVisible(AddressEntity, false);
 
-	EMXHookLibrary.Internal.GlobalAdressEntity = AdressEntity
-	EMXHookLibrary.Internal.GlobalHeapStart = PointerToVTableValue
+	EMXHookLibrary.Internal.GlobalAdressEntity = AddressEntity;
+	EMXHookLibrary.Internal.GlobalHeapStart = VTableValue;
 end
 
-EMXHookLibrary.Initialize = function(_useLoadGameOverride, _maxMemorySizeToAllocate) -- Entry Point
+EMXHookLibrary.Initialize = function(_useLoadGameOverride, _maxMemorySizeToAllocate, _useGeneralGameBugfixes) -- Entry Point
 	EMXHookLibrary.OverriddenUpgradeCosts = false
 	
-	if (nil == string.find(Framework.GetProgramVersion(), "1.71")) then
-		local Text = "EMXHookLibrary: Patch 1.71 was NOT found! Aborting ..."
-		Framework.WriteToLog(Text)
+	if (string.find(Framework.GetProgramVersion(), "1.71") == nil) then
+		local Text = "EMXHookLibrary: Patch 1.71 was NOT found! Aborting ...";
+		Framework.WriteToLog(Text);
 		return false;
 	end
 	
 	for Key, Value in pairs(EMXHookLibrary.Internal.InstanceCache) do
-		EMXHookLibrary.Internal.InstanceCache[Key] = nil
+		EMXHookLibrary.Internal.InstanceCache[Key] = nil;
 	end	
 	for Key, Value in pairs(EMXHookLibrary.Internal.ColorSetCache) do
-		EMXHookLibrary.Internal.ColorSetCache[Key] = nil
+		EMXHookLibrary.Internal.ColorSetCache[Key] = nil;
 	end
 	for Key, Value in pairs(EMXHookLibrary.Internal.ASCIIStringCache) do
-		EMXHookLibrary.Internal.ASCIIStringCache[Key] = nil
+		EMXHookLibrary.Internal.ASCIIStringCache[Key] = nil;
 	end
 	
 	if (Network.IsNATReady == nil) then
 		EMXHookLibrary.Internal.FindOffsetValue(36)
 		EMXHookLibrary.IsHistoryEdition = false
-		EMXHookLibrary.Internal.OriginalGameVariant = EMXHookLibrary.Internal.GetOriginalGameVariant()
+		EMXHookLibrary.Internal.CurrentGameVariant = EMXHookLibrary.Internal.GetOriginalGameVariant()
 	else
 		EMXHookLibrary.Internal.FindOffsetValue(34)
 		EMXHookLibrary.IsHistoryEdition = true
-		EMXHookLibrary.Internal.HistoryEditionVariant = EMXHookLibrary.Internal.GetHistoryEditionVariant()
+		EMXHookLibrary.Internal.CurrentGameVariant = EMXHookLibrary.Internal.GetHistoryEditionVariant()
 	end
 	
 	Framework.WriteToLog("EMXHookLibrary: Initialization successful! Version: " .. EMXHookLibrary.Internal.CurrentVersion .. 
-						 ". HistoryEditionVariant: " .. tostring(EMXHookLibrary.Internal.HistoryEditionVariant) .. ".")
+						 ". CurrentGameVariant: " .. tostring(EMXHookLibrary.Internal.CurrentGameVariant) .. ".");
 	Framework.WriteToLog("EMXHookLibrary: Heap Object starts at 0x" .. string.format("%0x", BigNum.mt.tostring(EMXHookLibrary.Internal.GlobalHeapStart)) .. 
-						 ". AddressEntity ID: " .. tostring(EMXHookLibrary.Internal.GlobalAdressEntity) .. ".")
+						 ". AddressEntity ID: " .. tostring(EMXHookLibrary.Internal.GlobalAdressEntity) .. ".");
 
-	if _useLoadGameOverride and type(_useLoadGameOverride) == "boolean" then
-		EMXHookLibrary.Internal.OverrideLoadGameHandling()
-		Framework.WriteToLog("EMXHookLibrary: LoadGame Overwritten!")
+	if _useLoadGameOverride == true then
+		EMXHookLibrary.Internal.OverrideLoadGameHandling();
+		Framework.WriteToLog("EMXHookLibrary: OverrideLoadGameHandling!");
 	end
-	
+	if _useGeneralGameBugfixes == true then
+		EMXHookLibrary.Bugfixes.Initialize();
+		Framework.WriteToLog("EMXHookLibrary: UseGeneralGameBugfixes!");
+	end
 	if _maxMemorySizeToAllocate ~= nil and type(_maxMemorySizeToAllocate) == "number" then
-		EMXHookLibrary.Internal.AllocatedMemoryMaxSize = _maxMemorySizeToAllocate
-		Framework.WriteToLog("EMXHookLibrary: Max memory size to allocate: " ..tostring(_maxMemorySizeToAllocate))
+		EMXHookLibrary.Internal.AllocatedMemoryMaxSize = _maxMemorySizeToAllocate;
+		Framework.WriteToLog("EMXHookLibrary: Max memory size to allocate: " .. tostring(_maxMemorySizeToAllocate));
 	end
+	EMXHookLibrary.Internal.AllocateDynamicMemory(EMXHookLibrary.Internal.AllocatedMemoryMaxSize);
 	
-	EMXHookLibrary.Internal.AllocateDynamicMemory(EMXHookLibrary.Internal.AllocatedMemoryMaxSize)
 	return true;
 end
 EMXHookLibrary.InitAdressEntity = EMXHookLibrary.Initialize; -- Compatibility with versions prior to 1.9.9 
@@ -1107,7 +1115,7 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 	
 	if EMXHookLibrary.Internal.ASCIIStringCache[_string] ~= nil then
 		Framework.WriteToLog("EMXHookLibrary: ASCII String Pointer loaded from StringCache: " .. _string .. " - " .. tostring(EMXHookLibrary.Internal.ASCIIStringCache[_string]))
-		return EMXHookLibrary.Internal.ASCIIStringCache[_string]
+		return EMXHookLibrary.Internal.ASCIIStringCache[_string];
 	end
 	
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 404) or 412
@@ -1134,27 +1142,18 @@ EMXHookLibrary.Internal.GetLuaASCIIStringFromPointer = function(_pointer)
 end
 
 EMXHookLibrary.Internal.GetHistoryEditionVariant = function()
-	local Pointer = EMXHookLibrary.RawPointer.New(Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, -78))["0"]["105"]
-	local HexString = string.sub(string.format("%x", tostring(Pointer)), 3, 8)
-
-	if HexString == "92ff" then
-		Framework.WriteToLog("EMXHookLibrary: History Edition Variant -> Found "..HexString.." -> Steam HE!")
-		return 1 -- Steam HE
-	else
-		Framework.WriteToLog("EMXHookLibrary: History Edition Variant -> Found "..HexString.." -> Ubisoft Connect HE!")
-		return 2 -- Ubi Connect HE
-	end
+	local Pointer = EMXHookLibrary.RawPointer.New(Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, -78))["0"]["105"];
+	local Identifier = string.sub(string.format("%x", tostring(Pointer)), 3, 8);
+	local Variant = ((Identifier == "92ff") and EMXHookLibrary.GameVariant.HistoryEditionSteam) or EMXHookLibrary.GameVariant.HistoryEditionUbi;
+	Framework.WriteToLog("EMXHookLibrary: Game Variant is " .. tostring(Variant) .. " -> Found ".. tostring(Identifier));
+	return Variant;
 end
 
 EMXHookLibrary.Internal.GetOriginalGameVariant = function()
-	local Pointer = Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, -81)
-	if Pointer ~= 9560772 then -- EGL::CSettler VTable Pointer
-		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 1 -> Found "..Pointer.." -> 0x001!")
-		return 1
-	else
-		Framework.WriteToLog("EMXHookLibrary: Original Game Variant 0 -> Found "..Pointer.." -> 0x004!")
-		return 0
-	end
+	local Pointer = Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, -81);
+	local Variant = ((Pointer ~= 9560772) and EMXHookLibrary.GameVariant.OriginalWithOffset) or EMXHookLibrary.GameVariant.Original;
+	Framework.WriteToLog("EMXHookLibrary: Game Variant is " .. tostring(Variant) .. " -> Found ".. tostring(Pointer));
+	return Variant;
 end
 
 EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
@@ -1170,7 +1169,7 @@ EMXHookLibrary.Internal.ResetHookedValues = function(_source, _stringParam)
 		Framework.LoadGameAndExitCurrentGame(_stringParam)
 	elseif _source == 3 then
 		Framework.LoadGame(_stringParam)
-	else -- In general, this should never happen!
+	else -- This should never happen!
 		local Command = "EMXHookLibrary: No valid reset source ERROR! " .. tostring(_source) .. " - " .. tostring(_stringParam) .. "."
 		Framework.WriteToLog(Command)
 		assert(false, Command)
@@ -1206,6 +1205,37 @@ EMXHookLibrary.Internal.OverrideLoadGameHandling = function()
 		end
 	]]);
 end
+
+EMXHookLibrary.Bugfixes.Initialize = function()
+	-- Fix Crash when dismissing entertainer
+	Logic.ExecuteInLuaLocalState([[	
+		EMXHookLibrary = EMXHookLibrary or {}
+		EMXHookLibrary.Bugfixes = EMXHookLibrary.Bugfixes or {}
+		
+		if EMXHookLibrary.Bugfixes.GUI_Merchant_SendBackClicked == nil then
+			EMXHookLibrary.Bugfixes.GUI_Merchant_SendBackClicked = GUI_Merchant.SendBackClicked;
+		end
+		GUI_Merchant.SendBackClicked = function()
+			local EntityID = GUI.GetSelectedEntity();
+			if Logic.IsEntertainer(EntityID) == true then
+				Sound.FXPlay2DSound("ui\\menu_click");
+				GUI.SendScriptCommand("EMXHookLibrary.Bugfixes.FixEntertainerCrash(" .. tostring(EntityID) .. ");");
+			else
+				EMXHookLibrary.Bugfixes.GUI_Merchant_SendBackClicked();
+			end
+		end
+	]]);
+end
+
+EMXHookLibrary.Bugfixes.FixEntertainerCrash = function(_entityID)
+	-- In theory, you could also do this solely via Logic.SetEntityScriptingValue ...
+	-- But i leave it up to the interested reader to do that ;)
+	EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_entityID)("48", _entityID);
+	Logic.ExecuteInLuaLocalState([[
+		GUI.CommandMerchantToLeaveMarketplace(]] .. tostring(_entityID) .. [[);
+	]]);
+end
+
 -- ************************************************************************************************************************************************************ --
 -- Some Helpers
 -- ************************************************************************************************************************************************************ --
@@ -1236,6 +1266,7 @@ function EMXHookLibrary.Helpers.Int2Float(num)
 		check = check / 2
 		fp = fp / 2
 	end
+	
 	return fraction * math.pow(2, exp) * sign
 end
 
@@ -1276,6 +1307,7 @@ function EMXHookLibrary.Helpers.Float2Int(fval)
 		signed = true
 		fval = fval * -1
 	end
+	
 	local outval = 0
 	local bits
 	local exp = 0
@@ -1298,7 +1330,6 @@ function EMXHookLibrary.Helpers.Float2Int(fval)
 
 	local bitVal = 4194304
 	local start = 1
-
 	for bpos = start, 23 do
 		local bit = bits[bpos]
 		if (not bit) then
@@ -1321,36 +1352,36 @@ function EMXHookLibrary.Helpers.Float2Int(fval)
 end
 
 function EMXHookLibrary.Helpers.BitAnd(a, b)
-    local result = 0
-    local bitval = 1
-    while a > 0 and b > 0 do
+	local result = 0
+	local bitval = 1
+	while a > 0 and b > 0 do
 		if a % 2 == 1 and b % 2 == 1 then
 			result = result + bitval
 		end
 		bitval = bitval * 2 
 		a = math.floor(a / 2)
 		b = math.floor(b / 2)
-    end
-    return result
+	end
+	return result;
 end
 
 function EMXHookLibrary.Helpers.ConvertWideCharToMultiByte(_string)
-	local OutputHexString = "" 
-	local OutputNumbers = {}
+	local HexString = "";
+	local Numbers = {};
 	
-	local CurrentCharacter = 0
+	local CurrentCharacter = 0;
 	for i = 1, #_string, 1 do
-		CurrentCharacter = _string:sub(i, i)
-		OutputHexString = "00" .. string.format("%0x", string.byte(CurrentCharacter)) .. OutputHexString
+		CurrentCharacter = _string:sub(i, i);
+		HexString = "00" .. string.format("%0x", string.byte(CurrentCharacter)) .. HexString
 		
 		if math.fmod(i, 2) == 0 or i == #_string then
-			OutputNumbers[#OutputNumbers + 1] = tonumber("0x" .. OutputHexString)
-			OutputHexString = ""
+			Numbers[#Numbers + 1] = tonumber("0x" .. HexString);
+			HexString = "";
 		end
 	end
 
-	OutputNumbers[#OutputNumbers + 1] = 0
-	return OutputNumbers
+	Numbers[#Numbers + 1] = 0;
+	return Numbers;
 end
 -- ************************************************************************************************************************************************************ --
 -- Here starts the BigNum - Code (minified, since it does not change)
@@ -1386,8 +1417,7 @@ BigNum.mt.__eq=BigNum.mt.eq;BigNum.mt.__le=BigNum.mt.le
 BigNum.mt.__lt=BigNum.mt.lt
 setmetatable(BigNum.mt,{__index="inexistent field",__newindex="not available",__metatable="hidden"})
 function BigNum.add(qW0lRiD1,iD1IUx,JLCOx_ak)local hPQ=0;local R1FIoQI=0;local NsoTwDs=0;local HGli='+'local iy=0
-if
-qW0lRiD1 ==nil or iD1IUx==nil or JLCOx_ak==nil then
+if qW0lRiD1 ==nil or iD1IUx==nil or JLCOx_ak==nil then
 assert(false,"Function BigNum.add: parameter nil")elseif qW0lRiD1.signal=='-'and iD1IUx.signal=='+'then
 qW0lRiD1.signal='+'BigNum.sub(iD1IUx,qW0lRiD1,JLCOx_ak)if not
 rawequal(qW0lRiD1,JLCOx_ak)then qW0lRiD1.signal='-'end;return 0 elseif
@@ -1407,8 +1437,7 @@ JLCOx_ak.len=hPQ+NsoTwDs;JLCOx_ak.signal=HGli
 for R1FIoQI=JLCOx_ak.len,iy do JLCOx_ak[R1FIoQI]=nil end;return 0 end
 function BigNum.sub(m6SCS0,NUhYw6R4,Hv)local Ch=0;local urkh=0;local zhzpBSx=0;local rHSjalVy=0
 if m6SCS0 ==nil or NUhYw6R4 ==nil or
-Hv==nil then
-assert(false,"Function BigNum.sub: parameter nil")elseif m6SCS0.signal=='-'and NUhYw6R4.signal=='+'then
+Hv==nil then assert(false,"Function BigNum.sub: parameter nil")elseif m6SCS0.signal=='-'and NUhYw6R4.signal=='+'then
 m6SCS0.signal='+'BigNum.add(m6SCS0,NUhYw6R4,Hv)Hv.signal='-'if not
 rawequal(m6SCS0,Hv)then m6SCS0.signal='-'end;return 0 elseif
 m6SCS0.signal=='-'and NUhYw6R4.signal=='-'then m6SCS0.signal='+'
@@ -1428,8 +1457,7 @@ if Hv[urkh]~=0 then Hv.len=urkh+1 end end;Hv.signal='+'if Hv.len==0 then Hv.len=
 assert(false,"Error in function sub")end;for urkh=Hv.len,BigNum.max(rHSjalVy,Ch-1)do
 Hv[urkh]=nil end;return 0 end
 function BigNum.mul(TjhsnP,t5jzEd9,JZAU2)local zPXTTg=0;j=0;local seMLr=BigNum.new()local qX=0;local h_8=0;local xL7OTb=JZAU2.len
-if
-TjhsnP==nil or t5jzEd9 ==nil or JZAU2 ==nil then
+if TjhsnP==nil or t5jzEd9 ==nil or JZAU2 ==nil then
 assert(false,"Function BigNum.mul: parameter nil")elseif TjhsnP.signal~=t5jzEd9.signal then
 BigNum.mul(TjhsnP,-t5jzEd9,JZAU2)JZAU2.signal='-'return 0 end;JZAU2.len=(TjhsnP.len)+ (t5jzEd9.len)for zPXTTg=1,JZAU2.len
 do JZAU2[zPXTTg-1]=0 end;for zPXTTg=JZAU2.len,xL7OTb do
@@ -1457,10 +1485,8 @@ K.signal=="-"and qL.signal=="-"then K.signal="+"qL.signal="+"
 BigNum.div(K,qL,vfIyB,quNsijN)K.signal="-"if quNsijN<u then BigNum.add(vfIyB,nSBOx7,vfIyB)
 BigNum.sub(qL,quNsijN,quNsijN)end;qL.signal="-"return 0 end;QUh2tc.len=K.len-qL.len-1
 BigNum.change(vfIyB,"0")BigNum.change(quNsijN,"0")BigNum.copy(K,quNsijN)
-while(
-BigNum.compareAbs(quNsijN,qL)~=2)do
-if quNsijN[quNsijN.len-1]>=
-qL[qL.len-1]then
+while(BigNum.compareAbs(quNsijN,qL)~=2)do
+if quNsijN[quNsijN.len-1]>=qL[qL.len-1]then
 BigNum.put(QUh2tc,math.floor(quNsijN[quNsijN.len-1]/
 qL[qL.len-1]),quNsijN.len-qL.len)QUh2tc.len=quNsijN.len-qL.len+1 else
 BigNum.put(QUh2tc,math.floor((quNsijN[
@@ -1513,17 +1539,12 @@ assert(false,"Function BigNum.change: string is not a valid number")end;CQi=stri
 lvW2ga-2)
 for _L6Bs=string.len(CQi),T7RKP do CQi=CQi.."0"end else lvW2ga=string.find(CQi,"%.")if lvW2ga~=nil then
 CQi=string.sub(CQi,1,lvW2ga-1)end end;IN=string.len(CQi)QYf1=KMw7_i1s.len
-if
-(IN>BigNum.RADIX_LEN)then local SH=IN-
-(math.floor(IN/BigNum.RADIX_LEN)*BigNum.RADIX_LEN)
+if(IN>BigNum.RADIX_LEN)then local SH=IN-(math.floor(IN/BigNum.RADIX_LEN)*BigNum.RADIX_LEN)
 for wU4wYbA9=1,IN-SH,BigNum.RADIX_LEN do
-KMw7_i1s[nHlJ]=tonumber(string.sub(CQi,
-- (wU4wYbA9+BigNum.RADIX_LEN-1),-
-wU4wYbA9))
+KMw7_i1s[nHlJ]=tonumber(string.sub(CQi,- (wU4wYbA9+BigNum.RADIX_LEN-1),-wU4wYbA9))
 if KMw7_i1s[nHlJ]==nil then
 assert(false,"Function BigNum.change: string is not a valid number")KMw7_i1s.len=0;return 1 end;nHlJ=nHlJ+1;lw4Q7kbl=lw4Q7kbl+1 end
-if(SH~=0)then
-KMw7_i1s[nHlJ]=tonumber(string.sub(CQi,1,SH))KMw7_i1s.len=lw4Q7kbl+1 else KMw7_i1s.len=lw4Q7kbl end
+if(SH~=0)then KMw7_i1s[nHlJ]=tonumber(string.sub(CQi,1,SH))KMw7_i1s.len=lw4Q7kbl+1 else KMw7_i1s.len=lw4Q7kbl end
 for fFeQcIM=KMw7_i1s.len-1,1,-1 do if KMw7_i1s[fFeQcIM]==0 then KMw7_i1s[fFeQcIM]=nil;KMw7_i1s.len=
 KMw7_i1s.len-1 else break end end else KMw7_i1s[nHlJ]=tonumber(CQi)KMw7_i1s.len=1 end else
 assert(false,"Function BigNum.change: parameter error, type unexpected")end;if QYf1 ~=nil then
