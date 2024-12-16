@@ -1,10 +1,10 @@
 # EMXHookingLibrary
 A work-in-progress Hook for the games "The Settlers 6" and "The Settlers 6: History Edition". Will very likely never be truly finished ;)
 
-Uses the "BigNum.lua" library. Special thanks to the authors!
+Uses the **BigNum.lua** library. Special thanks to the authors!
 
 ## Usage
-Include the file "emxhooklib.bin" in your map folder and load it with Script.Load() in the global map script. Then call the function `EMXHookLibrary.Initialize(_useLoadGameOverride, _maxMemorySizeToAllocate)` and after that, you can use the exported methods (listed below) however you like. Both function arguments are optional.
+Include the file **emxhooklib.bin** in your map folder and load it with Script.Load() in the global map script. Then call the function `EMXHookLibrary.Initialize(_useLoadGameOverride, _maxMemorySizeToAllocate, _useGeneralGameBugfixes)` and after that, you can use the exported methods (listed below) however you like. All three function arguments are optional. The boolean return value suggests if the initialization was successful.
 
 Hint: To reset the hooked values, use the function argument `EMXHookLibrary.Initialize(true)` and have the function `EMXHookLibrary_ResetValues(_source, _stringParam)` in your global map script, which will be automatically called when the map is closed. Put all your functions in there to reset your changed values.
 
@@ -246,8 +246,8 @@ EMXHookLibrary.SetEntityDisplayProperties(_entityIDOrType, _property, _value)
 	"ShowDestroyedModelAt", "MaxDarknessFactor", "ExplodeOnDestroyedModel", "SnowFactor", "SeasonColorSet", "LODDistance", "ConstructionSite", "Decal"
 	Einige Parameter müssen als Float gesetzt werden, dazu am Besten anfragen bzw. in der Definitions-xml nachsehen.
 
-EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(_entityID, _height)
-	-> Ändert die Terrainhöhe an der Position einer Entität, ohne die Texturen darunter sofort upzudaten. Damit sind bspw. "schwebende" Entitäten möglich.
-	Bspw. EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(Logic.GetKnightID(1), 4000)
+EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(_posX, _posY, _height)
+	-> Ändert die Terrainhöhe an einer Position, ohne die Texturen darunter sofort upzudaten. Damit sind bspw. "schwebende" Entitäten möglich.
+	Bspw. EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(5000, 5000, 5000);
 ```
 When errors occur, please notify me so i can fix them! ;)
