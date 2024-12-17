@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.7 - 16.12.2024 02:00 - Eisenmonoxid",
+		CurrentVersion = "2.0.7 - 17.12.2024 04:15 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -1219,7 +1219,7 @@ EMXHookLibrary.Bugfixes.Initialize = function()
 			local EntityID = GUI.GetSelectedEntity();
 			if Logic.IsEntertainer(EntityID) == true then
 				Sound.FXPlay2DSound("ui\\menu_click");
-				GUI.SendScriptCommand("EMXHookLibrary.Bugfixes.FixEntertainerCrash(" .. tostring(EntityID) .. ");");
+				GUI.SendScriptCommand("EMXHookLibrary.Bugfixes.FixEntertainerCrash(" .. tostring(EntityID) .. ", nil);");
 			else
 				EMXHookLibrary.Bugfixes.GUI_Merchant_SendBackClicked();
 			end
@@ -1227,13 +1227,22 @@ EMXHookLibrary.Bugfixes.Initialize = function()
 	]]);
 end
 
-EMXHookLibrary.Bugfixes.FixEntertainerCrash = function(_entityID)
-	-- In theory, you could also do this solely via Logic.SetEntityScriptingValue ...
-	-- But i leave it up to the interested reader to do that ;)
-	EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_entityID)("48", _entityID);
-	Logic.ExecuteInLuaLocalState([[
-		GUI.CommandMerchantToLeaveMarketplace(]] .. tostring(_entityID) .. [[);
-	]]);
+EMXHookLibrary.Bugfixes.FixEntertainerCrash = function(_entityID, _value)
+	-- In theory, you could also do this solely via Logic.SetEntityScriptingValue on the entertainer ...
+	-- But i leave it up to the interested reader to do that (provided your knowledge is sufficient) ;)
+	local Offset = (EMXHookLibrary.IsHistoryEdition and 44) or 48;
+	local Pointer = EMXHookLibrary.Internal.CalculateEntityIDToLogicObject(_entityID);
+	local Value = ((_value == nil) and tonumber(tostring(Pointer[Offset]))) or _value;
+	Pointer(Offset, ((_value == nil) and _entityID) or tonumber(Value));
+	
+	if _value == nil then
+		Logic.ExecuteInLuaLocalState([[
+			local Value = ]] .. tostring(Value) .. [[;
+			local EntityID = ]] .. tostring(_entityID) .. [[;
+			GUI.CommandMerchantToLeaveMarketplace(EntityID);
+			GUI.SendScriptCommand("EMXHookLibrary.Bugfixes.FixEntertainerCrash(" .. EntityID .. ", " .. Value .. ");");
+		]]);
+	end
 end
 
 -- ************************************************************************************************************************************************************ --
