@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.7 - 19.12.2024 03:13 - Eisenmonoxid",
+		CurrentVersion = "2.0.8 - 19.12.2024 03:52 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -1207,6 +1207,10 @@ EMXHookLibrary.Internal.OverrideLoadGameHandling = function()
 end
 
 EMXHookLibrary.Bugfixes.Initialize = function()
+	-- Fix SendScriptCommand in Multiplayer
+	if Framework.IsNetworkGame() and EMXHookLibrary.IsHistoryEdition then
+		EMXHookLibrary.Bugfixes.ToggleSendScriptCommandAvailability();
+	end
 	-- Fix Crash when dismissing entertainer
 	Logic.ExecuteInLuaLocalState([[	
 		EMXHookLibrary = EMXHookLibrary or {}
@@ -1243,6 +1247,17 @@ EMXHookLibrary.Bugfixes.FixEntertainerCrash = function(_entityID, _value)
 			GUI.SendScriptCommand("EMXHookLibrary.Bugfixes.FixEntertainerCrash(" .. EntityID .. ", " .. Value .. ");");
 		]]);
 	end
+end
+
+EMXHookLibrary.Bugfixes.ToggleSendScriptCommandAvailability = function()
+	-- This will enable GUI.SendScriptCommand (local script) in the History Edition Multiplayer
+	-- Can also be used to toggle it in the original release
+	local Offset = (EMXHookLibrary.IsHistoryEdition and 456) or 508;
+	local Pointer = EMXHookLibrary.Internal.GetEGLCGameLogic();
+	local Value = string.format("%0x", tostring(Pointer[Offset]));
+	local Byte = tonumber(Value:sub(#Value, #Value));
+
+	Pointer(Offset, (Byte == 0) and (Value + 1) or (Value - 1));
 end
 
 -- ************************************************************************************************************************************************************ --
