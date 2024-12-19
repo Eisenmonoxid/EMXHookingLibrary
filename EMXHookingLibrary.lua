@@ -9,7 +9,7 @@ EMXHookLibrary = {
 	Internal = {
 		CurrentGameVariant = 0,
 		
-		GlobalAdressEntity = 0, -- Helper entity used for pointer dereference
+		GlobalAdressEntity = 0,
 		GlobalHeapStart = 0,
 		GlobalOVOffset = 4128768,
 		
@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.7 - 17.12.2024 04:15 - Eisenmonoxid",
+		CurrentVersion = "2.0.7 - 19.12.2024 03:13 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
