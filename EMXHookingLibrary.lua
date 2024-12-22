@@ -21,7 +21,7 @@ EMXHookLibrary = {
 		InstanceCache = {},	
 		ColorSetCache = {},	
 		
-		CurrentVersion = "2.0.8 - 19.12.2024 03:52 - Eisenmonoxid",
+		CurrentVersion = "2.0.8 - 22.12.2024 18:39 - Eisenmonoxid",
 	},
 	
 	Helpers = {},
@@ -73,18 +73,16 @@ EMXHookLibrary.RawPointer = {
 		return Object
 	end,
 };
-
 -- ************************************************************************************************************************************************************ --
 -- **************************************************** -> These methods are exported into userspace <- -- **************************************************** --
 -- ************************************************************************************************************************************************************ --
-
 EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate = function(_posX, _posY, _height)
 	local xPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(_posX)
 	local yPos = EMXHookLibrary.Internal.Convert2DPlanePositionToSingle(_posY)
 	yPos = yPos + 1
 	
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", "36", "4"}) or {"32", "44", "8"}
-	local Pointer = EMXHookLibrary.Internal.GetEGLCGameLogic()["48"][Offsets[1]]
+	local Pointer = EMXHookLibrary.Internal.GetCGameLogic()["48"][Offsets[1]]
 	
 	local CTerrainHiRes = Pointer[Offsets[2]]
 	CTerrainHiRes.Pointer = BigNum.mt.mul(CTerrainHiRes.Pointer, BigNum.new(yPos))
@@ -298,7 +296,7 @@ end
 EMXHookLibrary.EditFestivalProperties = function(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"496", "8", "144", "52", "176", "84"}) or {"504", "12", "188", "72", "224", "108"}
 	
-	local Pointer = EMXHookLibrary.Internal.GetFrameworkCMain()[Offsets[1]]["44"][Offsets[2]]
+	local Pointer = EMXHookLibrary.Internal.GetCMain()[Offsets[1]]["44"][Offsets[2]]
 	if _promotionParticipantLimit ~= nil then
 		for i = 0, 12, 4 do Pointer[Offsets[3]](i, _promotionParticipantLimit) end
 	end
@@ -485,7 +483,7 @@ end
 
 EMXHookLibrary.ReplaceUpgradeCategoryEntityType = function(_upgradeCategory, _newEntityType)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"364", "40", "552", "12", "4", "16", "24", "0"}) or {"412", "40", "648", "16", "4", "12", "20", "4"}	
-	local Pointer = (EMXHookLibrary.Internal.GetEGLCGameLogic()[Offsets[1]][Offsets[2]][Offsets[3]] + Offsets[4])[Offsets[8]][Offsets[5]]
+	local Pointer = (EMXHookLibrary.Internal.GetCGameLogic()[Offsets[1]][Offsets[2]][Offsets[3]] + Offsets[4])[Offsets[8]][Offsets[5]]
 	local SharedIdentifier = BigNum.new(_upgradeCategory)
 	local CurrentIdentifier = Pointer[Offsets[6]].Pointer
 	
@@ -701,7 +699,7 @@ end
 
 EMXHookLibrary.SetTerritoryAcquiringBuildingID = function(_territoryID, _buildingID)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"332", "4", 168}) or {"372", "8", 180}
-	local Pointer = EMXHookLibrary.Internal.GetEGLCGameLogic()[Offsets[1]][Offsets[2]]
+	local Pointer = EMXHookLibrary.Internal.GetCGameLogic()[Offsets[1]][Offsets[2]]
 	Pointer = Pointer + (_territoryID * Offsets[3])
 	
 	Pointer("24", _buildingID)
@@ -833,8 +831,9 @@ EMXHookLibrary.Internal.GetObjectBehaviorIndexByID = function(_entityType, _beha
 	
 	return -1;
 end
-EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_newValue, _vanillaValue, _heValue)
-	EMXHookLibrary.Internal.GetLogicPropertiesEx()((EMXHookLibrary.IsHistoryEdition and _heValue) or _vanillaValue, _newValue)
+EMXHookLibrary.Internal.ModifyLogicPropertiesEx = function(_value, _ovOffset, _heOffset)
+	local Offset = (EMXHookLibrary.IsHistoryEdition and _heOffset) or _ovOffset
+	EMXHookLibrary.Internal.GetLogicPropertiesEx()(Offset, _value);
 end
 EMXHookLibrary.Internal.SetLimitByEntityType = function(_entityType, _upgradeLevel, _newLimit, _pointerValues)
 	local Offsets = (EMXHookLibrary.IsHistoryEdition and {"24", _pointerValues[2]}) or {"28", _pointerValues[1]}
@@ -944,10 +943,10 @@ EMXHookLibrary.Internal.GetLogicPropertiesEx = function() return EMXHookLibrary.
 EMXHookLibrary.Internal.GetCEntityProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198560, {2593, 1, 6, 7, 8}, {2358, 0, 0, 1, 8})["0"] end
 EMXHookLibrary.Internal.GetCEffectProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198564, {69981, 1, 4, 5, 8}, {189755, 0, 0, 1, 8})["0"] end
 EMXHookLibrary.Internal.GetCGoodProps = function() return EMXHookLibrary.Internal.GetObjectInstance(11198636, {16529, 0, 0, 1, 8}, {30412, 1, 6, 7, 8})["0"] end
-EMXHookLibrary.Internal.GetEGLCGameLogic = function() return EMXHookLibrary.Internal.GetObjectInstance(11198552, {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8})["0"] end
+EMXHookLibrary.Internal.GetCGameLogic = function() return EMXHookLibrary.Internal.GetObjectInstance(11198552, {39, 0, 0, 1, 8}, {104, 1, 2, 3, 8})["0"] end
 EMXHookLibrary.Internal.GetCGlobalsBaseEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674352, {774921, 1, 4, 5, 8}, {1803892, 1, 2, 3, 8})["0"] end
 EMXHookLibrary.Internal.GetCGlobalsLogicEx = function() return EMXHookLibrary.Internal.GetObjectInstance(11674344, {1136615, 1, 6, 7, 8}, {108296, 1, 2, 3, 8}, true)["0"] end
-EMXHookLibrary.Internal.GetFrameworkCMain = function() return EMXHookLibrary.Internal.GetObjectInstance(11158232, {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true)["0"] end
+EMXHookLibrary.Internal.GetCMain = function() return EMXHookLibrary.Internal.GetObjectInstance(11158232, {2250717, 0, 0, 1, 8}, {1338624, 1, 4, 5, 8}, true)["0"] end
 EMXHookLibrary.Internal.GetCTextSet = function() return EMXHookLibrary.Internal.GetObjectInstance(11469188, {475209, 1, 4, 4, 8}, {1504636, 1, 6, 7, 8})["0"] end
 EMXHookLibrary.Internal.GetCDisplay = function() return EMXHookLibrary.Internal.GetObjectInstance(11674360, {1617395, 1, 6, 7, 8}, {589264, 1, 2, 3, 8}, true)["0"] end
 EMXHookLibrary.Internal.GetCCameraBehaviorRTS = function() return EMXHookLibrary.Internal.GetObjectInstance(11568248, {1766975, 1, 6, 7, 8}, {738468, 1, 4, 5, 8}, true) end
@@ -981,7 +980,6 @@ EMXHookLibrary.Internal.GetValueAtPointer = function(_rawPointer)
 
 	return Logic.GetEntityScriptingValue(EMXHookLibrary.Internal.GlobalAdressEntity, tonumber(BigNum.mt.tostring(Index)))
 end
-
 EMXHookLibrary.Internal.SetValueAtPointer = function(_rawPointer, _Value)
 	if not Logic.IsEntityAlive(EMXHookLibrary.Internal.GlobalAdressEntity) then
 		local Error = "EMXHookLibrary: ERROR! Tried to set value at address "..tostring(_rawPointer).." without existing AdressEntity!"
@@ -1121,8 +1119,8 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 404) or 412
 	Framework.SetOnGameStartLuaCommand(_string)
 	
-	local Pointer = tonumber(tostring(EMXHookLibrary.Internal.GetFrameworkCMain()[Offset]))
-	EMXHookLibrary.Internal.GetFrameworkCMain()(Offset, 0)(Offset + 4, 0)
+	local Pointer = tonumber(tostring(EMXHookLibrary.Internal.GetCMain()[Offset]))
+	EMXHookLibrary.Internal.GetCMain()(Offset, 0)(Offset + 4, 0)
 	
 	EMXHookLibrary.Internal.ASCIIStringCache[_string] = Pointer
 	Framework.WriteToLog("EMXHookLibrary: ASCII String Pointer CREATED! " .. _string .. " - " .. tostring(Pointer))
@@ -1131,7 +1129,7 @@ EMXHookLibrary.Internal.CreatePureASCIITextInMemory = function(_string)
 end
 
 EMXHookLibrary.Internal.GetLuaASCIIStringFromPointer = function(_pointer)
-	local CMain = EMXHookLibrary.Internal.GetFrameworkCMain()
+	local CMain = EMXHookLibrary.Internal.GetCMain()
 	local SavedPointer = tonumber(tostring(CMain["20"]))
 	
 	CMain("20", tonumber(tostring(_pointer)))
@@ -1253,13 +1251,12 @@ EMXHookLibrary.Bugfixes.ToggleSendScriptCommandAvailability = function()
 	-- This will enable GUI.SendScriptCommand (local script) in the History Edition Multiplayer
 	-- Can also be used to toggle it in the original release
 	local Offset = (EMXHookLibrary.IsHistoryEdition and 456) or 508;
-	local Pointer = EMXHookLibrary.Internal.GetEGLCGameLogic();
+	local Pointer = EMXHookLibrary.Internal.GetCGameLogic();
 	local Value = string.format("%0x", tostring(Pointer[Offset]));
 	local Byte = tonumber(Value:sub(#Value, #Value));
 
 	Pointer(Offset, (Byte == 0) and (Value + 1) or (Value - 1));
 end
-
 -- ************************************************************************************************************************************************************ --
 -- Some Helpers
 -- ************************************************************************************************************************************************************ --
