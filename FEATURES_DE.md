@@ -1,5 +1,5 @@
 # Features
-Alle Funktionen befinden sich in der globalen **"EMXHookLibrary"** - Tabelle und müssen dementsprechend aufgerufen werden. (z.B SetPlayerColorRGB(_params) -> EMXHookLibrary.SetPlayerColorRGB(_params))
+Alle Funktionen befinden sich in der globalen **"EMXHookLibrary"** - Tabelle und müssen dementsprechend aufgerufen werden. (z.B SetPlayerColorRGB(_params) -> EMXHookLibrary.SetPlayerColorRGB(_params)).
 
 ---
 
@@ -160,7 +160,7 @@ Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
 
 ### ChangeModelFilePath(_modelID, _filePath, _pathLength)
 - Ändert den internen Dateipfad eines Models.
-- Bspw. `ChangeModelFilePath(Models.Buildings_B_Barracks, "Doodads\\D_NA_ExcavationSite_3\0\0", 29)`
+- Bspw. `ChangeModelFilePath(Models.Buildings_B_Barracks, "Doodads\\D_NA_ExcavationSite_3\0\0", 29)`.
 - Wenn das Model noch nicht geladen wurde, wird es im ID-Manager durch **D_NA_ExcavationSite_3** ersetzt.
 
 ---
@@ -247,7 +247,7 @@ für diese Dinge haben.
 - Im Gegensatz zu `EMXHookLibrary.CopyGoodTypePointer` wird hier in allokiertem Speicher ein neues Array
 angelegt. 
 - **_requiredResources** muss so aussehen: **{{_resource, _amount, _supplier}, {_resource, _amount, _supplier}, ...}**
-- Bspw. `EMXHookLibrary.CreateGoodTypeRequiredResources(Goods.G_Soap, {{Goods.G_Wool, 3, EntityCategories.GC_Food_Supplier}, {Goods.G_Stone, 2, EntityCategories.GC_Food_Supplier}})`
+- Bspw. `EMXHookLibrary.CreateGoodTypeRequiredResources(Goods.G_Soap, {{Goods.G_Wool, 3, EntityCategories.GC_Food_Supplier}, {Goods.G_Stone, 2, EntityCategories.GC_Food_Supplier}})`.
 - Es wird eine Tabelle zurückgegeben, welche die originalen Pointer enthält, damit man die Werte wieder zurücksetzen kann.
 
 ### ResetGoodTypePointer(_goodType, _resetPointers)
@@ -283,13 +283,13 @@ Diese Funktionen beeinflussen die globale Darstellung der Welt.
 - Es wird eine Tabelle zurückgegeben, welche die originalen Werte enthält, damit man
 das ColorSet wieder zurücksetzen kann. 
 - Der Name des Sets kann im Ordner im Spielverzeichnis nachgesehen werden.
-- Bspw. `EMXHookLibrary.SetColorSetColorRGB("ME_FOW", 1, {0.32, 0.135, 0.4, 1}); -- FoW color for season spring in climate zone ME`
+- Bspw. `EMXHookLibrary.SetColorSetColorRGB("ME_FOW", 1, {0.32, 0.135, 0.4, 1}); -- FoW color for season spring in climate zone ME`.
 
 ### SetPlayerColorRGB(_playerColorEntryIndex, _rgb)
 - Setzt die Spielerfarbe eines Spielers neu. 
 - **_rgb** muss ein table mit den Farbwerten (von **0 - 255**) sein.
 - Der Alphakanal muss immer **127** betragen und der erste Eintrag in der Tabelle sein. 
-- **0** und einstellige Werte müssen durch zwei Ziffern [bspw. **9 -> 09**] repräsentiert werden.
+- **0** und **einstellige Werte** müssen durch zwei Ziffern [bspw. **9 -> 09**] repräsentiert werden.
 ```
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 0, 0, 255, 255}) -- Yellow
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 253, 112, 0, 0}) -- Dark Blue
