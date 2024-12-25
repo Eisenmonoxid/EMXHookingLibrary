@@ -282,7 +282,7 @@ These functions affect the global display of the world.
 ### EditStringTableText(_IDManagerEntryIndex, _newString, _useAlternativePointer)
 - Modifies a StringTable entry. The EntryIndex must first be retrieved, and the character limit must be respected.
 - More details on usage upon request.
-- Example: "Saraya" -> "Test Knight": `EMXHookLibrary.EditStringTableText(5037, "Test Knight")`.
+- Example: "Saraya" -> "Testknight": `EMXHookLibrary.EditStringTableText(2100, "Testknight")`.
 
 ### SetColorSetColorRGB(_colorSetName, _season, _rgb, _wetFactor)
 - Sets the colors of a ColorSet per season.
@@ -295,7 +295,7 @@ These functions affect the global display of the world.
 - **_rgb** must be a table containing the color values (from **0 - 255**).
 - The alpha channel must always be **127** and the first entry in the table.
 - **0** and **single-digit values** must be represented as two digits [e.g., **9 -> 09**].
-```
+```lua
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 0, 0, 255, 255}) -- Yellow
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 253, 112, 0, 0}) -- Dark Blue
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 255, 255, 255}) -- White

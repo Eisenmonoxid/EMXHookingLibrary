@@ -129,9 +129,13 @@ Diese Funktionen beeinflussen die Darstellung von Entitäten und deren Modellen.
 - **_paramType** muss ein String mit dem Typ sein. Mögliche Typen: **"Models", "UpgradeSite", "Destroyed", "Lights"**.
 - _model setzt das derzeitige Model, kann auch **nil** sein.
 - Vor dem Ändern am Besten in der Definitions-xml der Entität nachschauen. Es kann sowohl eine (existierende) Entity-ID als auch ein Entitätentyp angegeben werden.
-- Bspw. `EMXHookLibrary.SetEntityDisplayModelParameters(Entities.B_StoreHouse, "Models", {Models.Buildings_B_NPC_Cloister_ME, 
-Models.Buildings_B_NPC_Storehouse_NE, Models.Buildings_B_NPC_Cloister_NE}, {Models.Buildings_B_NPC_Storehouse_ME}) -- Setzt neue Modelle
-für die verschiedenen Ausbaustufen des Lagerhauses.`.
+- Bspw.
+  ```lua
+  EMXHookLibrary.SetEntityDisplayModelParameters(Entities.B_StoreHouse, "Models", 
+  {Models.Buildings_B_NPC_Cloister_ME, Models.Buildings_B_NPC_Storehouse_NE, Models.Buildings_B_NPC_Cloister_NE}, 
+  {Models.Buildings_B_NPC_Storehouse_ME})
+  -- Sets new models for the various upgrade levels of the storehouse.
+  ```
 
 ### SetBuildingDisplayModelParameters(_entityIDOrType, _paramType, _params, _model)
 - Analog zu `EMXHookLibrary.SetEntityDisplayModelParameters` können hier die Modelle von (Produktions-)Gebäuden geändert werden.
@@ -151,8 +155,11 @@ für die verschiedenen Ausbaustufen des Lagerhauses.`.
 ### ModifyModelPropertiesByReferenceType(_modelID, _referenceModelID, _entryIndex)
 - Ändert Parameter eines Modeltyps durch Kopieren von Werten eines Referenztyps. 
 - Gibt für die Rücksetzfunktion den Originalwert zurück.
-- Bspw. `EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)`.
-Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
+- Bspw.
+  ```lua
+  EMXHookLibrary.ModifyModelProperties(Models.Doodads_D_NA_Cliff_Set01_Deco01, Models.Doodads_D_NE_Cliff_Set03_Sheet01, 0)
+  ```
+- Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
 - **ACHTUNG:** Dies kann etwas Memory leaken (148 Byte) im Fall, dass das Model bereits vom Spiel geladen wurde.
 
 ### ResetModelProperties(_modelID, _entryIndex, _resetValue)
@@ -160,7 +167,10 @@ Dies setzt für das erste Model den Shader-Effect vom zweiten Model.
 
 ### ChangeModelFilePath(_modelID, _filePath, _pathLength)
 - Ändert den internen Dateipfad eines Models.
-- Bspw. `ChangeModelFilePath(Models.Buildings_B_Barracks, "Doodads\\D_NA_ExcavationSite_3\0\0", 29)`.
+- Bspw.
+  ```lua
+  ChangeModelFilePath(Models.Buildings_B_Barracks, "Doodads\\D_NA_ExcavationSite_3\0\0", 29)
+  ```
 - Wenn das Model noch nicht geladen wurde, wird es im ID-Manager durch **D_NA_ExcavationSite_3** ersetzt.
 
 ---
@@ -224,7 +234,9 @@ Diese Funktionen beeinflussen die globale Spiellogik der Welt.
 ### SetMilitaryMetaFormationParameters(_distances)
 - Setzt einige Parameter zur Truppenanordnung. 
 - Der Parameter **_distances** muss eine Tabelle nach folgendem Vorbild sein:
-`-- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}`.
+  ```lua
+  -- {_rowDistance, _colDistance, _cartRowDistance, _cartColDistance, _engineRowDistance, _engineColDistance}
+  ```
 - Nicht benötigte Werte sind **nil**.
 
 ### ReplaceUpgradeCategoryEntityType(_upgradeCategory, _newEntityType)
@@ -247,7 +259,11 @@ für diese Dinge haben.
 - Im Gegensatz zu `EMXHookLibrary.CopyGoodTypePointer` wird hier in allokiertem Speicher ein neues Array
 angelegt. 
 - **_requiredResources** muss so aussehen: **{{_resource, _amount, _supplier}, {_resource, _amount, _supplier}, ...}**
-- Bspw. `EMXHookLibrary.CreateGoodTypeRequiredResources(Goods.G_Soap, {{Goods.G_Wool, 3, EntityCategories.GC_Food_Supplier}, {Goods.G_Stone, 2, EntityCategories.GC_Food_Supplier}})`.
+- Bspw. 
+  ```lua
+  EMXHookLibrary.CreateGoodTypeRequiredResources(Goods.G_Soap, {{Goods.G_Wool, 3, EntityCategories.GC_Food_Supplier}, 
+  {Goods.G_Stone, 2, EntityCategories.GC_Food_Supplier}})
+  ```
 - Es wird eine Tabelle zurückgegeben, welche die originalen Pointer enthält, damit man die Werte wieder zurücksetzen kann.
 
 ### ResetGoodTypePointer(_goodType, _resetPointers)
@@ -262,7 +278,10 @@ angelegt.
 ### ModifyTerrainHeightWithoutTextureUpdate(_posX, _posY, _height)
 - Ändert die Terrainhöhe an einer Position, ohne die Texturen darunter sofort upzudaten. 
 - Damit sind bspw. "schwebende" Entitäten möglich, allerdings nur bis zum nächsten Blockingupdate.
-- Bspw. `EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(5000, 5000, 5000)`.
+- Bspw.   
+  ```lua
+  EMXHookLibrary.ModifyTerrainHeightWithoutTextureUpdate(5000, 5000, 5000)
+  ```
 
 ### EditFestivalProperties(_festivalDuration, _promotionDuration, _promotionParticipantLimit, _festivalParticipantLimit)
 - Verändert einen oder mehrere Parameter der Feste (Aufstiegs- sowie normales Fest). 
@@ -290,7 +309,7 @@ das ColorSet wieder zurücksetzen kann.
 - **_rgb** muss ein table mit den Farbwerten (von **0 - 255**) sein.
 - Der Alphakanal muss immer **127** betragen und der erste Eintrag in der Tabelle sein. 
 - **0** und **einstellige Werte** müssen durch zwei Ziffern [bspw. **9 -> 09**] repräsentiert werden.
-```
+```lua
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 0, 0, 255, 255}) -- Yellow
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 253, 112, 0, 0}) -- Dark Blue
 EMXHookLibrary.SetPlayerColorRGB(1, {127, 255, 255, 255}) -- White
