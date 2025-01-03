@@ -1,5 +1,6 @@
 # EMXHookingLibrary
-A work-in-progress Hook for the games "The Settlers 6" and "The Settlers 6: History Edition". Will very likely never be truly finished ;)
+A lua script hook for the games "The Settlers 6" and "The Settlers 6: History Edition". Will very likely never be truly finished ;)
+If you want to use the hook library in your map and you need help, ask on my [Discord](https://discord.gg/7SGkQtAAET).
 
 Uses the **"BigNum.lua"** library. Special thanks to the authors!
 
@@ -17,6 +18,4 @@ Currently, the Hook supports the following general game bug fixes. These become 
 - _Fix GUI.SendScriptCommand: In the History Edition Multiplayer (without activated Development-Mode), the function was not executed._
 
 ## Features
-For a list of features, take a look at either the [German Features](https://github.com/Eisenmonoxid/EMXHookingLibrary/blob/main/FEATURES_DE.md) or the [English Features](https://github.com/Eisenmonoxid/EMXHookingLibrary/blob/main/FEATURES_EN.md) file.
-
-When errors occur, please notify me so they can be fixed! ;)
+For a comprehensive list of features, take a look at either the [German Features](https://github.com/Eisenmonoxid/EMXHookingLibrary/blob/main/FEATURES_DE.md) or the [English Features](https://github.com/Eisenmonoxid/EMXHookingLibrary/blob/main/FEATURES_EN.md) file.
