@@ -1,5 +1,6 @@
 # EMXHookingLibrary
 A lua script hook for the games "The Settlers 6" and "The Settlers 6: History Edition". Will very likely never be truly finished ;)
+
 If you want to use the hook library in your map and you need help, ask on my [Discord](https://discord.gg/7SGkQtAAET).
 
 Uses the **"BigNum.lua"** library. Special thanks to the authors!
